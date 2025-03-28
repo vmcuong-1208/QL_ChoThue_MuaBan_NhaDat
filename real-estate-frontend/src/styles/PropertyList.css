@@ -1,0 +1,39 @@
+.property-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 cột trên mỗi hàng */
+    gap: 20px; /* Khoảng cách giữa các ô */
+    padding: 20px;
+  }
+  
+  .property-item {
+    background: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .property-item:hover {
+    transform: scale(1.05);
+  }
+  
+  .property-item img {
+    width: 100%;  /* Để ảnh tự căn chỉnh theo ô */
+    height: 200px; /* Giữ kích thước đồng đều */
+    object-fit: cover; /* Cắt ảnh nếu cần để không méo */
+    border-radius: 10px;
+  }
+  
+  .property-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+  
+  .property-price {
+    font-size: 16px;
+    color: #e63946;
+    font-weight: bold;
+  }
+  
