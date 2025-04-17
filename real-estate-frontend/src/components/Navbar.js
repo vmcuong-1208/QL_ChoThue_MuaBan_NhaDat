@@ -15,7 +15,13 @@ const Navbar = () => {
       const userInfo = localStorage.getItem("userInfo")
 
       if (token && userInfo) {
-        setCurrentUser(JSON.parse(userInfo))
+        try {
+          setCurrentUser(JSON.parse(userInfo))
+        } catch (error) {
+          console.error("Lỗi parse userInfo:", error)
+          // Nếu có lỗi parse, tạo một đối tượng user cơ bản
+          setCurrentUser({ Email: "Người dùng" })
+        }
       } else {
         setCurrentUser(null)
       }
@@ -26,10 +32,13 @@ const Navbar = () => {
 
     // Thêm event listener để kiểm tra khi localStorage thay đổi
     window.addEventListener("storage", checkLoginStatus)
+    // Thêm một custom event listener để cập nhật ngay lập tức
+    window.addEventListener("login-success", checkLoginStatus)
 
     // Cleanup
     return () => {
       window.removeEventListener("storage", checkLoginStatus)
+      window.removeEventListener("login-success", checkLoginStatus)
     }
   }, [])
 
@@ -88,6 +97,9 @@ const Navbar = () => {
                   </Link>
                   <Link to="/yeu-thich" className="dropdown-item" onClick={() => setShowDropdown(false)}>
                     Bất động sản yêu thích
+                  </Link>
+                  <Link to="/quan-ly-bai-dang" className="dropdown-item" onClick={() => setShowDropdown(false)}>
+                    Quản lý bài đăng
                   </Link>
                   <button className="dropdown-item logout" onClick={handleLogout}>
                     Đăng xuất

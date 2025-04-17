@@ -157,7 +157,7 @@ const LoginRegister = () => {
 
       // Chuyển hướng hoặc cập nhật UI sau khi đăng nhập thành công
       console.log("Đăng nhập thành công:", response.data)
-
+      window.dispatchEvent(new Event("login-success"))
       // Đặt lại form
       setFormData({
         account: "",

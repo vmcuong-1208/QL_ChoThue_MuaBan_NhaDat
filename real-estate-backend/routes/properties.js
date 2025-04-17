@@ -1,0 +1,262 @@
+const express = require("express")
+const router = express.Router()
+const multer = require("multer")
+const path = require("path")
+const fs = require("fs")
+const jwt = require("jsonwebtoken")
+const db = require("../config/db") // Import database connection
+const authenticateToken = require("../middleware/authenticateToken"); // Import middleware for token authentication
+
+// Cấu hình multer để upload ảnh
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, "../uploads/properties")
+
+    // Tạo thư mục nếu chưa tồn tại
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true })
+    }
+
+    cb(null, uploadDir)
+  },
+  filename: (req, file, cb) => {
+    // Tạo tên file duy nhất
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
+    const ext = path.extname(file.originalname)
+    cb(null, "property-" + uniqueSuffix + ext)
+  },
+})
+
+// Lọc file
+const fileFilter = (req, file, cb) => {
+  // Chỉ chấp nhận ảnh
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true)
+  } else {
+    cb(new Error("Chỉ chấp nhận file ảnh!"), false)
+  }
+}
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+})
+
+// Lấy tất cả bài đăng (có phân trang và lọc)
+router.get("/", async (req, res) => {
+  try {
+    const page = Number.parseInt(req.query.page) || 1
+    const limit = Number.parseInt(req.query.limit) || 10
+    const loaiBDS = req.query.loaiBDS
+    const trangThai = req.query.trangThai
+    const giaTu = req.query.giaTu ? Number.parseFloat(req.query.giaTu) : null
+    const giaDen = req.query.giaDen ? Number.parseFloat(req.query.giaDen) : null
+    const dienTichTu = req.query.dienTichTu ? Number.parseFloat(req.query.dienTichTu) : null
+    const dienTichDen = req.query.dienTichDen ? Number.parseFloat(req.query.dienTichDen) : null
+
+    const filterConditions = []
+    if (loaiBDS) filterConditions.push(`MaLoaiND = '${loaiBDS}'`)
+    if (trangThai) filterConditions.push(`TrangThai = '${trangThai}'`)
+    if (giaTu !== null) filterConditions.push(`Gia >= ${giaTu}`)
+    if (giaDen !== null) filterConditions.push(`Gia <= ${giaDen}`)
+    if (dienTichTu !== null) filterConditions.push(`DienTich >= ${dienTichTu}`)
+    if (dienTichDen !== null) filterConditions.push(`DienTich <= ${dienTichDen}`)
+
+    const filterQuery = filterConditions.length > 0 ? `WHERE ${filterConditions.join(" AND ")}` : ""
+    const offset = (page - 1) * limit
+
+    const [properties] = await db.promise().query(
+      `SELECT * FROM THONGTINNHADAT ${filterQuery} ORDER BY NgayTao DESC LIMIT ${limit} OFFSET ${offset}`
+    )
+    const [[{ total }]] = await db.promise().query(
+      `SELECT COUNT(*) AS total FROM THONGTINNHADAT ${filterQuery}`
+    )
+
+    res.json({
+      properties,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    })
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách bất động sản:", error)
+    res.status(500).json({ message: "Lỗi server" })
+  }
+})
+
+// Lấy bài đăng của người dùng hiện tại
+router.get("/user", authenticateToken, async (req, res) => {
+    try {
+      console.log(">> Đã gọi vào GET /api/properties/user");
+      const userId = req.user.id || req.user.MaNgDung
+      console.log(">> User ID:", userId);
+      const [properties] = await db.promise().query(
+        `SELECT * FROM THONGTINNHADAT WHERE MaNgDung = ? ORDER BY NgayTao DESC`,
+        [userId]
+      )
+      res.json(properties)
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách bất động sản của người dùng:", error)
+      res.status(500).json({ message: "Lỗi server" })
+    }
+  })
+
+// Lấy bài đăng theo ID
+router.get("/:id", async (req, res) => {
+  try {
+    const propertyId = req.params.id
+    const [properties] = await db.promise().query(
+      `SELECT * FROM THONGTINNHADAT WHERE MaTTND = ?`,
+      [propertyId]
+    )
+    const property = properties[0]
+
+    if (!property) {
+      return res.status(404).json({ message: "Không tìm thấy bài đăng" })
+    }
+
+    await db.promise().query(
+      `UPDATE THONGTINNHADAT SET SoLuotXem = SoLuotXem + 1 WHERE MaTTND = ?`,
+      [propertyId]
+    )
+
+    res.json(property)
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin bất động sản:", error)
+    res.status(500).json({ message: "Lỗi server" })
+  }
+})
+
+
+
+// Tạo bài đăng mới
+router.post("/", authenticateToken, upload.array("HinhAnh", 10), async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.MaNgDung
+    const { TieuDe, MoTa, Gia, DienTich, DiaChi, TinhThanh, QuanHuyen, PhuongXa, MaLoaiND, TrangThai } = req.body
+    const hinhAnh = req.files.map((file) => `/uploads/properties/${file.filename}`)
+
+    const [result] = await db.promise().query(
+      `INSERT INTO THONGTINNHADAT (MaNgDung, TieuDe, MoTa, MaLoaiND, Gia, DienTich, DiaChi, TinhThanh, QuanHuyen, PhuongXa, TrangThai, SoLuotXem, NgayTao) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+      [userId, TieuDe, MoTa, MaLoaiND, Gia, DienTich, DiaChi, TinhThanh, QuanHuyen, PhuongXa, TrangThai]
+    )
+
+    const propertyId = result.insertId
+
+    // Insert images into HINHANHBDS table
+    for (const imagePath of hinhAnh) {
+      await db.promise().query(
+        `INSERT INTO HINHANHBDS (MaTTND, DuongDanAnh) VALUES (?, ?)`,
+        [propertyId, imagePath]
+      )
+    }
+
+    res.status(201).json({
+      message: "Đăng tin thành công",
+      property: { MaTTND: propertyId, ...req.body, HinhAnh: hinhAnh },
+    })
+  } catch (error) {
+    console.error("Lỗi khi tạo bài đăng:", error)
+    res.status(500).json({ message: "Lỗi server" })
+  }
+})
+
+// Cập nhật bài đăng
+router.put("/:id", authenticateToken, upload.array("HinhAnh", 10), async (req, res) => {
+  try {
+    const propertyId = req.params.id
+    const userId = req.user.id || req.user.MaNgDung
+    const [properties] = await db.promise().query(
+      `SELECT * FROM THONGTINNHADAT WHERE MaTTND = ?`,
+      [propertyId]
+    )
+    const property = properties[0]
+
+    if (!property) {
+      return res.status(404).json({ message: "Không tìm thấy bài đăng" })
+    }
+
+    if (property.MaNgDung !== userId) {
+      return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa bài đăng này" })
+    }
+
+    const { TieuDe, MoTa, Gia, DienTich, DiaChi, TinhThanh, QuanHuyen, PhuongXa, MaLoaiND, TrangThai, HinhAnhCu } = req.body
+    let hinhAnh = HinhAnhCu ? JSON.parse(HinhAnhCu) : []
+
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map((file) => `/uploads/properties/${file.filename}`)
+      hinhAnh = [...hinhAnh, ...newImages]
+    }
+
+    await db.promise().query(
+      `UPDATE THONGTINNHADAT SET TieuDe = ?, MoTa = ?, MaLoaiND = ?, Gia = ?, DienTich = ?, DiaChi = ?, TinhThanh = ?, QuanHuyen = ?, PhuongXa = ?, TrangThai = ? WHERE MaTTND = ?`,
+      [TieuDe, MoTa, MaLoaiND, Gia, DienTich, DiaChi, TinhThanh, QuanHuyen, PhuongXa, TrangThai, propertyId]
+    )
+
+    // Update images in HINHANHBDS table
+    await db.promise().query(`DELETE FROM HINHANHBDS WHERE MaTTND = ?`, [propertyId])
+    for (const imagePath of hinhAnh) {
+      await db.promise().query(
+        `INSERT INTO HINHANHBDS (MaTTND, DuongDanAnh) VALUES (?, ?)`,
+        [propertyId, imagePath]
+      )
+    }
+
+    res.json({
+      message: "Cập nhật bài đăng thành công",
+      property: { MaTTND: propertyId, ...req.body, HinhAnh: hinhAnh },
+    })
+  } catch (error) {
+    console.error("Lỗi khi cập nhật bài đăng:", error)
+    res.status(500).json({ message: "Lỗi server" })
+  }
+})
+
+// Xóa bài đăng
+router.delete("/:id", authenticateToken, async (req, res) => {
+  try {
+    const propertyId = req.params.id
+    const userId = req.user.id || req.user.MaNgDung
+    const [properties] = await db.promise().query(
+      `SELECT * FROM THONGTINNHADAT WHERE MaTTND = ?`,
+      [propertyId]
+    )
+    const property = properties[0]
+
+    if (!property) {
+      return res.status(404).json({ message: "Không tìm thấy bài đăng" })
+    }
+
+    if (property.MaNgDung !== userId) {
+      return res.status(403).json({ message: "Bạn không có quyền xóa bài đăng này" })
+    }
+
+    // Delete images from HINHANHBDS table
+    const [images] = await db.promise().query(
+      `SELECT DuongDanAnh FROM HINHANHBDS WHERE MaTTND = ?`,
+      [propertyId]
+    )
+    for (const { DuongDanAnh } of images) {
+      const fullPath = path.join(__dirname, "..", DuongDanAnh)
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath)
+      }
+    }
+
+    await db.promise().query(`DELETE FROM THONGTINNHADAT WHERE MaTTND = ?`, [propertyId])
+
+    res.json({ message: "Xóa bài đăng thành công" })
+  } catch (error) {
+    console.error("Lỗi khi xóa bài đăng:", error)
+    res.status(500).json({ message: "Lỗi server" })
+  }
+})
+
+module.exports = router

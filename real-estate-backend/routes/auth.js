@@ -3,6 +3,22 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const router = express.Router();
+const authenticateToken = require("../middleware/authenticateToken"); // Middleware xác thực token
+const multer = require('multer');
+const path = require('path');
+
+// Cấu hình multer để lưu file vào thư mục uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, '../uploads'));
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage });
 
 // Đăng ký tài khoản
 router.post('/register', async (req, res) => {
@@ -64,7 +80,7 @@ router.post("/login", async (req, res) => {
         }
 
         // Tạo JWT token
-        const token = jwt.sign({ MaNgDung: user[0].MaNgDung, Email }, "SECRET_KEY", { expiresIn: "1h" });
+        const token = jwt.sign({ MaNgDung: user[0].MaNgDung, Email }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         res.status(200).json({ message: "Đăng nhập thành công!", token });
 
@@ -75,24 +91,60 @@ router.post("/login", async (req, res) => {
 });
 
 // Cập nhật thông tin cá nhân
-router.put('/update', (req, res) => {
-    const { MaNgDung, HoTen, DiaChi, AnhDaiDien, MoTaBanThan } = req.body;
+router.put('/update', authenticateToken, upload.single('AnhDaiDien'), (req, res) => {
+    const { HoTen, DiaChi, MoTaBanThan } = req.body;
+    const MaNgDung = req.user.MaNgDung; // Lấy từ token
 
     if (!MaNgDung) {
         return res.status(400).json({ message: "Thiếu ID người dùng" });
     }
 
+    let AnhDaiDien = null;
+    if (req.file) {
+        AnhDaiDien = `/uploads/${req.file.filename}`; // Lưu đường dẫn file
+    }
+
+    console.log("Dữ liệu nhận được từ frontend:", { HoTen, DiaChi, AnhDaiDien, MoTaBanThan, MaNgDung });
+
     const sql = `UPDATE NGUOIDUNG SET 
-                    HoTen = ?, 
-                    DiaChi = ?, 
-                    AnhDaiDien = ?, 
-                    MoTaBanThan = ?, 
+                    HoTen = COALESCE(?, HoTen), 
+                    DiaChi = COALESCE(?, DiaChi), 
+                    AnhDaiDien = COALESCE(?, AnhDaiDien), 
+                    MoTaBanThan = COALESCE(?, MoTaBanThan), 
                     NgayCapNhat = NOW()
                  WHERE MaNgDung = ?`;
 
     db.query(sql, [HoTen, DiaChi, AnhDaiDien, MoTaBanThan, MaNgDung], (err, result) => {
-        if (err) return res.status(500).json({ message: "Lỗi khi cập nhật", error: err });
+        if (err) {
+            console.error("Lỗi khi thực thi câu lệnh SQL:", err);
+            return res.status(500).json({ message: "Lỗi khi cập nhật", error: err });
+        }
 
-        res.json({ message: "Cập nhật thành công!" });
+        console.log("Kết quả cập nhật:", result);
+        res.json({ message: "Cập nhật thành công!", AnhDaiDien });
+    });
+});
+
+// API lấy thông tin người dùng
+router.get('/me', authenticateToken, (req, res) => {
+    const MaNgDung = req.user.MaNgDung; // Lấy từ token
+
+    if (!MaNgDung) {
+        return res.status(400).json({ message: "Thiếu ID người dùng" });
+    }
+
+    const sql = `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan FROM NGUOIDUNG WHERE MaNgDung = ?`;
+
+    db.query(sql, [MaNgDung], (err, results) => {
+        if (err) {
+            console.error("Lỗi khi thực thi câu lệnh SQL:", err);
+            return res.status(500).json({ message: "Lỗi server", error: err });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: "Không tìm thấy người dùng" });
+        }
+
+        res.json(results[0]);
     });
 });

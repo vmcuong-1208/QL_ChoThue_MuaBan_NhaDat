@@ -85,6 +85,9 @@ export const AuthProvider = ({ children }) => {
 
         console.log("Thông tin người dùng:", userResponse.data)
         setCurrentUser(userResponse.data)
+        localStorage.setItem("userInfo", JSON.stringify(userResponse.data));
+        const loginEvent = new Event("login-success");
+        window.dispatchEvent(loginEvent);
         return { success: true }
       } catch (userError) {
         console.error("Lỗi khi lấy thông tin người dùng:", userError)

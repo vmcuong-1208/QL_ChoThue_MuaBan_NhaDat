@@ -12,6 +12,9 @@ app.use(express.json());
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+const propertyRoutes = require('./routes/properties');
+app.use('/api/properties', propertyRoutes); 
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server đang chạy trên cổng ${PORT}`);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaPen, FaCheck, FaTimes } from "react-icons/fa"
 import "../styles/Profile.css"
+import axios from "axios"
 
 const Profile = () => {
   const [currentUser, setCurrentUser] = useState(null)
@@ -18,23 +19,39 @@ const Profile = () => {
   })
   const [previewImage, setPreviewImage] = useState("")
 
-  // Lấy thông tin người dùng từ localStorage
+  // Lấy thông tin người dùng từ API
   useEffect(() => {
-    const userInfo = localStorage.getItem("userInfo")
-    if (userInfo) {
-      const user = JSON.parse(userInfo)
-      setCurrentUser(user)
-      setFormData({
-        HoTen: user.HoTen || "",
-        SDT: user.SDT || "",
-        DiaChi: user.DiaChi || "",
-        MoTaBanThan: user.MoTaBanThan || "",
-        AnhDaiDien: user.AnhDaiDien || "",
-      })
-      setPreviewImage(user.AnhDaiDien || "")
-    }
-    setLoading(false)
-  }, [])
+    const fetchUserData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/api/auth/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const user = response.data;
+        const fullImageUrl = user.AnhDaiDien ? `http://localhost:5000${user.AnhDaiDien}` : "";
+        setCurrentUser(user);
+        setFormData({
+          HoTen: user.HoTen || "",
+          SDT: user.SDT || "",
+          DiaChi: user.DiaChi || "",
+          MoTaBanThan: user.MoTaBanThan || "",
+          AnhDaiDien: user.AnhDaiDien || "",
+        });
+        setPreviewImage(fullImageUrl);
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin người dùng:", error);
+        setMessage({ type: "error", text: "Không thể tải thông tin người dùng." });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   // Xử lý thay đổi input
   const handleChange = (e) => {
@@ -49,17 +66,11 @@ const Profile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0]
     if (file) {
-      // Trong thực tế, bạn sẽ upload ảnh lên server
-      // Ở đây chúng ta chỉ tạo URL tạm thời để preview
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPreviewImage(reader.result)
-        setFormData({
-          ...formData,
-          AnhDaiDien: reader.result,
-        })
-      }
-      reader.readAsDataURL(file)
+      setPreviewImage(URL.createObjectURL(file))
+      setFormData({
+        ...formData,
+        AnhDaiDien: file,
+      })
     }
   }
 
@@ -70,9 +81,27 @@ const Profile = () => {
     setMessage({ type: "", text: "" })
 
     try {
-      // Trong thực tế, bạn sẽ gọi API để cập nhật thông tin
-      // Ở đây chúng ta chỉ cập nhật localStorage
-      const updatedUser = { ...currentUser, ...formData }
+      const token = localStorage.getItem("token")
+      const formDataToSend = new FormData()
+      formDataToSend.append("HoTen", formData.HoTen)
+      formDataToSend.append("DiaChi", formData.DiaChi)
+      formDataToSend.append("MoTaBanThan", formData.MoTaBanThan)
+      if (formData.AnhDaiDien instanceof File) {
+        formDataToSend.append("AnhDaiDien", formData.AnhDaiDien)
+      }
+
+      const response = await axios.put(
+        "http://localhost:5000/api/auth/update", // Thay URL này bằng endpoint backend thực tế
+        formDataToSend,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      )
+
+      const updatedUser = response.data
       localStorage.setItem("userInfo", JSON.stringify(updatedUser))
       setCurrentUser(updatedUser)
       setMessage({ type: "success", text: "Cập nhật thông tin thành công!" })
