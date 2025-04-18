@@ -93,18 +93,16 @@ router.post("/login", async (req, res) => {
 // Cập nhật thông tin cá nhân
 router.put('/update', authenticateToken, upload.single('AnhDaiDien'), (req, res) => {
     const { HoTen, DiaChi, MoTaBanThan } = req.body;
-    const MaNgDung = req.user.MaNgDung; // Lấy từ token
+    const MaNgDung = req.user.MaNgDung;
 
     if (!MaNgDung) {
-        return res.status(400).json({ message: "Thiếu ID người dùng" });
+        return res.status(400).json({ message: "Missing user ID" });
     }
 
     let AnhDaiDien = null;
     if (req.file) {
-        AnhDaiDien = `/uploads/${req.file.filename}`; // Lưu đường dẫn file
+        AnhDaiDien = `/uploads/${req.file.filename}`;
     }
-
-    console.log("Dữ liệu nhận được từ frontend:", { HoTen, DiaChi, AnhDaiDien, MoTaBanThan, MaNgDung });
 
     const sql = `UPDATE NGUOIDUNG SET 
                     HoTen = COALESCE(?, HoTen), 
@@ -116,12 +114,11 @@ router.put('/update', authenticateToken, upload.single('AnhDaiDien'), (req, res)
 
     db.query(sql, [HoTen, DiaChi, AnhDaiDien, MoTaBanThan, MaNgDung], (err, result) => {
         if (err) {
-            console.error("Lỗi khi thực thi câu lệnh SQL:", err);
-            return res.status(500).json({ message: "Lỗi khi cập nhật", error: err });
+            console.error("Error executing SQL query:", err);
+            return res.status(500).json({ message: "Failed to update", error: err });
         }
 
-        console.log("Kết quả cập nhật:", result);
-        res.json({ message: "Cập nhật thành công!", AnhDaiDien });
+        res.json({ message: "Update successful!", AnhDaiDien });
     });
 });
 
@@ -145,6 +142,11 @@ router.get('/me', authenticateToken, (req, res) => {
             return res.status(404).json({ message: "Không tìm thấy người dùng" });
         }
 
-        res.json(results[0]);
+        const user = results[0];
+        if (user.AnhDaiDien) {
+            user.AnhDaiDien = `http://localhost:5000${user.AnhDaiDien}`;
+        }
+
+        res.json(user);
     });
 });

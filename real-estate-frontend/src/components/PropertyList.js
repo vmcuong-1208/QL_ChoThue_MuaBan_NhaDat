@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react"
 import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaFilter, FaSort } from "react-icons/fa"
 import "../styles/PropertyList.css"
+import { useAuth } from "../context/AuthContext" // Corrected import path
+import { useNavigate } from "react-router-dom"
 
 // Dữ liệu mẫu với thêm thông tin
 const initialProperties = [
@@ -157,7 +159,9 @@ const initialProperties = [
 ]
 
 const PropertyList = () => {
-  const [properties, setProperties] = useState(initialProperties)
+  const { currentUser } = useAuth()
+  const navigate = useNavigate()
+
   const [favorites, setFavorites] = useState([])
   const [filterType, setFilterType] = useState("Tất cả")
   const [sortOption, setSortOption] = useState("default")
@@ -180,6 +184,10 @@ const PropertyList = () => {
 
   // Xử lý toggle yêu thích
   const toggleFavorite = (id) => {
+    if (!currentUser) {
+      navigate("/auth")
+      return
+    }
     if (favorites.includes(id)) {
       setFavorites(favorites.filter((favId) => favId !== id))
     } else {
@@ -202,7 +210,7 @@ const PropertyList = () => {
   // Lọc và sắp xếp bất động sản
   const filteredAndSortedProperties = React.useMemo(() => {
     // Lọc theo loại
-    const result = filterType === "Tất cả" ? properties : properties.filter((property) => property.type === filterType)
+    const result = filterType === "Tất cả" ? initialProperties : initialProperties.filter((property) => property.type === filterType)
 
     // Sắp xếp
     switch (sortOption) {
@@ -220,7 +228,7 @@ const PropertyList = () => {
         // Mặc định: Hiển thị featured trước
         return [...result].sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0))
     }
-  }, [properties, filterType, sortOption])
+  }, [filterType, sortOption])
 
   // Phân trang
   const indexOfLastProperty = currentPage * propertiesPerPage

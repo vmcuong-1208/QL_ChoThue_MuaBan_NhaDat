@@ -5,16 +5,24 @@ import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { FaPlus, FaEllipsisV, FaEdit, FaTrash, FaEye, FaMapMarkerAlt, FaRulerCombined } from "react-icons/fa"
 import "../styles/Post.css"
+import { useAuth } from "../context/AuthContext" // Corrected import path
 
 const API_URL = "http://localhost:5000/api"
 
 const Post = () => {
   const navigate = useNavigate()
+  const { currentUser } = useAuth()
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeMenu, setActiveMenu] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+
+  useEffect(() => {
+    if (!currentUser) {
+      navigate("/auth")
+    }
+  }, [navigate, currentUser])
 
   // Lấy danh sách bài đăng của người dùng
   useEffect(() => {

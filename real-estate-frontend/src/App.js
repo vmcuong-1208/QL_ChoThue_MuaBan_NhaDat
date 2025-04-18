@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Navbar from "./components/Navbar"
+
 import Home from "./components/Home"
 import Properties from "./components/Properties"
 import Contact from "./components/Contact"
@@ -13,7 +14,9 @@ import LoginRegister from "./components/LoginRegister"
 // Import component mới
 import Post from "./components/Post"
 import PostForm from "./components/PostForm"
+// Import component quản trị
 
+import AdminPanel from "./components/AdminPanel"
 const App = () => {
   return (
     <Router>
@@ -36,6 +39,7 @@ const App = () => {
         <Route path="/dang-tin" element={<PostForm />} />
         <Route path="/chinh-sua-tin/:id" element={<PostForm />} />
         <Route path="/auth" element={<LoginRegister />} />
+        <Route path="/admin-panel" element={<AdminPanel />} />
       </Routes>
       <FloatingButton />
       <Footer />

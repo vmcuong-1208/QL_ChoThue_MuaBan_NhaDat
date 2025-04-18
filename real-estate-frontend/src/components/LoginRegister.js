@@ -1,16 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useContext } from "react"
 import { useNavigate } from "react-router-dom"
 import { FaGoogle, FaEye, FaEyeSlash } from "react-icons/fa"
 import axios from "axios" // Thêm axios để gọi API
 import "../styles/LoginRegister.css"
+import { useAuth } from "../context/AuthContext" // Corrected import path
 
 // URL API backend
 const API_URL = "http://localhost:5000/api" // Thay đổi URL này theo cấu hình của bạn
 
 const LoginRegister = () => {
   const navigate = useNavigate()
+  const { token, login } = useAuth() // Import login from AuthContext
 
   // State cho form
   const [isLogin, setIsLogin] = useState(true)
@@ -33,11 +35,10 @@ const LoginRegister = () => {
 
   // Kiểm tra nếu đã đăng nhập
   useEffect(() => {
-    const token = localStorage.getItem("token")
     if (token) {
       navigate("/")
     }
-  }, [navigate])
+  }, [navigate, token])
 
   // Xử lý chuyển đổi giữa đăng nhập và đăng ký
   const toggleForm = () => {
@@ -131,55 +132,44 @@ const LoginRegister = () => {
   // Xử lý đăng nhập
   const handleLogin = async () => {
     try {
-      console.log("Đang gửi request đăng nhập với:", { Email: formData.email, MatKhau: formData.password })
+      console.log("Đang gửi request đăng nhập với:", { Email: formData.email, MatKhau: formData.password });
 
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        Email: formData.email,
-        MatKhau: formData.password,
-      })
+      const result = await login(formData.email, formData.password); // Use login from AuthContext
 
-      console.log("Response từ server:", response.data)
+      if (result.success) {
+        setApiMessage({
+          type: "success",
+          text: "Đăng nhập thành công!",
+        });
 
-      setApiMessage({
-        type: "success",
-        text: "Đăng nhập thành công!",
-      })
+        // Đặt lại form
+        setFormData({
+          account: "",
+          email: "",
+          phone: "",
+          fullName: "",
+          password: "",
+          confirmPassword: "",
+        });
 
-      // Lưu token vào localStorage
-      localStorage.setItem("token", response.data.token)
-
-      // Lưu thông tin người dùng cơ bản
-      const userInfo = {
-        Email: formData.email,
-        isLoggedIn: true,
+        // Chuyển hướng về trang chủ
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      } else {
+        setApiMessage({
+          type: "error",
+          text: result.message || "Đăng nhập thất bại. Vui lòng thử lại.",
+        });
       }
-      localStorage.setItem("userInfo", JSON.stringify(userInfo))
-
-      // Chuyển hướng hoặc cập nhật UI sau khi đăng nhập thành công
-      console.log("Đăng nhập thành công:", response.data)
-      window.dispatchEvent(new Event("login-success"))
-      // Đặt lại form
-      setFormData({
-        account: "",
-        email: "",
-        phone: "",
-        fullName: "",
-        password: "",
-        confirmPassword: "",
-      })
-
-      // Chuyển hướng về trang chủ
-      setTimeout(() => {
-        navigate("/")
-      }, 1000)
     } catch (error) {
-      console.error("Lỗi đăng nhập:", error)
+      console.error("Lỗi đăng nhập:", error);
       setApiMessage({
         type: "error",
-        text: error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại.",
-      })
+        text: "Đăng nhập thất bại. Vui lòng thử lại.",
+      });
     }
-  }
+  };
 
   // Xử lý đăng ký
   const handleRegister = async () => {
