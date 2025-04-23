@@ -50,30 +50,58 @@ router.get("/", async (req, res) => {
   try {
     const page = Number.parseInt(req.query.page) || 1
     const limit = Number.parseInt(req.query.limit) || 10
-    const loaiBDS = req.query.loaiBDS
-    const trangThai = req.query.trangThai
-    const giaTu = req.query.giaTu ? Number.parseFloat(req.query.giaTu) : null
-    const giaDen = req.query.giaDen ? Number.parseFloat(req.query.giaDen) : null
-    const dienTichTu = req.query.dienTichTu ? Number.parseFloat(req.query.dienTichTu) : null
-    const dienTichDen = req.query.dienTichDen ? Number.parseFloat(req.query.dienTichDen) : null
-
-    const filterConditions = []
-    if (loaiBDS) filterConditions.push(`MaLoaiND = '${loaiBDS}'`)
-    if (trangThai) filterConditions.push(`TrangThai = '${trangThai}'`)
-    if (giaTu !== null) filterConditions.push(`Gia >= ${giaTu}`)
-    if (giaDen !== null) filterConditions.push(`Gia <= ${giaDen}`)
-    if (dienTichTu !== null) filterConditions.push(`DienTich >= ${dienTichTu}`)
-    if (dienTichDen !== null) filterConditions.push(`DienTich <= ${dienTichDen}`)
-
-    const filterQuery = filterConditions.length > 0 ? `WHERE ${filterConditions.join(" AND ")}` : ""
     const offset = (page - 1) * limit
 
-    const [properties] = await db.promise().query(
-      `SELECT * FROM THONGTINNHADAT ${filterQuery} ORDER BY NgayTao DESC LIMIT ${limit} OFFSET ${offset}`
-    )
-    const [[{ total }]] = await db.promise().query(
-      `SELECT COUNT(*) AS total FROM THONGTINNHADAT ${filterQuery}`
-    )
+    const values = []
+    const filterConditions = []
+
+    if (req.query.loaiBDS) {
+      filterConditions.push("MaLoaiND = ?")
+      values.push(req.query.loaiBDS)
+    }
+    if (req.query.trangThai) {
+      filterConditions.push("TrangThai = ?")
+      values.push(req.query.trangThai)
+    }
+    if (req.query.giaTu) {
+      filterConditions.push("Gia >= ?")
+      values.push(Number(req.query.giaTu))
+    }
+    if (req.query.giaDen) {
+      filterConditions.push("Gia <= ?")
+      values.push(Number(req.query.giaDen))
+    }
+    if (req.query.dienTichTu) {
+      filterConditions.push("DienTich >= ?")
+      values.push(Number(req.query.dienTichTu))
+    }
+    if (req.query.dienTichDen) {
+      filterConditions.push("DienTich <= ?")
+      values.push(Number(req.query.dienTichDen))
+    }
+
+    const filterQuery = filterConditions.length > 0 ? "WHERE " + filterConditions.join(" AND ") : ""
+
+    const sql = `
+      SELECT tt.*, 
+             (SELECT DuongDanAnh 
+              FROM HINHANHBDS 
+              WHERE MaTTND = tt.MaTTND 
+              LIMIT 1) AS HinhAnh
+      FROM THONGTINNHADAT tt
+      ${filterQuery}
+      ORDER BY NgayTao DESC
+      LIMIT ? OFFSET ?
+    `
+
+    values.push(limit, offset)
+
+    const [properties] = await db.promise().query(sql, values)
+
+    // Tổng số bản ghi
+    const countSql = `SELECT COUNT(*) AS total FROM THONGTINNHADAT ${filterQuery}`
+    const [countRows] = await db.promise().query(countSql, values.slice(0, values.length - 2)) 
+    const total = countRows[0].total
 
     res.json({
       properties,
@@ -89,6 +117,7 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Lỗi server" })
   }
 })
+
 
 // Lấy bài đăng của người dùng hiện tại
 router.get("/user", authenticateToken, async (req, res) => {

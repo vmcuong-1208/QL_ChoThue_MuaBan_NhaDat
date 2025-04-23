@@ -29,7 +29,7 @@ CREATE TABLE NGUOIDUNG (
 -- Bảng Loại nhà đất
 CREATE TABLE LOAINHADAT (
     MaLoaiND INT AUTO_INCREMENT PRIMARY KEY,
-    TenLoaiND ENUM('căn hộ', 'nhà riêng', 'đất nền', 'nhà mặt phố', 'biệt thự', 'văn phòng', 'kho xưởng', 'khác') NOT NULL, 
+    TenLoaiND VARCHAR(100) NOT NULL UNIQUE,
     MoTa TEXT
 );
 -- Bảng Thông tin nhà đất 
@@ -99,4 +99,3 @@ CREATE TABLE DANHGIA (
     FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE,
     FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-db tôi như trên

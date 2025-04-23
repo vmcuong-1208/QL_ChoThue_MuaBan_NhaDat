@@ -15,7 +15,7 @@ const AdminPanel = () => {
   const { currentUser } = useAuth()
 
   useEffect(() => {
-    // Kiểm tra xem người dùng có phải là admin không
+    // Kiểm tra xem người dùng có đăng nhập chưa
     if (!currentUser) {
       navigate("/auth")
       return

@@ -162,5 +162,9 @@ export const AuthProvider = ({ children }) => {
     hasPermission,
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={value}>  {loading ? (
+    <div className="loading-container">Đang tải...</div>
+  ) : (
+    children
+  )}</AuthContext.Provider>
 }

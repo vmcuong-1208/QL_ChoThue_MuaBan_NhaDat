@@ -20,7 +20,7 @@ const PostForm = () => {
     Gia: "",
     DienTich: "",
     DiaChi: "",
-    LoaiBDS: "Nhà phố",
+    LoaiBDS: "",
     SoPhongNgu: 1,
     SoPhongTam: 1,
     HuongNha: "",
@@ -33,7 +33,48 @@ const PostForm = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+  const [propertyTypes, setPropertyTypes] = useState([])
 
+  // Lấy danh sách loại nhà đất từ API
+  useEffect(() => {
+    const fetchPropertyTypes = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await axios.get(`${API_URL}/property-types`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setPropertyTypes(response.data)
+
+        // Nếu không phải đang chỉnh sửa, thiết lập loại nhà đất mặc định
+        if (!isEditing && response.data.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            LoaiBDS: response.data[0].MaLoai,
+          }))
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách loại nhà đất:", error)
+      }
+    }
+
+    fetchPropertyTypes()
+  }, [isEditing])
+// Lấy danh sách loại nhà đất từ API
+  useEffect(() => {
+    const fetchPropertyTypes = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await axios.get(`${API_URL}/property-types`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setPropertyTypes(response.data)
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách loại nhà đất:", error)
+      }
+    }
+  
+    fetchPropertyTypes()
+  }, [])
   // Lấy dữ liệu bài đăng nếu đang chỉnh sửa
   useEffect(() => {
     if (isEditing) {
@@ -53,7 +94,7 @@ const PostForm = () => {
             Gia: property.Gia || "",
             DienTich: property.DienTich || "",
             DiaChi: property.DiaChi || "",
-            LoaiBDS: property.LoaiBDS || "Nhà phố",
+            LoaiBDS: property.LoaiBDS || "",
             SoPhongNgu: property.SoPhongNgu || 1,
             SoPhongTam: property.SoPhongTam || 1,
             HuongNha: property.HuongNha || "",
@@ -195,8 +236,6 @@ const PostForm = () => {
     }
   }
 
-  // Danh sách loại bất động sản
-  const propertyTypes = ["Nhà phố", "Biệt thự", "Căn hộ", "Shophouse", "Đất nền", "Văn phòng", "Khác"]
 
   // Danh sách hướng nhà
   const directions = ["Đông", "Tây", "Nam", "Bắc", "Đông Bắc", "Đông Nam", "Tây Bắc", "Tây Nam"]
@@ -258,9 +297,10 @@ const PostForm = () => {
                 Loại bất động sản <span className="required">*</span>
               </label>
               <select id="LoaiBDS" name="LoaiBDS" value={formData.LoaiBDS} onChange={handleChange} required>
+              <option value="">Chọn loại bất động sản</option>
                 {propertyTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
+                  <option key={type.MaLoai} value={type.MaLoai}>
+                    {type.TenLoai}
                   </option>
                 ))}
               </select>

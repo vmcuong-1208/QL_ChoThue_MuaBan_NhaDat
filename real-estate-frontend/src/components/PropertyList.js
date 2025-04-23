@@ -1,174 +1,60 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import axios from "axios"
 import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaFilter, FaSort } from "react-icons/fa"
 import "../styles/PropertyList.css"
 import { useAuth } from "../context/AuthContext" // Corrected import path
 import { useNavigate } from "react-router-dom"
 
-// Dữ liệu mẫu với thêm thông tin
-const initialProperties = [
-  {
-    id: 1,
-    title: "Nhà phố Quận 1",
-    address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
-    price: 5000000000,
-    formattedPrice: "5 tỷ",
-    area: 120,
-    views: 1542,
-    type: "Nhà phố",
-    status: "Đang bán",
-    image: "https://i.ex-cdn.com/vietnamfinance.vn/files/f1/news/bichnga/2020/11/17/%C4%90%C3%B4ng%20TPHCM-1.jpg",
-    isFeatured: true,
-  },
-  {
-    id: 2,
-    title: "Biệt thự Quận 1",
-    address: "45 Lê Lợi, Quận 1, TP.HCM",
-    price: 200000000000,
-    formattedPrice: "200 tỷ",
-    area: 500,
-    views: 3210,
-    type: "Biệt thự",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-    isFeatured: true,
-  },
-  {
-    id: 3,
-    title: "Biệt thự Quận 2",
-    address: "78 Thảo Điền, Quận 2, TP.HCM",
-    price: 100000000000,
-    formattedPrice: "100 tỷ",
-    area: 450,
-    views: 2156,
-    type: "Biệt thự",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-  },
-  {
-    id: 4,
-    title: "Biệt thự Quận 3",
-    address: "56 Võ Thị Sáu, Quận 3, TP.HCM",
-    price: 40000000000,
-    formattedPrice: "40 tỷ",
-    area: 320,
-    views: 1876,
-    type: "Biệt thự",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-  },
-  {
-    id: 5,
-    title: "Biệt thự Quận 4",
-    address: "34 Nguyễn Tất Thành, Quận 4, TP.HCM",
-    price: 30000000000,
-    formattedPrice: "30 tỷ",
-    area: 280,
-    views: 1245,
-    type: "Biệt thự",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-  },
-  {
-    id: 6,
-    title: "Biệt thự Quận 5",
-    address: "89 Trần Hưng Đạo, Quận 5, TP.HCM",
-    price: 110000000000,
-    formattedPrice: "110 tỷ",
-    area: 420,
-    views: 2345,
-    type: "Biệt thự",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-  },
-  {
-    id: 7,
-    title: "Biệt thự Quận 10",
-    address: "67 Lý Thường Kiệt, Quận 10, TP.HCM",
-    price: 99000000000,
-    formattedPrice: "99 tỷ",
-    area: 380,
-    views: 1987,
-    type: "Biệt thự",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-  },
-  {
-    id: 8,
-    title: "Căn hộ chung cư Quận 2",
-    address: "123 Mai Chí Thọ, Quận 2, TP.HCM",
-    price: 3000000000,
-    formattedPrice: "3 tỷ",
-    area: 75,
-    views: 2456,
-    type: "Căn hộ",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-  },
-  {
-    id: 9,
-    title: "Căn hộ cao cấp Quận 7",
-    address: "45 Nguyễn Lương Bằng, Quận 7, TP.HCM",
-    price: 6000000000,
-    formattedPrice: "6 tỷ",
-    area: 90,
-    views: 1876,
-    type: "Căn hộ",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-    isFeatured: true,
-  },
-  {
-    id: 10,
-    title: "Shophouse Quận 9",
-    address: "78 Lê Văn Việt, Quận 9, TP.HCM",
-    price: 15000000000,
-    formattedPrice: "15 tỷ",
-    area: 150,
-    views: 1432,
-    type: "Shophouse",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-  },
-  {
-    id: 11,
-    title: "Nhà phố Quận Bình Thạnh",
-    address: "56 Điện Biên Phủ, Bình Thạnh, TP.HCM",
-    price: 7000000000,
-    formattedPrice: "7 tỷ",
-    area: 100,
-    views: 1765,
-    type: "Nhà phố",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-  },
-  {
-    id: 12,
-    title: "Villa Quận 2",
-    address: "34 Xuân Thủy, Quận 2, TP.HCM",
-    price: 120000000000,
-    formattedPrice: "120 tỷ",
-    area: 480,
-    views: 2876,
-    type: "Biệt thự",
-    status: "Đang bán",
-    image: "https://static1.cafeland.vn/cafelandnew/hinh-anh/2023/01/17/169/image(1).png",
-    isFeatured: true,
-  },
-]
+const API_URL = "http://localhost:5000/api"
 
 const PropertyList = () => {
   const { currentUser } = useAuth()
   const navigate = useNavigate()
 
+  const [properties, setProperties] = useState([])
   const [favorites, setFavorites] = useState([])
   const [filterType, setFilterType] = useState("Tất cả")
   const [sortOption, setSortOption] = useState("default")
   const [showFilters, setShowFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [propertyTypes, setPropertyTypes] = useState([])
+  const [loading, setLoading] = useState(true)
   const propertiesPerPage = 8
-
+  
+  // Lấy danh sách loại nhà đất từ API
+  useEffect(() => {
+    const fetchPropertyTypes = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await axios.get(`${API_URL}/property-types`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setPropertyTypes(response.data)
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách loại nhà đất:", error)
+      }
+    }
+  
+    fetchPropertyTypes()
+  }, [])
+  
+  // Lấy danh sách bất động sản
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true)
+        const response = await axios.get(`${API_URL}/properties`)
+        setProperties(response.data.properties)
+      } catch (err) {
+        console.error("Lỗi lấy BĐS:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProperties()
+  }, [])
   // Lấy danh sách yêu thích từ localStorage khi component mount
   useEffect(() => {
     const savedFavorites = localStorage.getItem("propertyFavorites")
@@ -209,26 +95,30 @@ const PropertyList = () => {
 
   // Lọc và sắp xếp bất động sản
   const filteredAndSortedProperties = React.useMemo(() => {
-    // Lọc theo loại
-    const result = filterType === "Tất cả" ? initialProperties : initialProperties.filter((property) => property.type === filterType)
+    let result = [...properties]
+    if (filterType !== "Tất cả") {
+      result = result.filter(p => {
+        const type = propertyTypes.find(t => t.MaLoai === p.MaLoaiND)
+        return type?.TenLoai === filterType
+      })
+    }
 
     // Sắp xếp
     switch (sortOption) {
       case "price-asc":
-        return [...result].sort((a, b) => a.price - b.price)
+        return result.sort((a, b) => a.Gia - b.Gia)
       case "price-desc":
-        return [...result].sort((a, b) => b.price - a.price)
+        return result.sort((a, b) => b.Gia - a.Gia)
       case "area-asc":
-        return [...result].sort((a, b) => a.area - b.area)
+        return result.sort((a, b) => a.DienTich - b.DienTich)
       case "area-desc":
-        return [...result].sort((a, b) => b.area - a.area)
+        return result.sort((a, b) => b.DienTich - a.DienTich)
       case "views-desc":
-        return [...result].sort((a, b) => b.views - a.views)
+        return result.sort((a, b) => b.SoLuotXem - a.SoLuotXem)
       default:
-        // Mặc định: Hiển thị featured trước
-        return [...result].sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0))
+        return result
     }
-  }, [filterType, sortOption])
+  }, [properties, filterType, sortOption, propertyTypes])
 
   // Phân trang
   const indexOfLastProperty = currentPage * propertiesPerPage
@@ -236,8 +126,9 @@ const PropertyList = () => {
   const currentProperties = filteredAndSortedProperties.slice(indexOfFirstProperty, indexOfLastProperty)
   const totalPages = Math.ceil(filteredAndSortedProperties.length / propertiesPerPage)
 
-  // Danh sách các loại bất động sản
-  const propertyTypes = ["Tất cả", "Nhà phố", "Biệt thự", "Căn hộ", "Shophouse"]
+  if (loading) {
+    return <div className="loading-container">Đang tải dữ liệu...</div>
+  }
 
   return (
     <div className="property-list-container">
@@ -264,13 +155,19 @@ const PropertyList = () => {
       {showFilters && (
         <div className="property-filters">
           <div className="filter-chips">
+          <button
+              className={`filter-chip ${filterType === "Tất cả" ? "active" : ""}`}
+              onClick={() => handleFilterChange("Tất cả")}
+            >
+              Tất cả
+            </button>
             {propertyTypes.map((type) => (
               <button
-                key={type}
-                className={`filter-chip ${filterType === type ? "active" : ""}`}
-                onClick={() => handleFilterChange(type)}
+                key={type.MaLoai}
+                className={`filter-chip ${filterType === type.TenLoai ? "active" : ""}`}
+                onClick={() => handleFilterChange(type.TenLoai)}
               >
-                {type}
+                {type.TenLoai}
               </button>
             ))}
           </div>
