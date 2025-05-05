@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import axios from "axios"
 import { FaUpload, FaTrash, FaArrowLeft } from "react-icons/fa"
 import "../styles/PostForm.css"
+import locationService from "../services/locationService"
 
 const API_URL = "http://localhost:5000/api"
 
@@ -20,11 +21,11 @@ const PostForm = () => {
     Gia: "",
     DienTich: "",
     DiaChi: "",
-    LoaiBDS: "",
-    SoPhongNgu: 1,
-    SoPhongTam: 1,
-    HuongNha: "",
-    TrangThai: "Đang bán",
+    MaLoaiND: "",
+    MaTinh: "",
+    MaHuyen: "",
+    MaXa: "",
+    TrangThai: "đang bán",
     HinhAnh: [],
   })
 
@@ -33,7 +34,13 @@ const PostForm = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+
+  // State cho danh sách loại nhà đất và địa điểm
   const [propertyTypes, setPropertyTypes] = useState([])
+  const [provinces, setProvinces] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [wards, setWards] = useState([])
+  const [loadingLocations, setLoadingLocations] = useState(false)
 
   // Lấy danh sách loại nhà đất từ API
   useEffect(() => {
@@ -49,7 +56,7 @@ const PostForm = () => {
         if (!isEditing && response.data.length > 0) {
           setFormData((prev) => ({
             ...prev,
-            LoaiBDS: response.data[0].MaLoai,
+            MaLoaiND: response.data[0].MaLoai,
           }))
         }
       } catch (error) {
@@ -59,7 +66,68 @@ const PostForm = () => {
 
     fetchPropertyTypes()
   }, [isEditing])
-// Lấy danh sách loại nhà đất từ API
+
+  // Lấy danh sách tỉnh/thành phố
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      try {
+        setLoadingLocations(true)
+        const data = await locationService.getProvinces()
+        setProvinces(data)
+        setLoadingLocations(false)
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách tỉnh/thành phố:", error)
+        setLoadingLocations(false)
+      }
+    }
+
+    fetchProvinces()
+  }, [])
+
+  // Lấy danh sách quận/huyện khi chọn tỉnh/thành phố
+  useEffect(() => {
+    const fetchDistricts = async () => {
+      if (!formData.MaTinh) {
+        setDistricts([])
+        return
+      }
+
+      try {
+        setLoadingLocations(true)
+        const data = await locationService.getDistricts(formData.MaTinh)
+        setDistricts(data)
+        setLoadingLocations(false)
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách quận/huyện:", error)
+        setLoadingLocations(false)
+      }
+    }
+
+    fetchDistricts()
+  }, [formData.MaTinh])
+
+  // Lấy danh sách phường/xã khi chọn quận/huyện
+  useEffect(() => {
+    const fetchWards = async () => {
+      if (!formData.MaHuyen) {
+        setWards([])
+        return
+      }
+
+      try {
+        setLoadingLocations(true)
+        const data = await locationService.getWards(formData.MaHuyen)
+        setWards(data)
+        setLoadingLocations(false)
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách phường/xã:", error)
+        setLoadingLocations(false)
+      }
+    }
+
+    fetchWards()
+  }, [formData.MaHuyen])
+  // Lấy danh sách loại nhà đất từ API
   useEffect(() => {
     const fetchPropertyTypes = async () => {
       try {
@@ -72,7 +140,7 @@ const PostForm = () => {
         console.error("Lỗi khi lấy danh sách loại nhà đất:", error)
       }
     }
-  
+
     fetchPropertyTypes()
   }, [])
   // Lấy dữ liệu bài đăng nếu đang chỉnh sửa
@@ -94,11 +162,11 @@ const PostForm = () => {
             Gia: property.Gia || "",
             DienTich: property.DienTich || "",
             DiaChi: property.DiaChi || "",
-            LoaiBDS: property.LoaiBDS || "",
-            SoPhongNgu: property.SoPhongNgu || 1,
-            SoPhongTam: property.SoPhongTam || 1,
-            HuongNha: property.HuongNha || "",
-            TrangThai: property.TrangThai || "Đang bán",
+            MaLoaiND: property.MaLoaiND || "",
+            MaTinh: property.MaTinh || "",
+            MaHuyen: property.MaHuyen || "",
+            MaXa: property.MaXa || "",
+            TrangThai: property.TrangThai || "đang bán",
             HinhAnh: property.HinhAnh || [],
           })
 
@@ -121,7 +189,7 @@ const PostForm = () => {
     const { name, value } = e.target
 
     // Xử lý đặc biệt cho trường số
-    if (name === "Gia" || name === "DienTich" || name === "SoPhongNgu" || name === "SoPhongTam") {
+    if (name === "Gia" || name === "DienTich") {
       const numValue = value === "" ? "" : Number(value)
       setFormData({
         ...formData,
@@ -132,6 +200,22 @@ const PostForm = () => {
         ...formData,
         [name]: value,
       })
+    }
+
+    // Reset các trường phụ thuộc khi thay đổi tỉnh/quận
+    if (name === "MaTinh") {
+      setFormData((prev) => ({
+        ...prev,
+        MaHuyen: "",
+        MaXa: "",
+        [name]: value,
+      }))
+    } else if (name === "MaHuyen") {
+      setFormData((prev) => ({
+        ...prev,
+        MaXa: "",
+        [name]: value,
+      }))
     }
   }
 
@@ -205,7 +289,7 @@ const PostForm = () => {
       let response
       if (isEditing) {
         // Cập nhật bài đăng
-        response = await axios.put(`${API_URL}/properties/${id}`, postData, {
+        await axios.put(`${API_URL}/properties/${id}`, postData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
@@ -213,7 +297,7 @@ const PostForm = () => {
         })
       } else {
         // Tạo bài đăng mới
-        response = await axios.post(`${API_URL}/properties`, postData, {
+        await axios.post(`${API_URL}/properties`, postData, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
@@ -222,7 +306,7 @@ const PostForm = () => {
       }
 
       setSuccess(true)
-      
+
 
       // Chuyển hướng sau khi thành công
       setTimeout(() => {
@@ -236,12 +320,8 @@ const PostForm = () => {
     }
   }
 
-
-  // Danh sách hướng nhà
-  const directions = ["Đông", "Tây", "Nam", "Bắc", "Đông Bắc", "Đông Nam", "Tây Bắc", "Tây Nam"]
-
   // Danh sách trạng thái
-  const statuses = ["Đang bán", "Đang cho thuê", "Đã bán", "Đã cho thuê", "Tạm ngưng"]
+  const statuses = ["đang bán", "cho thuê", "đã bán", "đã cho thuê"]
 
   return (
     <div className="post-form-container">
@@ -293,11 +373,11 @@ const PostForm = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="LoaiBDS">
+              <label htmlFor="MaLoaiND">
                 Loại bất động sản <span className="required">*</span>
               </label>
-              <select id="LoaiBDS" name="LoaiBDS" value={formData.LoaiBDS} onChange={handleChange} required>
-              <option value="">Chọn loại bất động sản</option>
+              <select id="MaLoaiND" name="MaLoaiND" value={formData.MaLoaiND} onChange={handleChange} required>
+                <option value="">Chọn loại bất động sản</option>
                 {propertyTypes.map((type) => (
                   <option key={type.MaLoai} value={type.MaLoai}>
                     {type.TenLoai}
@@ -313,7 +393,7 @@ const PostForm = () => {
               <select id="TrangThai" name="TrangThai" value={formData.TrangThai} onChange={handleChange} required>
                 {statuses.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
                   </option>
                 ))}
               </select>
@@ -357,48 +437,84 @@ const PostForm = () => {
               />
             </div>
           </div>
+        </div>
+
+        <div className="form-section">
+          <h2>Địa chỉ</h2>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="SoPhongNgu">Số phòng ngủ</label>
-              <input
-                type="number"
-                id="SoPhongNgu"
-                name="SoPhongNgu"
-                value={formData.SoPhongNgu}
+              <label htmlFor="MaTinh">
+                Tỉnh/Thành phố <span className="required">*</span>
+              </label>
+              <select
+                id="MaTinh"
+                name="MaTinh"
+                value={formData.MaTinh}
                 onChange={handleChange}
-                min="0"
-              />
+                required
+                disabled={loadingLocations}
+              >
+                <option value="">Chọn Tỉnh/Thành phố</option>
+                {provinces.map((province) => (
+                  <option key={province.MaTinh} value={province.MaTinh}>
+                    {province.TenTinh}
+                  </option>
+                ))}
+              </select>
+              {loadingLocations && formData.MaTinh && !formData.MaHuyen && (
+                <div className="loading-indicator">Đang tải quận/huyện...</div>
+              )}
             </div>
 
             <div className="form-group">
-              <label htmlFor="SoPhongTam">Số phòng tắm</label>
-              <input
-                type="number"
-                id="SoPhongTam"
-                name="SoPhongTam"
-                value={formData.SoPhongTam}
+              <label htmlFor="MaHuyen">
+                Quận/Huyện <span className="required">*</span>
+              </label>
+              <select
+                id="MaHuyen"
+                name="MaHuyen"
+                value={formData.MaHuyen}
                 onChange={handleChange}
-                min="0"
-              />
+                required
+                disabled={!formData.MaTinh || loadingLocations}
+              >
+                <option value="">Chọn Quận/Huyện</option>
+                {districts.map((district) => (
+                  <option key={district.MaHuyen} value={district.MaHuyen}>
+                    {district.TenHuyen}
+                  </option>
+                ))}
+              </select>
+              {loadingLocations && formData.MaHuyen && !formData.MaXa && (
+                <div className="loading-indicator">Đang tải phường/xã...</div>
+              )}
             </div>
 
             <div className="form-group">
-              <label htmlFor="HuongNha">Hướng nhà</label>
-              <select id="HuongNha" name="HuongNha" value={formData.HuongNha} onChange={handleChange}>
-                <option value="">Chọn hướng</option>
-                {directions.map((direction) => (
-                  <option key={direction} value={direction}>
-                    {direction}
+              <label htmlFor="MaXa">
+                Phường/Xã <span className="required">*</span>
+              </label>
+              <select
+                id="MaXa"
+                name="MaXa"
+                value={formData.MaXa}
+                onChange={handleChange}
+                required
+                disabled={!formData.MaHuyen || loadingLocations}
+              >
+                <option value="">Chọn Phường/Xã</option>
+                {wards.map((ward) => (
+                  <option key={ward.MaXa} value={ward.MaXa}>
+                    {ward.TenXa}
                   </option>
                 ))}
               </select>
             </div>
           </div>
-
           <div className="form-group">
             <label htmlFor="DiaChi">
-              Địa chỉ <span className="required">*</span>
+              Địa chỉ chi tiết <span className="required">*</span>
             </label>
             <input
               type="text"
@@ -406,7 +522,7 @@ const PostForm = () => {
               name="DiaChi"
               value={formData.DiaChi}
               onChange={handleChange}
-              placeholder="Nhập địa chỉ đầy đủ"
+              placeholder="Số nhà, tên đường, khu vực..."
               required
             />
           </div>

@@ -126,6 +126,7 @@
     flex-direction: column;
     flex-grow: 1;
     position: relative;
+    padding-bottom: 60px;
   }
   
   .property-title {
@@ -138,7 +139,7 @@
   
   .property-address {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 5px;
     font-size: 14px;
     color: #666;
@@ -146,6 +147,9 @@
     line-height: 1.4;
   }
   
+.property-address .icon {
+  margin-top: 3px;
+}
   .property-details {
     display: flex;
     justify-content: space-between;
@@ -172,6 +176,7 @@
     justify-content: space-between;
     margin-bottom: 16px;
     font-size: 14px;
+    align-items: center;
   }
   
   .property-type {
@@ -197,6 +202,7 @@
     position: absolute;
     bottom: 16px;
     right: 16px;
+    z-index: 5;
   }
   
   .action-menu-button {
@@ -210,6 +216,7 @@
     justify-content: center;
     cursor: pointer;
     transition: background-color 0.2s;
+    color: #333;
   }
   
   .action-menu-button:hover {
@@ -240,6 +247,7 @@
     cursor: pointer;
     transition: background-color 0.2s;
     font-size: 14px;
+    color : #333;
   }
   
   .action-item:hover {
