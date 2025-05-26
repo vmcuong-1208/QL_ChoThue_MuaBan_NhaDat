@@ -1,20 +1,34 @@
 "use client"
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
-import "../styles/Navbar.css";
+import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
+import { FaUser, FaHeart } from "react-icons/fa"
+import { toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import "../styles/Navbar.css"
 
 const Navbar = () => {
-  const { currentUser, logout, loading, hasPermission } = useAuth(); // Use AuthContext
-  const [showDropdown, setShowDropdown] = useState(false);
+  const { currentUser, logout, loading, hasPermission } = useAuth()
+  const [showDropdown, setShowDropdown] = useState(false)
+  const navigate = useNavigate()
 
   const toggleDropdown = () => {
-    setShowDropdown(!showDropdown);
-  };
+    setShowDropdown(!showDropdown)
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      toast.success("Đăng xuất thành công!")
+      navigate("/")
+    } catch (error) {
+      toast.error("Đăng xuất thất bại. Vui lòng thử lại.")
+    }
+  }
 
   if (loading) {
-    return <div className="navbar-loading">Đang tải...</div>;
+    return <div className="navbar-loading">Đang tải...</div>
   }
 
   return (
@@ -26,19 +40,13 @@ const Navbar = () => {
 
         <ul className="navbar-menu">
           <li className="navbar-item">
-            <Link to="/" className="navbar-link">
-              Trang chủ
-            </Link>
+            <Link to="/" className="navbar-link">Trang chủ</Link>
           </li>
           <li className="navbar-item">
-            <Link to="/bat-dong-san" className="navbar-link">
-              Bất động sản
-            </Link>
+            <Link to="/tim-kiem" className="navbar-link">Tìm kiếm</Link>
           </li>
           <li className="navbar-item">
-            <Link to="/lien-he" className="navbar-link">
-              Liên hệ
-            </Link>
+            <Link to="/lien-he" className="navbar-link">Liên hệ</Link>
           </li>
 
           {currentUser ? (
@@ -61,17 +69,20 @@ const Navbar = () => {
                     Thông tin cá nhân
                   </Link>
                   <Link to="/yeu-thich" className="dropdown-item" onClick={() => setShowDropdown(false)}>
-                    Bất động sản yêu thích
+                    <FaHeart /> Yêu thích
                   </Link>
                   <Link to="/quan-ly-bai-dang" className="dropdown-item" onClick={() => setShowDropdown(false)}>
                     Quản lý bài đăng
+                  </Link>
+                  <Link to="/tin-nhan" className="dropdown-item" onClick={() => setShowDropdown(false)}>
+                    Tin nhắn
                   </Link>
                   {hasPermission(["admin"]) && (
                     <Link to="/admin-panel" className="dropdown-item" onClick={() => setShowDropdown(false)}>
                       Quản trị
                     </Link>
                   )}
-                  <button className="dropdown-item logout" onClick={logout}>
+                  <button className="dropdown-item logout" onClick={handleLogout}>
                     Đăng xuất
                   </button>
                 </div>
@@ -87,7 +98,7 @@ const Navbar = () => {
         </ul>
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar

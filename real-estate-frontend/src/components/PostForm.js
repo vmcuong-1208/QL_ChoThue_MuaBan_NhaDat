@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import axios from "axios"
-import { FaUpload, FaTrash, FaArrowLeft } from "react-icons/fa"
+import { FaUpload, FaTrash, FaArrowLeft, FaInfoCircle } from "react-icons/fa"
 import "../styles/PostForm.css"
 import locationService from "../services/locationService"
-
+import GoogleMapGuide from "./GoogleMapGuide"
 const API_URL = "http://localhost:5000/api"
 
 const PostForm = () => {
@@ -26,6 +26,7 @@ const PostForm = () => {
     MaHuyen: "",
     MaXa: "",
     TrangThai: "đang bán",
+    GoogleMapIframe: "",
     HinhAnh: [],
   })
 
@@ -42,13 +43,15 @@ const PostForm = () => {
   const [wards, setWards] = useState([])
   const [loadingLocations, setLoadingLocations] = useState(false)
 
+  // Thêm state để hiển thị hướng dẫn
+  const [showMapGuide, setShowMapGuide] = useState(false)
   // Lấy danh sách loại nhà đất từ API
   useEffect(() => {
     const fetchPropertyTypes = async () => {
       try {
         const token = localStorage.getItem("token")
         const response = await axios.get(`${API_URL}/property-types`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
         setPropertyTypes(response.data)
 
@@ -144,6 +147,7 @@ const PostForm = () => {
     fetchPropertyTypes()
   }, [])
   // Lấy dữ liệu bài đăng nếu đang chỉnh sửa
+  // Trong useEffect khi lấy dữ liệu bài đăng để chỉnh sửa
   useEffect(() => {
     if (isEditing) {
       const fetchPropertyData = async () => {
@@ -167,6 +171,7 @@ const PostForm = () => {
             MaHuyen: property.MaHuyen || "",
             MaXa: property.MaXa || "",
             TrangThai: property.TrangThai || "đang bán",
+            GoogleMapIframe: property.GoogleMapIframe || "",
             HinhAnh: property.HinhAnh || [],
           })
 
@@ -526,8 +531,38 @@ const PostForm = () => {
               required
             />
           </div>
+          
+          {/* Thêm trường nhúng Google Maps */}
+          <div className="form-group">
+            <div className="label-with-guide">
+              <label htmlFor="GoogleMapIframe">Nhúng Google Maps</label>
+              <button type="button" className="guide-button" onClick={() => setShowMapGuide(true)}>
+                <FaInfoCircle /> Hướng dẫn
+              </button>
+            </div>
+            <textarea
+              id="GoogleMapIframe"
+              name="GoogleMapIframe"
+              value={formData.GoogleMapIframe || ""}
+              onChange={handleChange}
+              placeholder="Dán mã nhúng (iframe) Google Maps vào đây..."
+              rows="4"
+            ></textarea>
+            <div className="form-hint">Dán mã iframe từ Google Maps để hiển thị vị trí bất động sản trên bản đồ.</div>
+
+            {/* Hiển thị xem trước nếu đã nhập iframe */}
+            {formData.GoogleMapIframe && (
+              <div className="map-preview">
+                <h4>Xem trước bản đồ:</h4>
+                <div className="iframe-container" dangerouslySetInnerHTML={{ __html: formData.GoogleMapIframe }}></div>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Thêm component hướng dẫn */}
+        {showMapGuide && <GoogleMapGuide onClose={() => setShowMapGuide(false)} />}
+          
         <div className="form-section">
           <h2>Hình ảnh</h2>
           <p className="image-hint">Tối đa 10 hình ảnh, định dạng JPG, PNG (tối đa 5MB/ảnh)</p>

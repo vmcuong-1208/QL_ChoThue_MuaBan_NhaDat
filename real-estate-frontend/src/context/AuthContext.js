@@ -3,9 +3,7 @@
 import { createContext, useState, useEffect, useContext } from "react"
 import axios from "axios"
 
-// Thay đổi API_URL để đảm bảo đúng với backend
 // const API_URL = "http://localhost:5000/api"
-// Nếu bạn đang sử dụng URL khác trong Postman, hãy thay đổi thành URL đó
 const API_URL = "http://localhost:5000/api" // Thay đổi URL này nếu cần
 
 // Tạo context

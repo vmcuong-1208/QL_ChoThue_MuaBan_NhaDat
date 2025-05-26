@@ -157,18 +157,9 @@ const Post = () => {
   }
 
   // Xử lý xem chi tiết bài đăng
-  const handleView = async (id) => {
-    try {
-      // Gọi API tăng lượt xem
-      await axios.post(`${API_URL}/properties/${id}/view`)
-
-      // Chuyển đến trang chi tiết
-      navigate(`/bat-dong-san/${id}`)
-    } catch (error) {
-      console.error("Lỗi khi tăng lượt xem:", error)
-      // Vẫn chuyển đến trang chi tiết ngay cả khi có lỗi
-      navigate(`/bat-dong-san/${id}`)
-    }
+  const handleView = (id) => {
+    console.log(`Viewing own property with ID: ${id}`)
+    navigate(`/bat-dong-san/${id}`)
   }
 
   // Định dạng giá tiền
@@ -225,7 +216,7 @@ const Post = () => {
     <div className="post-management-container">
       <div className="post-management-header">
         <h1>Quản lý bài đăng</h1>
-        <Link to="/dang-tin" className="add-post-button">
+        <Link to="/dang-bai" className="add-post-button">
           <FaPlus /> Đăng tin mới
         </Link>
       </div>
@@ -233,7 +224,7 @@ const Post = () => {
       {properties.length === 0 ? (
         <div className="no-posts">
           <p>Bạn chưa có bài đăng nào.</p>
-          <Link to="/dang-tin" className="add-first-post-button">
+          <Link to="/dang-bai" className="add-first-post-button">
             Đăng tin ngay
           </Link>
         </div>

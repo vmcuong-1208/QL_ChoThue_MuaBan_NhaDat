@@ -23,7 +23,7 @@ const PropertyList = () => {
   const [loading, setLoading] = useState(true)
   const [locationNames, setLocationNames] = useState({})
   const propertiesPerPage = 8
-  
+
   // Lấy danh sách loại nhà đất từ API
   useEffect(() => {
     const fetchPropertyTypes = async () => {
@@ -37,15 +37,14 @@ const PropertyList = () => {
         console.error("Lỗi khi lấy danh sách loại nhà đất:", error)
       }
     }
-  
+
     fetchPropertyTypes()
   }, [])
-  
+
   // Lấy danh sách bất động sản
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        
         setLoading(true)
         const response = await axios.get(`${API_URL}/properties`)
         console.log("Properties data:", response.data.properties)
@@ -103,28 +102,90 @@ const PropertyList = () => {
     fetchProperties()
   }, [])
   // Lấy danh sách yêu thích từ localStorage khi component mount
-  useEffect(() => {
-    const savedFavorites = localStorage.getItem("propertyFavorites")
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites))
-    }
-  }, [])
+  // useEffect(() => {
+  //   const savedFavorites = localStorage.getItem("propertyFavorites")
+  //   if (savedFavorites) {
+  //     setFavorites(JSON.parse(savedFavorites))
+  //   }
+  // }, [])
 
-  // Lưu danh sách yêu thích vào localStorage khi thay đổi
+  // // Lưu danh sách yêu thích vào localStorage khi thay đổi
+  // useEffect(() => {
+  //   localStorage.setItem("propertyFavorites", JSON.stringify(favorites))
+  // }, [favorites])
+
+  // Thay thế useEffect cho favorites
   useEffect(() => {
-    localStorage.setItem("propertyFavorites", JSON.stringify(favorites))
-  }, [favorites])
+    const checkFavorites = async () => {
+      if (!currentUser) return
+
+      const token = localStorage.getItem("token")
+      const favoriteStatuses = {}
+
+      for (const property of properties) {
+        try {
+          const response = await axios.get(`${API_URL}/favorites/check/${property.MaTTND}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          favoriteStatuses[property.MaTTND] = response.data.isFavorite
+        } catch (error) {
+          console.error("Error checking favorite status:", error)
+        }
+      }
+
+      setFavorites(
+        Object.keys(favoriteStatuses)
+          .filter((id) => favoriteStatuses[id])
+          .map(Number),
+      )
+    }
+
+    if (properties.length > 0) {
+      checkFavorites()
+    }
+  }, [properties, currentUser])
 
   // Xử lý toggle yêu thích
-  const toggleFavorite = (id) => {
+  // const toggleFavorite = (id) => {
+  //   if (!currentUser) {
+  //     navigate("/auth")
+  //     return
+  //   }
+  //   if (favorites.includes(id)) {
+  //     setFavorites(favorites.filter((favId) => favId !== id))
+  //   } else {
+  //     setFavorites([...favorites, id])
+  //   }
+  // }
+
+  // Cập nhật toggleFavorite function
+  const toggleFavorite = async (id) => {
     if (!currentUser) {
       navigate("/auth")
       return
     }
-    if (favorites.includes(id)) {
-      setFavorites(favorites.filter((favId) => favId !== id))
-    } else {
-      setFavorites([...favorites, id])
+
+    try {
+      const token = localStorage.getItem("token")
+
+      if (favorites.includes(id)) {
+        await axios.delete(`${API_URL}/favorites/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        setFavorites(favorites.filter((favId) => favId !== id))
+      } else {
+        await axios.post(
+          `${API_URL}/favorites/${id}`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        )
+        setFavorites([...favorites, id])
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error)
+      alert("Có lỗi xảy ra khi cập nhật yêu thích")
     }
   }
 
@@ -170,8 +231,11 @@ const PropertyList = () => {
   // Xử lý tăng lượt xem và chuyển đến trang chi tiết
   const handleViewDetails = async (id) => {
     try {
-      // Gọi API tăng lượt xem
-      await axios.post(`${API_URL}/properties/${id}/view`)
+      console.log(`Viewing property details for ID: ${id}`)
+      // Gọi API tăng lượt xem với ID người dùng (nếu đã đăng nhập)
+      await axios.post(`${API_URL}/properties/${id}/view`, {
+        viewerId: currentUser?.MaNgDung, // Truyền ID người xem
+      })
 
       // Chuyển đến trang chi tiết
       navigate(`/bat-dong-san/${id}`)
@@ -224,7 +288,6 @@ const PropertyList = () => {
   const currentProperties = filteredAndSortedProperties.slice(indexOfFirstProperty, indexOfLastProperty)
   const totalPages = Math.ceil(filteredAndSortedProperties.length / propertiesPerPage)
 
-  
   // Lấy tên loại bất động sản
   const getPropertyTypeName = (maLoaiND) => {
     const type = propertyTypes.find((t) => t.MaLoai === maLoaiND)
@@ -259,7 +322,7 @@ const PropertyList = () => {
       {showFilters && (
         <div className="property-filters">
           <div className="filter-chips">
-          <button
+            <button
               className={`filter-chip ${filterType === "Tất cả" ? "active" : ""}`}
               onClick={() => handleFilterChange("Tất cả")}
             >
@@ -285,59 +348,59 @@ const PropertyList = () => {
             console.log(`Property ${property.MaTTND} image:`, property.HinhAnh)
 
             return (
-            <div key={property.MaTTND} className={`property-card ${property.isFeatured ? "featured" : ""}`}>
-              <div className="property-image-container">
-              <img
-                  src={
-                    property.HinhAnh && property.HinhAnh.length > 0
-                    ? `${SERVER_URL}${property.HinhAnh[0]}`
-                      : "/placeholder.svg?height=200&width=400"
-                  }
-                  alt={property.TieuDe}
-                  className="property-image"
-                  onError={(e) => {
-                    console.error(`Error loading image for property ${property.MaTTND}`)
-                    e.target.src = "/placeholder.svg?height=200&width=400"
-                  }}
-                />
-                <button
-                  className="favorite-button"
-                  onClick={() => toggleFavorite(property.MaTTND)}
-                  aria-label={favorites.includes(property.MaTTND) ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-                >
-                  {favorites.includes(property.MaTTND) ? (
-                    <FaHeart className="favorite-icon active" />
-                  ) : (
-                    <FaRegHeart className="favorite-icon" />
-                  )}
-                </button>
-                {property.isFeatured && <span className="featured-badge">Nổi bật</span>}
-                <span className="property-status">{property.TrangThai}</span>
-              </div>
-              <div className="property-info">
-                <h3 className="property-title">{property.TieuDe}</h3>
-                <p className="property-address">
-                  <FaMapMarkerAlt className="icon" /> {getFullAddress(property)}
-                </p>
-                <div className="property-details">
-                  <div className="property-price">{formatPrice(property.Gia)}</div>
-                  <div className="property-area">
-                    <FaRulerCombined className="icon" /> {property.DienTich} m²
+              <div key={property.MaTTND} className={`property-card ${property.isFeatured ? "featured" : ""}`}>
+                <div className="property-image-container">
+                  <img
+                    src={
+                      property.HinhAnh && property.HinhAnh.length > 0
+                        ? `${SERVER_URL}${property.HinhAnh[0]}`
+                        : "/placeholder.svg?height=200&width=400"
+                    }
+                    alt={property.TieuDe}
+                    className="property-image"
+                    onError={(e) => {
+                      console.error(`Error loading image for property ${property.MaTTND}`)
+                      e.target.src = "/placeholder.svg?height=200&width=400"
+                    }}
+                  />
+                  <button
+                    className="favorite-button"
+                    onClick={() => toggleFavorite(property.MaTTND)}
+                    aria-label={favorites.includes(property.MaTTND) ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+                  >
+                    {favorites.includes(property.MaTTND) ? (
+                      <FaHeart className="favorite-icon active" />
+                    ) : (
+                      <FaRegHeart className="favorite-icon" />
+                    )}
+                  </button>
+                  {property.isFeatured && <span className="featured-badge">Nổi bật</span>}
+                  <span className="property-status">{property.TrangThai}</span>
+                </div>
+                <div className="property-info">
+                  <h3 className="property-title">{property.TieuDe}</h3>
+                  <p className="property-address">
+                    <FaMapMarkerAlt className="icon" /> {getFullAddress(property)}
+                  </p>
+                  <div className="property-details">
+                    <div className="property-price">{formatPrice(property.Gia)}</div>
+                    <div className="property-area">
+                      <FaRulerCombined className="icon" /> {property.DienTich} m²
+                    </div>
                   </div>
+                  <div className="property-meta">
+                    <span className="property-type">{getPropertyTypeName(property.MaLoaiND)}</span>
+                    <span className="property-views">
+                      <FaEye className="icon" /> {property.SoLuotXem || 0}
+                    </span>
+                  </div>
+                  <button className="view-details-button" onClick={() => handleViewDetails(property.MaTTND)}>
+                    Xem chi tiết
+                  </button>
                 </div>
-                <div className="property-meta">
-                  <span className="property-type">{getPropertyTypeName(property.MaLoaiND)}</span>
-                  <span className="property-views">
-                    <FaEye className="icon" /> {property.SoLuotXem || 0}
-                  </span>
-                </div>
-                <button className="view-details-button" onClick={() => handleViewDetails(property.MaTTND)}>
-                  Xem chi tiết
-                </button>
               </div>
-            </div>
-          )
-        })
+            )
+          })
         ) : (
           <div className="no-results">
             <p>Không tìm thấy bất động sản phù hợp với bộ lọc.</p>

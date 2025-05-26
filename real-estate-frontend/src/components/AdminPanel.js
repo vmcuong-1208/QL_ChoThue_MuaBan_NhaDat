@@ -6,7 +6,10 @@ import { FaUsers, FaHome, FaTachometerAlt, FaSignOutAlt, FaChevronDown } from "r
 import "../styles/AdminPanel.css"
 import PropertyTypeManager from "./PropertyTypeManager"
 import UserManager from "./UserManager"
-import { useAuth } from "../context/AuthContext" // Corrected import path
+import { useAuth } from "../context/AuthContext"
+import axios from "axios"
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 
 const AdminPanel = () => {
   const navigate = useNavigate()
@@ -15,14 +18,13 @@ const AdminPanel = () => {
   const { currentUser } = useAuth()
 
   useEffect(() => {
-    // Kiểm tra xem người dùng có đăng nhập chưa
     if (!currentUser) {
       navigate("/auth")
       return
     }
 
-    // Kiểm tra quyền admin (giả sử LoaiTaiKhoan = "Admin" là admin)
-    if (currentUser.LoaiTaiKhoan !== "admin") {
+    // Kiểm tra quyền admin (cả "Admin" và "admin")
+    if (!currentUser.LoaiTaiKhoan || currentUser.LoaiTaiKhoan.toLowerCase() !== "admin") {
       navigate("/")
       alert("Bạn không có quyền truy cập trang quản trị")
     }
@@ -38,7 +40,6 @@ const AdminPanel = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
-  // Hiển thị nội dung tương ứng với tab đang active
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -114,69 +115,94 @@ const AdminPanel = () => {
   )
 }
 
-// Component Dashboard
+// Component Dashboard với dữ liệu động
 const Dashboard = () => {
+  const [stats, setStats] = useState(null)
+  const [recentActivities, setRecentActivities] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        console.log("Fetching stats with token:", token ? "exists" : "missing")
+
+        const response = await axios.get(`${API_URL}/admin/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        setStats(response.data.stats)
+        setRecentActivities(response.data.recentActivities)
+      } catch (error) {
+        console.error("Lỗi khi lấy thống kê:", error)
+        if (error.response?.status === 403) {
+          setError("Không có quyền truy cập. Vui lòng đăng nhập với tài khoản admin.")
+        } else {
+          setError("Không thể tải thống kê. Vui lòng thử lại sau.")
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  if (loading) {
+    return <div className="admin-loading">Đang tải thống kê...</div>
+  }
+
+  if (error) {
+    return <div className="admin-error">{error}</div>
+  }
+
   return (
     <div className="dashboard">
       <div className="stats-container">
         <div className="stat-card">
           <h3>Tổng số người dùng</h3>
-          <p className="stat-value">125</p>
+          <p className="stat-value">{stats?.totalUsers || 0}</p>
+          <span className="stat-change">+{stats?.newUsersThisMonth || 0} trong tháng</span>
         </div>
         <div className="stat-card">
           <h3>Bài đăng mới trong tháng</h3>
-          <p className="stat-value">48</p>
+          <p className="stat-value">{stats?.newPostsThisMonth || 0}</p>
         </div>
         <div className="stat-card">
           <h3>Tổng số bài đăng</h3>
-          <p className="stat-value">356</p>
+          <p className="stat-value">{stats?.totalPosts || 0}</p>
         </div>
         <div className="stat-card">
           <h3>Loại nhà đất</h3>
-          <p className="stat-value">8</p>
+          <p className="stat-value">{stats?.totalPropertyTypes || 0}</p>
         </div>
       </div>
 
       <div className="recent-activity">
         <h2>Hoạt động gần đây</h2>
         <div className="activity-list">
-          <div className="activity-item">
-            <div className="activity-time">10:30 AM</div>
-            <div className="activity-content">
-              <strong>Nguyễn Văn A</strong> đã đăng một bài đăng mới: <span>Nhà phố Quận 1</span>
+          {recentActivities.length > 0 ? (
+            recentActivities.map((activity, index) => (
+              <div key={index} className="activity-item">
+                <div className="activity-time">{new Date(activity.createdAt).toLocaleDateString("vi-VN")}</div>
+                <div className="activity-content">
+                  <strong>{activity.userName}</strong> đã đăng bài:
+                  <span> {activity.content}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="activity-item">
+              <div className="activity-content">Chưa có hoạt động nào</div>
             </div>
-          </div>
-          <div className="activity-item">
-            <div className="activity-time">09:15 AM</div>
-            <div className="activity-content">
-              <strong>Trần Thị B</strong> đã cập nhật thông tin cá nhân
-            </div>
-          </div>
-          <div className="activity-item">
-            <div className="activity-time">Hôm qua</div>
-            <div className="activity-content">
-              <strong>Admin</strong> đã thêm loại nhà đất mới: <span>Penthouse</span>
-            </div>
-          </div>
-          <div className="activity-item">
-            <div className="activity-time">Hôm qua</div>
-            <div className="activity-content">
-              <strong>Lê Văn C</strong> đã đăng ký tài khoản mới
-            </div>
-          </div>
-          <div className="activity-item">
-            <div className="activity-time">2 ngày trước</div>
-            <div className="activity-content">
-              <strong>Phạm Thị D</strong> đã cập nhật bài đăng: <span>Biệt thự Quận 2</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-// Hàm lấy tiêu đề cho tab
 const getTabTitle = (tab) => {
   switch (tab) {
     case "dashboard":

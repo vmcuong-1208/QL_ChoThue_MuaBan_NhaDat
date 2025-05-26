@@ -1,49 +1,102 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { AuthProvider } from "./context/AuthContext"
 import Navbar from "./components/Navbar"
-
 import Home from "./components/Home"
-import Properties from "./components/Properties"
-import Contact from "./components/Contact"
-import Profile from "./components/Profile"
-import Footer from "./components/Footer"
-import SearchBar from "./components/SearchBar"
-import PropertyList from "./components/PropertyList"
-import FloatingButton from "./components/FloatingButton"
 import LoginRegister from "./components/LoginRegister"
-
-// Import component mới
+import Profile from "./components/Profile"
 import Post from "./components/Post"
 import PostForm from "./components/PostForm"
-// Import component quản trị
-
+import PropertyDetail from "./components/PropertyDetail"
+import Contact from "./components/Contact"
 import AdminPanel from "./components/AdminPanel"
-const App = () => {
+import ProtectedRoute from "./components/ProtectedRoute"
+import MessageCenter from "./components/MessageCenter"
+import Favorites from "./components/Favorites"
+import SearchResults from "./components/SearchResults"
+import Footer from "./components/Footer"
+import FloatingButton from "./components/FloatingButton"
+import "./App.css"
+
+function App() {
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <Home />
-              <SearchBar />
-              <PropertyList />
-            </>
-          }
-        />
-        <Route path="/bat-dong-san" element={<Properties />} />
-        <Route path="/lien-he" element={<Contact />} />
-        <Route path="/ho-so" element={<Profile />} />
-        <Route path="/quan-ly-bai-dang" element={<Post />} />
-        <Route path="/dang-tin" element={<PostForm />} />
-        <Route path="/chinh-sua-tin/:id" element={<PostForm />} />
-        <Route path="/auth" element={<LoginRegister />} />
-        <Route path="/admin-panel" element={<AdminPanel />} />
-      </Routes>
-      <FloatingButton />
-      <Footer />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Navbar />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/auth" element={<LoginRegister />} />
+              <Route path="/lien-he" element={<Contact />} />
+              <Route path="/tim-kiem" element={<SearchResults />} />
+              <Route path="/bat-dong-san/:id" element={<PropertyDetail />} />
+
+              {/* Protected Routes */}
+              <Route
+                path="/ho-so"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/quan-ly-bai-dang"
+                element={
+                  <ProtectedRoute>
+                    <Post />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dang-bai"
+                element={
+                  <ProtectedRoute>
+                    <PostForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sua-bai/:id"
+                element={
+                  <ProtectedRoute>
+                    <PostForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tin-nhan"
+                element={
+                  <ProtectedRoute>
+                    <MessageCenter />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/yeu-thich"
+                element={
+                  <ProtectedRoute>
+                    <Favorites />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Admin Routes */}
+              <Route
+                path="/admin-panel"
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminPanel />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </main>
+          <Footer />
+          <FloatingButton />
+        </div>
+      </Router>
+    </AuthProvider>
   )
 }
 
