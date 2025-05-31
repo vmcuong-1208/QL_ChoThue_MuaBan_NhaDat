@@ -3,12 +3,24 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
-import { FaPlus, FaEllipsisV, FaEdit, FaTrash, FaEye, FaMapMarkerAlt, FaRulerCombined } from "react-icons/fa"
+import {
+  FaPlus,
+  FaEllipsisV,
+  FaEdit,
+  FaTrash,
+  FaEye,
+  FaMapMarkerAlt,
+  FaRulerCombined,
+  FaCheckCircle,
+} from "react-icons/fa"
 import "../styles/Post.css"
 import { useAuth } from "../context/AuthContext"
 import locationService from "../services/locationService"
+import VerificationModal from "./VerificationModal"
+
 const API_URL = "http://localhost:5000/api"
-const SERVER_URL = "http://localhost:5000" 
+const SERVER_URL = "http://localhost:5000"
+
 const Post = () => {
   const navigate = useNavigate()
   const { currentUser } = useAuth()
@@ -19,6 +31,9 @@ const Post = () => {
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [locationNames, setLocationNames] = useState({})
   const [propertyTypes, setPropertyTypes] = useState([])
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [selectedPropertyId, setSelectedPropertyId] = useState(null)
+
   useEffect(() => {
     if (!currentUser) {
       navigate("/auth")
@@ -41,6 +56,7 @@ const Post = () => {
 
     fetchPropertyTypes()
   }, [])
+
   // Lấy danh sách bài đăng của người dùng
   useEffect(() => {
     const fetchUserProperties = async () => {
@@ -56,27 +72,22 @@ const Post = () => {
             Authorization: `Bearer ${token}`,
           },
         })
-        
-        // Debug log
+
         console.log("User properties:", response.data)
-        // Lưu danh sách bài đăng
         setProperties(response.data)
-        
+
         // Lấy thông tin địa điểm cho mỗi bài đăng
         const propertiesWithLocations = [...response.data]
         const locationNamesObj = {}
 
-        // Lấy thông tin tỉnh/thành phố
         const provinces = await locationService.getProvinces()
 
         for (const property of propertiesWithLocations) {
           if (property.MaTinh) {
-            // Tìm tên tỉnh
             const province = provinces.find((p) => p.MaTinh === Number.parseInt(property.MaTinh))
             if (province) {
               locationNamesObj[`province_${property.MaTinh}`] = province.TenTinh
 
-              // Lấy thông tin quận/huyện
               if (property.MaHuyen) {
                 try {
                   const districts = await locationService.getDistricts(property.MaTinh)
@@ -84,7 +95,6 @@ const Post = () => {
                   if (district) {
                     locationNamesObj[`district_${property.MaHuyen}`] = district.TenHuyen
 
-                    // Lấy thông tin phường/xã
                     if (property.MaXa) {
                       try {
                         const wards = await locationService.getWards(property.MaHuyen)
@@ -142,7 +152,6 @@ const Post = () => {
         },
       })
 
-      // Cập nhật danh sách sau khi xóa
       setProperties(properties.filter((property) => property.MaTTND !== id))
       setConfirmDelete(null)
     } catch (error) {
@@ -162,6 +171,13 @@ const Post = () => {
     navigate(`/bat-dong-san/${id}`)
   }
 
+  // Xử lý xác thực
+  const handleVerification = (id) => {
+    setSelectedPropertyId(id)
+    setShowVerificationModal(true)
+    setActiveMenu(null)
+  }
+
   // Định dạng giá tiền
   const formatPrice = (price) => {
     if (price >= 1000000000) {
@@ -176,34 +192,49 @@ const Post = () => {
   const getFullAddress = (property) => {
     const addressParts = []
 
-    // Thêm địa chỉ chi tiết
     if (property.DiaChi) {
       addressParts.push(property.DiaChi)
     }
 
-    // Thêm phường/xã
     if (property.MaXa && locationNames[`ward_${property.MaXa}`]) {
       addressParts.push(locationNames[`ward_${property.MaXa}`])
     }
 
-    // Thêm quận/huyện
     if (property.MaHuyen && locationNames[`district_${property.MaHuyen}`]) {
       addressParts.push(locationNames[`district_${property.MaHuyen}`])
     }
 
-    // Thêm tỉnh/thành phố
     if (property.MaTinh && locationNames[`province_${property.MaTinh}`]) {
       addressParts.push(locationNames[`province_${property.MaTinh}`])
     }
 
     return addressParts.join(", ")
   }
-  
+
   // Lấy tên loại bất động sản
   const getPropertyTypeName = (maLoaiND) => {
     const type = propertyTypes.find((t) => t.MaLoai === maLoaiND)
     return type ? type.TenLoai : "Không xác định"
   }
+
+  // Lấy badge xác thực
+  const getVerificationBadge = (trangThaiXacThuc) => {
+    switch (trangThaiXacThuc) {
+      case "đã xác thực":
+        return (
+          <span className="verification-badge verified">
+            <FaCheckCircle /> Đã xác thực
+          </span>
+        )
+      case "chờ xác thực":
+        return <span className="verification-badge pending">Chờ xác thực</span>
+      case "từ chối":
+        return <span className="verification-badge rejected">Từ chối</span>
+      default:
+        return null
+    }
+  }
+
   if (loading) {
     return <div className="loading-container">Đang tải dữ liệu...</div>
   }
@@ -216,7 +247,7 @@ const Post = () => {
     <div className="post-management-container">
       <div className="post-management-header">
         <h1>Quản lý bài đăng</h1>
-        <Link to="/dang-bai" className="add-post-button">
+        <Link to="/dang-tin" className="add-post-button">
           <FaPlus /> Đăng tin mới
         </Link>
       </div>
@@ -224,90 +255,114 @@ const Post = () => {
       {properties.length === 0 ? (
         <div className="no-posts">
           <p>Bạn chưa có bài đăng nào.</p>
-          <Link to="/dang-bai" className="add-first-post-button">
+          <Link to="/dang-tin" className="add-first-post-button">
             Đăng tin ngay
           </Link>
         </div>
       ) : (
         <div className="property-list">
           {properties.map((property) => {
-            // Debug log để kiểm tra dữ liệu hình ảnh
             console.log(`Property ${property.MaTTND} image:`, property.HinhAnh)
 
             return (
-            <div key={property.MaTTND} className="property-card">
-              <div className="property-image-container">
-                <img
-                  src={
-                    property.HinhAnh && property.HinhAnh.length > 0
-                      ? `${SERVER_URL}${property.HinhAnh[0]}`
-                      : "/placeholder.svg?height=200&width=400"
-                  }
-                  alt={property.TieuDe}
-                  className="property-image"
-                  onError={(e) => {
-                    console.error(`Error loading image for property ${property.MaTTND}`)
-                    e.target.src = "/placeholder.svg?height=200&width=400"
-                  }}
-                />
-                <span className="property-status">{property.TrangThai || "Đang đăng"}</span>
-              </div>
-              <div className="property-info">
-                <h3 className="property-title">{property.TieuDe}</h3>
-                <p className="property-address">
-                  <FaMapMarkerAlt className="icon" /> {getFullAddress(property)}
-                </p>
-                <div className="property-details">
-                  <div className="property-price">{formatPrice(property.Gia)}</div>
-                  <div className="property-area">
-                    <FaRulerCombined className="icon" /> {property.DienTich} m²
-                  </div>
-                </div>
-                <div className="property-meta">
-                <span className="property-type">{getPropertyTypeName(property.MaLoaiND)}</span>
-                  <span className="property-views">
-                  <FaEye className="icon" /> {property.SoLuotXem || 0}
-                  </span>
-                </div>
-
-                <div className="property-actions">
-                  <button className="action-menu-button" onClick={() => toggleMenu(property.MaTTND)}>
-                    <FaEllipsisV />
-                  </button>
-
-                  {activeMenu === property.MaTTND && (
-                    <div className="action-menu">
-                      <button className="action-item" onClick={() => handleView(property.MaTTND)}>
-                        <FaEye /> Xem
-                      </button>
-                      <button className="action-item" onClick={() => handleEdit(property.MaTTND)}>
-                        <FaEdit /> Chỉnh sửa
-                      </button>
-                      <button className="action-item delete" onClick={() => setConfirmDelete(property.MaTTND)}>
-                        <FaTrash /> Xóa
-                      </button>
+              <div key={property.MaTTND} className="property-card">
+                <div className="property-image-container">
+                  <img
+                    src={
+                      property.HinhAnh && property.HinhAnh.length > 0
+                        ? `${SERVER_URL}${property.HinhAnh[0]}`
+                        : "/placeholder.svg?height=200&width=400"
+                    }
+                    alt={property.TieuDe}
+                    className="property-image"
+                    onError={(e) => {
+                      console.error(`Error loading image for property ${property.MaTTND}`)
+                      e.target.src = "/placeholder.svg?height=200&width=400"
+                    }}
+                  />
+                  <span className="property-status">{property.TrangThai || "Đang đăng"}</span>
+                  {property.TrangThaiXacThuc === "đã xác thực" && (
+                    <div className="verified-icon">
+                      <FaCheckCircle />
                     </div>
                   )}
                 </div>
-              </div>
+                <div className="property-info">
+                  <h3 className="property-title">{property.TieuDe}</h3>
+                  <p className="property-address">
+                    <FaMapMarkerAlt className="icon" /> {getFullAddress(property)}
+                  </p>
+                  <div className="property-details">
+                    <div className="property-price">{formatPrice(property.Gia)}</div>
+                    <div className="property-area">
+                      <FaRulerCombined className="icon" /> {property.DienTich} m²
+                    </div>
+                  </div>
+                  <div className="property-meta">
+                    <span className="property-type">{getPropertyTypeName(property.MaLoaiND)}</span>
+                    <span className="property-views">
+                      <FaEye className="icon" /> {property.SoLuotXem || 0}
+                    </span>
+                  </div>
 
-              {confirmDelete === property.MaTTND && (
-                <div className="delete-confirm">
-                  <p>Bạn có chắc chắn muốn xóa bài đăng này?</p>
-                  <div className="confirm-actions">
-                    <button className="confirm-yes" onClick={() => handleDelete(property.MaTTND)}>
-                      Có
+                  {getVerificationBadge(property.TrangThaiXacThuc)}
+
+                  <div className="property-actions">
+                    <button className="action-menu-button" onClick={() => toggleMenu(property.MaTTND)}>
+                      <FaEllipsisV />
                     </button>
-                    <button className="confirm-no" onClick={() => setConfirmDelete(null)}>
-                      Không
-                    </button>
+
+                    {activeMenu === property.MaTTND && (
+                      <div className="action-menu">
+                        <button className="action-item" onClick={() => handleView(property.MaTTND)}>
+                          <FaEye /> Xem
+                        </button>
+                        <button className="action-item" onClick={() => handleEdit(property.MaTTND)}>
+                          <FaEdit /> Chỉnh sửa
+                        </button>
+                        <button className="action-item" onClick={() => handleVerification(property.MaTTND)}>
+                          <FaCheckCircle /> Xác thực
+                        </button>
+                        <button className="action-item delete" onClick={() => setConfirmDelete(property.MaTTND)}>
+                          <FaTrash /> Xóa
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          )
-        })}
+
+                {confirmDelete === property.MaTTND && (
+                  <div className="delete-confirm">
+                    <p>Bạn có chắc chắn muốn xóa bài đăng này?</p>
+                    <div className="confirm-actions">
+                      <button className="confirm-yes" onClick={() => handleDelete(property.MaTTND)}>
+                        Có
+                      </button>
+                      <button className="confirm-no" onClick={() => setConfirmDelete(null)}>
+                        Không
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
+      )}
+
+      {/* Modal xác thực */}
+      {showVerificationModal && (
+        <VerificationModal
+          propertyId={selectedPropertyId}
+          onClose={() => {
+            setShowVerificationModal(false)
+            setSelectedPropertyId(null)
+          }}
+          onSuccess={() => {
+            // Refresh danh sách bài đăng
+            window.location.reload()
+          }}
+        />
       )}
     </div>
   )

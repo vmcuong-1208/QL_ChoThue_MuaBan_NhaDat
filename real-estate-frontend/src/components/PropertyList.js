@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import axios from "axios"
-import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaFilter, FaSort } from "react-icons/fa"
+import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaFilter, FaSort, FaCheckCircle } from "react-icons/fa"
 import "../styles/PropertyList.css"
 import { useAuth } from "../context/AuthContext"
 import { useNavigate } from "react-router-dom"
@@ -374,6 +374,11 @@ const PropertyList = () => {
                       <FaRegHeart className="favorite-icon" />
                     )}
                   </button>
+                  {property.TrangThaiXacThuc === "đã xác thực" && (
+                    <div className="verified-icon">
+                      <FaCheckCircle />
+                    </div>
+                  )}
                   {property.isFeatured && <span className="featured-badge">Nổi bật</span>}
                   <span className="property-status">{property.TrangThai}</span>
                 </div>

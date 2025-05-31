@@ -16,6 +16,7 @@ import {
   FaChevronRight,
   FaShareAlt,
   FaCommentDots,
+  FaCheckCircle,
 } from "react-icons/fa"
 import { useAuth } from "../context/AuthContext"
 import locationService from "../services/locationService"
@@ -405,7 +406,15 @@ const PropertyDetail = () => {
           {/* Thông tin chính */}
           <div className="property-main-info">
             <div className="property-header">
-              <h1 className="property-title">{property.TieuDe}</h1>
+              <div className="property-title-section">
+                <h1 className="property-title">{property.TieuDe}</h1>
+                {property.TrangThaiXacThuc === "đã xác thực" && (
+                  <div className="verified-badge" title="Bất động sản đã được xác thực">
+                    <FaCheckCircle />
+                    <span>Đã xác thực</span>
+                  </div>
+                )}
+              </div>
               <div className="property-actions">
                 <button className="action-button share" onClick={handleShare}>
                   <FaShareAlt /> Chia sẻ

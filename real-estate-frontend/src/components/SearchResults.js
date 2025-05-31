@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import axios from "axios"
-import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaSort, FaSearch } from "react-icons/fa"
+import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaSort, FaSearch, FaCheckCircle} from "react-icons/fa"
 import { useAuth } from "../context/AuthContext"
 import locationService from "../services/locationService"
 import "../styles/SearchResults.css"
@@ -465,6 +465,11 @@ const SearchResults = () => {
                       e.target.src = "/placeholder.svg?height=200&width=400"
                     }}
                   />
+                  {property.TrangThaiXacThuc === "đã xác thực" && (
+                    <div className="verified-icon">
+                      <FaCheckCircle />
+                    </div>
+                  )}
                   <button className="favorite-button" onClick={() => toggleFavorite(property.MaTTND)}>
                     {favorites.includes(property.MaTTND) ? (
                       <FaHeart className="favorite-icon active" />

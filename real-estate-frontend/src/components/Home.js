@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
-import { FaSearch, FaMapMarkerAlt } from "react-icons/fa"
+import { FaSearch, FaMapMarkerAlt, FaCheckCircle } from "react-icons/fa"
 import "../styles/global.css"
 import PropertyList from "./PropertyList"
 import { useAuth } from "../context/AuthContext"
@@ -289,6 +289,11 @@ const Home = () => {
                       alt={property.TieuDe}
                       className="property-image"
                     />
+                    {property.TrangThaiXacThuc === "đã xác thực" && (
+                      <div className="verified-icon">
+                        <FaCheckCircle />
+                      </div>
+                    )}
                     <span className="property-status">{property.TrangThai}</span>
                   </div>
 

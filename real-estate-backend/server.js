@@ -50,6 +50,10 @@ app.use("/api/properties/search", searchRoutes)
 
 const adminRoutes = require("./routes/admin")
 app.use("/api/admin", adminRoutes)
+
+const verificationRoutes = require("./routes/verification")
+app.use("/api/verification", verificationRoutes)
+
 // Xử lý lỗi 404
 app.use((req, res) => {
   console.log(`404 Not Found: ${req.method} ${req.originalUrl}`)

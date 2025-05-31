@@ -46,12 +46,42 @@ CREATE TABLE THONGTINNHADAT (
     MaHuyen  VARCHAR(20) NOT NULL,
     MaXa  VARCHAR(20) NOT NULL,
     SoLuotXem INT UNSIGNED DEFAULT 0,
-    TrangThai ENUM('đang bán', 'cho thuê', 'đã bán', 'đã cho thuê') DEFAULT 'đang bán',
+    TrangThai ENUM('đang bán', 'cho thuê', 'đã bán', 'đã cho thuê','chờ xác thực','đã xác thực') DEFAULT 'đang bán',
     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
     GoogleMapIframe TEXT;
+    TrangThaiXacThuc ENUM('chưa xác thực', 'chờ xác thực', 'đã xác thực', 'từ chối') DEFAULT 'chưa xác thực';
     FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE,
 	FOREIGN KEY (MaLoaiND) REFERENCES LOAINHADAT(MaLoaiND) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tạo bảng thông tin xác thực
+CREATE TABLE THONGTINXACTHUC (
+    MaXacThuc INT AUTO_INCREMENT PRIMARY KEY,
+    MaTTND INT NOT NULL,
+    -- Các trường admin sẽ check
+    CoSoDoSoHong BOOLEAN DEFAULT FALSE,
+    DaCungCapBanChup BOOLEAN DEFAULT FALSE,
+    DungDiaChi BOOLEAN DEFAULT FALSE,
+    BDSTonTaiDungDiaChi BOOLEAN DEFAULT FALSE,
+    DungHinhAnhDacDiem BOOLEAN DEFAULT FALSE,
+    DaDoiChieuVoiSoDo BOOLEAN DEFAULT FALSE,
+    CoGiayXacNhanKhongTraanhChap BOOLEAN DEFAULT FALSE,
+    DaKiemTraQuyHoach BOOLEAN DEFAULT FALSE,
+    -- Trường user tự check
+    CamKetCapNhatDinhKy BOOLEAN DEFAULT FALSE,
+    -- Files upload
+    FileSoDo VARCHAR(255),
+    VideoXacThuc VARCHAR(255),
+    FileGiayXacNhan VARCHAR(255),
+    FileQuyHoach VARCHAR(255),
+    GhiChuNguoiBan TEXT,
+    NgayGui DATETIME DEFAULT CURRENT_TIMESTAMP,
+    NgayXacThuc DATETIME NULL,
+    NguoiXacThuc INT NULL,
+    GhiChuAdmin TEXT,
+    FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE,
+    FOREIGN KEY (NguoiXacThuc) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE TINHTHANH (
@@ -139,3 +169,6 @@ CREATE INDEX idx_property_loai ON THONGTINNHADAT(MaLoaiND);
 CREATE INDEX idx_yeuthich_user ON YEUTHICH(MaNgDung);
 CREATE INDEX idx_yeuthich_property ON YEUTHICH(MaTTND);
 CREATE INDEX idx_danhgia_property ON DANHGIA(MaTTND);
+CREATE INDEX idx_verification_status ON THONGTINNHADAT(TrangThaiXacThuc);
+CREATE INDEX idx_verification_property ON THONGTINXACTHUC(MaTTND);
+CREATE INDEX idx_verification_date ON THONGTINXACTHUC(NgayGui);

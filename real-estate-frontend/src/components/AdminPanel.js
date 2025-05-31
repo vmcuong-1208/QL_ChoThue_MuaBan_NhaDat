@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { FaUsers, FaHome, FaTachometerAlt, FaSignOutAlt, FaChevronDown } from "react-icons/fa"
+import { FaUsers, FaHome, FaTachometerAlt, FaSignOutAlt, FaChevronDown, FaCheckCircle } from "react-icons/fa"
 import "../styles/AdminPanel.css"
 import PropertyTypeManager from "./PropertyTypeManager"
 import UserManager from "./UserManager"
+import VerificationManager from "./VerificationManager"
 import { useAuth } from "../context/AuthContext"
 import axios from "axios"
 
@@ -23,7 +24,6 @@ const AdminPanel = () => {
       return
     }
 
-    // Kiểm tra quyền admin (cả "Admin" và "admin")
     if (!currentUser.LoaiTaiKhoan || currentUser.LoaiTaiKhoan.toLowerCase() !== "admin") {
       navigate("/")
       alert("Bạn không có quyền truy cập trang quản trị")
@@ -48,6 +48,8 @@ const AdminPanel = () => {
         return <PropertyTypeManager />
       case "users":
         return <UserManager />
+      case "verification":
+        return <VerificationManager />
       default:
         return <Dashboard />
     }
@@ -92,6 +94,11 @@ const AdminPanel = () => {
             <li className={activeTab === "users" ? "active" : ""}>
               <button onClick={() => setActiveTab("users")}>
                 <FaUsers /> <span>Quản lý người dùng</span>
+              </button>
+            </li>
+            <li className={activeTab === "verification" ? "active" : ""}>
+              <button onClick={() => setActiveTab("verification")}>
+                <FaCheckCircle /> <span>Quản lý xác thực</span>
               </button>
             </li>
           </ul>
@@ -211,6 +218,8 @@ const getTabTitle = (tab) => {
       return "Quản lý loại nhà đất"
     case "users":
       return "Quản lý người dùng"
+    case "verification":
+      return "Quản lý xác thực"
     default:
       return "Tổng quan"
   }

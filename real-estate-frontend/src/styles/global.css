@@ -441,3 +441,23 @@ body {
   text-align: center;
   color: #95a5a6;
 }
+.property-image-container .verified-icon {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(34, 197, 94, 0.9);
+  color: white;
+  padding: 6px;
+  border-radius: 50%;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.property-image-container .verified-icon svg {
+  width: 14px;
+  height: 14px;
+}

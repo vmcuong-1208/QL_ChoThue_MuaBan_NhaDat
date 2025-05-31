@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaLightbulb } from "react-icons/fa"
+import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaLightbulb, FaCheckCircle} from "react-icons/fa"
 import "../styles/Recommendations.css"
 import { useAuth } from "../context/AuthContext"
 import { useNavigate } from "react-router-dom"
@@ -250,6 +250,11 @@ const Recommendations = () => {
                     e.target.src = "/placeholder.svg?height=200&width=400"
                   }}
                 />
+                {property.TrangThaiXacThuc === "đã xác thực" && (
+                  <div className="verified-icon">
+                    <FaCheckCircle />
+                  </div>
+                )}
                 <button
                   className="favorite-button"
                   onClick={() => toggleFavorite(property.MaTTND)}

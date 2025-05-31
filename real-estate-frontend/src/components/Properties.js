@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import axios from "axios"
-import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined } from "react-icons/fa"
+import { FaHeart, FaRegHeart, FaEye, FaMapMarkerAlt, FaRulerCombined, FaCheckCircle } from "react-icons/fa"
 import "../styles/Properties.css"
 import { useAuth } from "../context/AuthContext"
 import { useNavigate } from "react-router-dom"
@@ -293,6 +293,7 @@ const Properties = () => {
           {recommendations.map((property) => (
             <div key={property.MaTTND} className="property-card">
               <div className="property-image-container">
+                
                 <img
                   src={
                     property.HinhAnh && property.HinhAnh.length > 0
@@ -316,8 +317,14 @@ const Properties = () => {
                     <FaRegHeart className="favorite-icon" />
                   )}
                 </button>
+                {property.TrangThaiXacThuc === "đã xác thực" && (
+                  <div className="verified-icon">
+                    <FaCheckCircle />
+                  </div>
+                )}
                 <span className="property-status">{property.TrangThai}</span>
                 {property.score && property.score > 3 && <span className="recommendation-badge">Phù hợp</span>}
+                
               </div>
 
               <div className="property-info">
