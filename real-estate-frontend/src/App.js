@@ -14,10 +14,11 @@ import MessageCenter from "./components/MessageCenter"
 import Favorites from "./components/Favorites"
 import SearchResults from "./components/SearchResults"
 import Footer from "./components/Footer"
-import FloatingButton from "./components/FloatingButton"
+import ChatBot from "./components/ChatBot"
 import "./App.css"
 
 function App() {
+  
   return (
     <AuthProvider>
       <Router>
@@ -31,7 +32,6 @@ function App() {
               <Route path="/tim-kiem" element={<SearchResults />} />
               <Route path="/bat-dong-san/:id" element={<PropertyDetail />} />
 
-              {/* Protected Routes */}
               <Route
                 path="/ho-so"
                 element={
@@ -80,8 +80,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
-              {/* Admin Routes */}
               <Route
                 path="/admin-panel"
                 element={
@@ -93,7 +91,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
-          <FloatingButton />
+          <ChatBot />
         </div>
       </Router>
     </AuthProvider>

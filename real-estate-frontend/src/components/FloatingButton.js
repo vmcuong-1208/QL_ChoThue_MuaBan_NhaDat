@@ -1,22 +1,44 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { HelpCircle } from "lucide-react"; // Thêm icon (cần cài thư viện)
+import React, { useState } from "react"
+import { MessageCircle, X } from "lucide-react"
+import ChatbotAssistant from "./ChatbotAssistant"
 
 const FloatingButton = () => {
-  const [hover, setHover] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
+
+  const toggleChat = () => {
+    setIsOpen((prev) => !prev)
+  }
 
   return (
-    <div
-      className="floating-button"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      <Link to="/lien-he" className="button">
-        <HelpCircle size={28} />
-      </Link>
-      {hover && <span className="tooltip">Hỗ trợ</span>}
-    </div>
-  );
-};
+    <>
+      <div
+        className="floating-button"
+        onClick={toggleChat}
+        style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          width: "60px",
+          height: "60px",
+          borderRadius: "50%",
+          backgroundColor: "#5eb1ef",
+          color: "#fff",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1001,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          cursor: "pointer",
+        }}
+        title={isOpen ? "Đóng chat" : "Hỗ trợ trực tuyến"}
+      >
+        {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
+      </div>
 
-export default FloatingButton;
+      {/* Khung chat được tách riêng */}
+      <ChatbotAssistant isOpen={isOpen} />
+    </>
+  )
+}
+
+export default FloatingButton
