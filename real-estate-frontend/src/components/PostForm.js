@@ -136,7 +136,7 @@ const PostForm = () => {
       try {
         const token = localStorage.getItem("token")
         const response = await axios.get(`${API_URL}/property-types`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
         setPropertyTypes(response.data)
       } catch (error) {
@@ -265,6 +265,25 @@ const PostForm = () => {
     setError(null)
 
     try {
+      // Check post limit for regular users
+      const currentUser = JSON.parse(localStorage.getItem("user"))
+      if (currentUser?.LoaiTaiKhoan?.toLowerCase() === "thường" && !isEditing) {
+        try {
+          const token = localStorage.getItem("token")
+          const response = await axios.get(`${API_URL}/properties/user`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+
+          if (response.data.length >= 1) {
+            setError("Tài khoản thường chỉ được đăng tối đa 1 tin. Vui lòng nâng cấp tài khoản để đăng thêm tin.")
+            setLoading(false)
+            return
+          }
+        } catch (error) {
+          console.error("Error checking post limit:", error)
+        }
+      }
+
       const token = localStorage.getItem("token")
       if (!token) {
         navigate("/auth")
@@ -311,7 +330,6 @@ const PostForm = () => {
       }
 
       setSuccess(true)
-
 
       // Chuyển hướng sau khi thành công
       setTimeout(() => {
@@ -531,7 +549,7 @@ const PostForm = () => {
               required
             />
           </div>
-          
+
           {/* Thêm trường nhúng Google Maps */}
           <div className="form-group">
             <div className="label-with-guide">
@@ -562,7 +580,7 @@ const PostForm = () => {
 
         {/* Thêm component hướng dẫn */}
         {showMapGuide && <GoogleMapGuide onClose={() => setShowMapGuide(false)} />}
-          
+
         <div className="form-section">
           <h2>Hình ảnh</h2>
           <p className="image-hint">Tối đa 10 hình ảnh, định dạng JPG, PNG (tối đa 5MB/ảnh)</p>

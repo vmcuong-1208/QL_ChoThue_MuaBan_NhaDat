@@ -1,58 +1,60 @@
 "use client"
 
-import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
-import { useNavigate } from "react-router-dom";
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaPen, FaCheck, FaTimes } from "react-icons/fa";
-import "../styles/Profile.css";
+import { useState, useEffect } from "react"
+import { useAuth } from "../context/AuthContext" // Import useAuth
+import { useNavigate } from "react-router-dom"
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaPen, FaCheck, FaTimes } from "react-icons/fa"
+import "../styles/Profile.css"
+import PaymentModal from "./PaymentModal"
 
 const Profile = () => {
-  const { currentUser, updateProfile, loading } = useAuth(); // Use AuthContext
-  const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
+  const { currentUser, updateProfile, loading } = useAuth() // Use AuthContext
+  const navigate = useNavigate()
+  const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     HoTen: currentUser?.HoTen || "",
     SDT: currentUser?.SDT || "",
     DiaChi: currentUser?.DiaChi || "",
     MoTaBanThan: currentUser?.MoTaBanThan || "",
     AnhDaiDien: currentUser?.AnhDaiDien || "",
-  });
-  const [previewImage, setPreviewImage] = useState(currentUser?.AnhDaiDien || "");
+  })
+  const [previewImage, setPreviewImage] = useState(currentUser?.AnhDaiDien || "")
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   useEffect(() => {
     if (!currentUser) {
-      navigate("/auth");
+      navigate("/auth")
     }
-  }, [currentUser]);
+  }, [currentUser])
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData({
       ...formData,
       [name]: value,
-    });
-  };
+    })
+  }
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files[0]
     if (file) {
-      setPreviewImage(URL.createObjectURL(file));
+      setPreviewImage(URL.createObjectURL(file))
       setFormData({
         ...formData,
         AnhDaiDien: file,
-      });
+      })
     }
-  };
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formDataToSend = new FormData();
+    e.preventDefault()
+    const formDataToSend = new FormData()
     Object.keys(formData).forEach((key) => {
-      formDataToSend.append(key, formData[key]);
-    });
-    await updateProfile(formDataToSend);
-    setIsEditing(false);
-  };
+      formDataToSend.append(key, formData[key])
+    })
+    await updateProfile(formDataToSend)
+    setIsEditing(false)
+  }
 
   const handleCancel = () => {
     setFormData({
@@ -61,13 +63,32 @@ const Profile = () => {
       DiaChi: currentUser?.DiaChi || "",
       MoTaBanThan: currentUser?.MoTaBanThan || "",
       AnhDaiDien: currentUser?.AnhDaiDien || "",
-    });
-    setPreviewImage(currentUser?.AnhDaiDien || "");
-    setIsEditing(false);
-  };
+    })
+    setPreviewImage(currentUser?.AnhDaiDien || "")
+    setIsEditing(false)
+  }
+
+  const handleUpgradeToBroker = () => {
+    setShowPaymentModal(true)
+  }
+
+  const handlePaymentSuccess = async (token, method) => {
+    try {
+      // Call API to upgrade account
+      const formDataToSend = new FormData()
+      formDataToSend.append("paymentToken", token)
+      formDataToSend.append("paymentMethod", method)
+      formDataToSend.append("upgradeType", "broker")
+
+      await updateProfile(formDataToSend)
+      alert("Nâng cấp tài khoản thành công! Bạn đã trở thành môi giới.")
+    } catch (error) {
+      alert("Có lỗi xảy ra khi nâng cấp tài khoản. Vui lòng liên hệ hỗ trợ.")
+    }
+  }
 
   if (loading) {
-    return <div className="loading-container">Đang tải...</div>;
+    return <div className="loading-container">Đang tải...</div>
   }
 
   if (!currentUser) {
@@ -78,18 +99,25 @@ const Profile = () => {
         </div>
         <div className="profile-message error">Bạn cần đăng nhập để xem thông tin cá nhân.</div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="profile-container">
       <div className="profile-header">
         <h1>Thông tin cá nhân</h1>
-        {!isEditing && (
-          <button className="edit-button" onClick={() => setIsEditing(true)}>
-            <FaPen /> Chỉnh sửa
-          </button>
-        )}
+        <div className="profile-header-actions">
+          {currentUser?.LoaiTaiKhoan?.toLowerCase() === "thường" && (
+            <button className="upgrade-button" onClick={handleUpgradeToBroker}>
+              Trở thành môi giới
+            </button>
+          )}
+          {!isEditing && (
+            <button className="edit-button" onClick={() => setIsEditing(true)}>
+              <FaPen /> Chỉnh sửa
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="profile-content">
@@ -203,8 +231,16 @@ const Profile = () => {
           )}
         </div>
       </div>
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handlePaymentSuccess}
+        amount={500000}
+        purpose="Nâng cấp tài khoản môi giới"
+      />
     </div>
-  );
-};
+  )
+}
 
-export default Profile;
+export default Profile

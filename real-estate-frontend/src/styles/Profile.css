@@ -294,3 +294,38 @@
     }
   }
   
+  .profile-header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.upgrade-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.upgrade-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+@media (max-width: 768px) {
+  .profile-header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .upgrade-button,
+  .edit-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

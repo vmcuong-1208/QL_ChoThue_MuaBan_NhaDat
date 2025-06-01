@@ -162,7 +162,7 @@ const Post = () => {
 
   // Xử lý chỉnh sửa bài đăng
   const handleEdit = (id) => {
-    navigate(`/chinh-sua-tin/${id}`)
+    navigate(`/sua-bai/${id}`)
   }
 
   // Xử lý xem chi tiết bài đăng
@@ -247,7 +247,7 @@ const Post = () => {
     <div className="post-management-container">
       <div className="post-management-header">
         <h1>Quản lý bài đăng</h1>
-        <Link to="/dang-tin" className="add-post-button">
+        <Link to="/dang-bai" className="add-post-button">
           <FaPlus /> Đăng tin mới
         </Link>
       </div>
@@ -255,7 +255,7 @@ const Post = () => {
       {properties.length === 0 ? (
         <div className="no-posts">
           <p>Bạn chưa có bài đăng nào.</p>
-          <Link to="/dang-tin" className="add-first-post-button">
+          <Link to="/dang-bai" className="add-first-post-button">
             Đăng tin ngay
           </Link>
         </div>

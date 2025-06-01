@@ -33,7 +33,7 @@ const GoogleMapGuide = ({ onClose }) => {
               và tìm kiếm địa điểm bất động sản của bạn.
             </p>
             <div className="guide-image">
-              <img src="/placeholder.svg?height=200&width=400" alt="Tìm kiếm địa điểm trên Google Maps" />
+              <img src="https://cdn.tgdd.vn/Files/2020/11/10/1305861/googlemap_1280x720-800-resize.jpg" alt="Tìm kiếm địa điểm trên Google Maps" />
             </div>
           </div>
 
@@ -43,7 +43,7 @@ const GoogleMapGuide = ({ onClose }) => {
             </h3>
             <p>Nhấp vào nút "Chia sẻ" hoặc biểu tượng chia sẻ trên Google Maps.</p>
             <div className="guide-image">
-              <img src="/placeholder.svg?height=200&width=400" alt="Nhấp vào nút chia sẻ" />
+              <img src="https://cellphones.com.vn/sforum/wp-content/uploads/2024/01/cach-chia-se-vi-tri-tren-google-maps-6-1.jpg" alt="Nhấp vào nút chia sẻ" />
             </div>
           </div>
 
@@ -53,7 +53,7 @@ const GoogleMapGuide = ({ onClose }) => {
             </h3>
             <p>Trong cửa sổ chia sẻ, chọn tab "Nhúng bản đồ" hoặc "Embed a map".</p>
             <div className="guide-image">
-              <img src="/placeholder.svg?height=200&width=400" alt="Chọn Nhúng bản đồ" />
+              <img src="https://mona.media/wp-content/uploads/2017/09/map-4.png" alt="Chọn Nhúng bản đồ" />
             </div>
           </div>
 
@@ -63,7 +63,7 @@ const GoogleMapGuide = ({ onClose }) => {
             </h3>
             <p>Sao chép toàn bộ mã HTML (iframe) được cung cấp.</p>
             <div className="guide-image">
-              <img src="/placeholder.svg?height=200&width=400" alt="Sao chép mã nhúng" />
+              <img src="https://light.com.vn/Files/26/thu-thuat-marketing-online/sao-chep-html-map.jpg" alt="Sao chép mã nhúng" />
             </div>
             <div className="code-example">
               <pre>
