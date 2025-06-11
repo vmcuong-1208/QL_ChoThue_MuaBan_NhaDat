@@ -15,6 +15,9 @@ import Favorites from "./components/Favorites"
 import SearchResults from "./components/SearchResults"
 import Footer from "./components/Footer"
 import ChatBot from "./components/ChatBot"
+import MoMoCallback from "./components/MoMoCallback"
+import PaymentSuccess from "./components/PaymentSuccess"
+import GoogleAuthSuccess from "./components/GoogleAuthSuccess"
 import "./App.css"
 
 function App() {
@@ -31,7 +34,9 @@ function App() {
               <Route path="/lien-he" element={<Contact />} />
               <Route path="/tim-kiem" element={<SearchResults />} />
               <Route path="/bat-dong-san/:id" element={<PropertyDetail />} />
-
+              <Route path="/payment/momo/callback" element={<MoMoCallback />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
               <Route
                 path="/ho-so"
                 element={

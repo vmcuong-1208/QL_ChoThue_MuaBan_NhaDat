@@ -1,167 +1,228 @@
 "use client"
 
-import { createContext, useState, useEffect, useContext } from "react"
-import axios from "axios"
-// const API_URL = "http://localhost:5000/api"
-const API_URL = "http://localhost:5000/api" // Thay đổi URL này nếu cần
+import { createContext, useContext, useState, useEffect } from "react"
 
-// Tạo context
 const AuthContext = createContext()
 
-// Hook để sử dụng context
-export const useAuth = () => useContext(AuthContext)
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
 
-// Provider component
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null)
+  const [currentUser, setCurrentUser] = useState(() => {
+    const userInfo = localStorage.getItem("userInfo")
+    return userInfo ? JSON.parse(userInfo) : null
+  })
+
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem("token")
+  })
+
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
-  // Kiểm tra token và lấy thông tin người dùng khi component mount
-  useEffect(() => {
-    const checkLoggedIn = async () => {
-      try {
-        const token = localStorage.getItem("token")
-
-        if (!token) {
-          setLoading(false)
-          return
-        }
-
-        // Gọi API để lấy thông tin người dùng từ token
-        const response = await axios.get(`${API_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        setCurrentUser(response.data)
-      } catch (error) {
-        console.error("Lỗi xác thực:", error)
-        localStorage.removeItem("token") // Xóa token nếu không hợp lệ
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkLoggedIn()
-  }, [])
-
-  // Hàm đăng nhập
-  const login = async (email, password) => {
+  // Load user info from server
+  const loadUserInfo = async (authToken) => {
     try {
-      setError(null)
-
-      // Log để debug
-      console.log("Đang gửi request đăng nhập với:", { Email: email, MatKhau: password })
-
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        Email: email,
-        MatKhau: password,
+      const response = await fetch(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${authToken}` },
       })
 
-      // Log response để debug
-      console.log("Response từ server:", response.data)
-
-      // Kiểm tra cấu trúc response
-      if (!response.data.token) {
-        console.error("Token không tồn tại trong response:", response.data)
-        return { success: false, message: "Định dạng response không hợp lệ" }
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.user) {
+          setCurrentUser(data.user)
+          localStorage.setItem("userInfo", JSON.stringify(data.user))
+          return data.user
+        }
       }
+      return null
+    } catch (error) {
+      console.error("Failed to load user info:", error)
+      return null
+    }
+  }
 
-      const { token } = response.data
-      localStorage.setItem("token", token)
+  // Kiểm tra token khi app khởi động
+  useEffect(() => {
+    const checkAuth = async () => {
+      const savedToken = localStorage.getItem("token")
 
-      try {
-        // Lấy thông tin người dùng sau khi đăng nhập
-        const userResponse = await axios.get(`${API_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+      if (savedToken) {
+        try {
+          // Verify token với server
+          const response = await fetch(`${API_URL}/auth/verify`, {
+            headers: { Authorization: `Bearer ${savedToken}` },
+          })
 
-        console.log("Thông tin người dùng:", userResponse.data)
-        setCurrentUser(userResponse.data)
-        localStorage.setItem("userInfo", JSON.stringify(userResponse.data));
-        const loginEvent = new Event("login-success");
-        window.dispatchEvent(loginEvent);
-        return { success: true }
-      } catch (userError) {
-        console.error("Lỗi khi lấy thông tin người dùng:", userError)
-        // Vẫn trả về success vì đăng nhập thành công, chỉ lỗi khi lấy thông tin
-        return { success: true, message: "Đăng nhập thành công nhưng không lấy được thông tin người dùng" }
+          if (response.ok) {
+            const data = await response.json()
+            if (data.valid) {
+              setToken(savedToken)
+              // Load fresh user info from server
+              await loadUserInfo(savedToken)
+            } else {
+              // Token không hợp lệ, xóa khỏi localStorage
+              localStorage.removeItem("token")
+              localStorage.removeItem("userInfo")
+              setToken(null)
+              setCurrentUser(null)
+            }
+          } else {
+            // Token không hợp lệ, xóa khỏi localStorage
+            localStorage.removeItem("token")
+            localStorage.removeItem("userInfo")
+            setToken(null)
+            setCurrentUser(null)
+          }
+        } catch (error) {
+          console.error("Token verification failed:", error)
+          localStorage.removeItem("token")
+          localStorage.removeItem("userInfo")
+          setToken(null)
+          setCurrentUser(null)
+        }
+      }
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [])
+
+  const login = async (email, password) => {
+    try {
+      console.log("Đang gửi request đăng nhập với:", { Email: email, MatKhau: password })
+
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Email: email,
+          MatKhau: password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        const { token: authToken, user } = data
+
+        // Lưu vào localStorage
+        localStorage.setItem("token", authToken)
+        localStorage.setItem("userInfo", JSON.stringify(user))
+
+        // Cập nhật state
+        setToken(authToken)
+        setCurrentUser(user)
+
+        return { success: true, message: "Đăng nhập thành công!" }
+      } else {
+        return { success: false, message: data.message || "Đăng nhập thất bại" }
       }
     } catch (error) {
       console.error("Lỗi đăng nhập:", error)
-      console.error("Response error:", error.response?.data)
-      setError(error.response?.data?.message || "Đăng nhập thất bại")
-      return { success: false, message: error.response?.data?.message || "Đăng nhập thất bại" }
+      return {
+        success: false,
+        message: "Đăng nhập thất bại. Vui lòng thử lại.",
+      }
     }
   }
 
-  // Hàm đăng xuất
-  const logout = () => {
-    localStorage.removeItem("token")
-    setCurrentUser(null)
-  }
-
-  // Hàm đăng ký
-  const register = async (userData) => {
+  const logout = async () => {
     try {
-      setError(null)
-      const response = await axios.post(`${API_URL}/auth/register`, userData)
-      return { success: true, message: response.data.message }
+      // Xóa khỏi localStorage
+      localStorage.removeItem("token")
+      localStorage.removeItem("userInfo")
+
+      // Reset state
+      setToken(null)
+      setCurrentUser(null)
+
+      return { success: true }
     } catch (error) {
-      setError(error.response?.data?.message || "Đăng ký thất bại")
-      return { success: false, message: error.response?.data?.message || "Đăng ký thất bại" }
+      console.error("Lỗi đăng xuất:", error)
+      return { success: false, message: "Đăng xuất thất bại" }
     }
   }
 
-  // Hàm cập nhật thông tin người dùng
-  const updateProfile = async (userData) => {
+  const updateProfile = async (formData) => {
     try {
-      setError(null)
-      const token = localStorage.getItem("token")
+      setLoading(true)
+      const authToken = localStorage.getItem("token")
 
-      const response = await axios.put(`${API_URL}/auth/update`, userData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      let response
+      if (formData.get && formData.get("paymentToken")) {
+        // Handle account upgrade
+        response = await fetch(`${API_URL}/auth/upgrade`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            paymentToken: formData.get("paymentToken"),
+            paymentMethod: formData.get("paymentMethod"),
+            upgradeType: formData.get("upgradeType"),
+          }),
+        })
+      } else {
+        // Handle regular profile update
+        response = await fetch(`${API_URL}/auth/update`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: formData,
+        })
+      }
 
-      // Cập nhật thông tin người dùng trong state
-      setCurrentUser((prev) => ({ ...prev, ...userData }))
+      const data = await response.json()
 
-      return { success: true, message: response.data.message }
+      if (data.success) {
+        const updatedUser = data.user
+        setCurrentUser(updatedUser)
+        localStorage.setItem("userInfo", JSON.stringify(updatedUser))
+        return { success: true, user: updatedUser }
+      } else {
+        throw new Error(data.message || "Update failed")
+      }
     } catch (error) {
-      setError(error.response?.data?.message || "Cập nhật thất bại")
-      return { success: false, message: error.response?.data?.message || "Cập nhật thất bại" }
+      console.error("Error updating profile:", error)
+      throw error
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Kiểm tra quyền truy cập
   const hasPermission = (requiredRoles) => {
-    if (!currentUser) return false
+    if (!currentUser || !currentUser.LoaiTaiKhoan) return false
 
-    if (!requiredRoles || requiredRoles.length === 0) return true
-
-    return requiredRoles.includes(currentUser.LoaiTaiKhoan)
+    const userRole = currentUser.LoaiTaiKhoan.toLowerCase()
+    return requiredRoles.some((role) => role.toLowerCase() === userRole)
   }
 
-  const value = {
+  const contextData = {
     currentUser,
+    token,
     loading,
-    error,
     login,
     logout,
-    register,
     updateProfile,
     hasPermission,
+    setCurrentUser,
+    setToken,
+    loadUserInfo,
   }
 
-  return <AuthContext.Provider value={value}>  {loading ? (
-    <div className="loading-container">Đang tải...</div>
-  ) : (
-    children
-  )}</AuthContext.Provider>
+  return <AuthContext.Provider value={contextData}>{children}</AuthContext.Provider>
 }
+
+// Custom hook để sử dụng AuthContext
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
+}
+
+export default AuthContext

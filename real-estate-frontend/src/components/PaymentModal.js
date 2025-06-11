@@ -1,237 +1,262 @@
 "use client"
 
-import { useState } from "react"
-import { FaTimes, FaQrcode, FaCopy, FaCheckCircle } from "react-icons/fa"
+import { useState, useEffect } from "react"
+import { QRCodeSVG } from "qrcode.react"
 import "../styles/PaymentModal.css"
 
-const PaymentModal = ({ isOpen, onClose, onSuccess, amount = 500000, purpose = "Nâng cấp tài khoản môi giới" }) => {
-  const [selectedMethod, setSelectedMethod] = useState("momo")
-  const [paymentToken, setPaymentToken] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [copied, setCopied] = useState(false)
+const PaymentModal = ({ isOpen, onClose, onSuccess, amount = 500000, description = "Nâng cấp tài khoản môi giới" }) => {
+  const [loading, setLoading] = useState(false)
+  const [paymentData, setPaymentData] = useState(null)
+  const [error, setError] = useState("")
+  const [showQR, setShowQR] = useState(false)
+  const [isPolling, setIsPolling] = useState(false)
+  const [pollingInterval, setPollingInterval] = useState(null)
 
-  // Mock payment info - trong thực tế sẽ lấy từ API
-  const paymentInfo = {
-    momo: {
-      name: "MoMo",
-      qrCode: "/placeholder.svg?height=200&width=200&text=MoMo+QR",
-      phoneNumber: "0123456789",
-      accountName: "CONG TY BDS THUAN CUONG",
-      amount: amount,
-      content: `${purpose} - ${Date.now()}`,
-    },
-    vnpay: {
-      name: "VNPay",
-      qrCode: "/placeholder.svg?height=200&width=200&text=VNPay+QR",
-      bankAccount: "1234567890",
-      bankName: "Ngân hàng Vietcombank",
-      accountName: "CONG TY BDS THUAN CUONG",
-      amount: amount,
-      content: `${purpose} - ${Date.now()}`,
-    },
-  }
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount)
-  }
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleSubmitToken = async () => {
-    if (!paymentToken.trim()) {
-      alert("Vui lòng nhập mã giao dịch")
-      return
+  // Reset state khi modal đóng/mở
+  useEffect(() => {
+    if (!isOpen) {
+      setPaymentData(null)
+      setError("")
+      setShowQR(false)
+      setLoading(false)
+      setIsPolling(false)
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+        setPollingInterval(null)
+      }
     }
+  }, [isOpen])
 
-    setIsSubmitting(true)
+  const checkPaymentStatus = async (orderId) => {
     try {
-      // Simulate API call to verify payment
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const token = localStorage.getItem("token")
+      const response = await fetch(`http://localhost:5000/api/momo-payment/check-status/${orderId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-      // In thực tế, gọi API để verify payment token
-      // const response = await axios.post('/api/payments/verify', {
-      //   token: paymentToken,
-      //   method: selectedMethod,
-      //   amount: amount
-      // })
+      if (response.ok) {
+        const data = await response.json()
+        console.log("Payment status:", data)
 
-      onSuccess(paymentToken, selectedMethod)
-      onClose()
+        if (data.success && data.transaction.status === "SUCCESS") {
+          setIsPolling(false)
+          if (pollingInterval) {
+            clearInterval(pollingInterval)
+          }
+          alert("Thanh toán thành công! Tài khoản đã được nâng cấp.")
+          onSuccess && onSuccess()
+          onClose()
+          window.location.reload() // Reload để cập nhật UI
+        } else if (data.transaction.status === "FAILED") {
+          setIsPolling(false)
+          if (pollingInterval) {
+            clearInterval(pollingInterval)
+          }
+          alert("Thanh toán thất bại!")
+        }
+      }
     } catch (error) {
-      alert("Có lỗi xảy ra khi xác thực thanh toán. Vui lòng thử lại.")
-    } finally {
-      setIsSubmitting(false)
+      console.error("Error checking payment status:", error)
     }
   }
+
+  const startPolling = (orderId) => {
+    setIsPolling(true)
+    const interval = setInterval(() => {
+      checkPaymentStatus(orderId)
+    }, 3000) // Check mỗi 3 giây
+
+    setPollingInterval(interval)
+
+    // Dừng polling sau 5 phút
+    setTimeout(() => {
+      setIsPolling(false)
+      clearInterval(interval)
+    }, 300000)
+  }
+
+  const handleMoMoPayment = async () => {
+    setLoading(true)
+    setError("")
+
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("Vui lòng đăng nhập để thanh toán")
+      }
+
+      console.log("Creating MoMo payment...")
+
+      const response = await fetch("http://localhost:5000/api/momo-payment/create-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: amount,
+          orderInfo: description,
+          extraData: JSON.stringify({
+            service: "upgrade_account",
+            userId: JSON.parse(atob(token.split(".")[1])).userId,
+          }),
+        }),
+      })
+
+      console.log("Response status:", response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("Response error:", errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+
+      const data = await response.json()
+      console.log("Payment data received:", data)
+
+      if (data.success && data.payUrl) {
+        setPaymentData(data)
+        setShowQR(true)
+
+        // Tự động mở trang thanh toán sau 2 giây
+        setTimeout(() => {
+          window.open(data.payUrl, "_blank")
+        }, 2000)
+
+        startPolling(data.orderId)
+      } else {
+        throw new Error(data.message || "Không thể tạo giao dịch MoMo")
+      }
+    } catch (error) {
+      console.error("Error creating MoMo payment:", error)
+      setError(error.message || "Có lỗi xảy ra khi tạo giao dịch")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const copyPaymentLink = () => {
+    if (paymentData?.payUrl) {
+      navigator.clipboard.writeText(paymentData.payUrl)
+      alert("Đã copy link thanh toán!")
+    }
+  }
+
+  const openMoMoPage = () => {
+    if (paymentData?.payUrl) {
+      window.open(paymentData.payUrl, "_blank")
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
+    }
+  }, [pollingInterval])
 
   if (!isOpen) return null
 
-  const currentPayment = paymentInfo[selectedMethod]
-
   return (
-    <div className="payment-modal-overlay">
-      <div className="payment-modal">
+    <div className="payment-modal-overlay" onClick={onClose}>
+      <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
         <div className="payment-modal-header">
           <h2>Thanh toán nâng cấp tài khoản</h2>
-          <button className="payment-modal-close" onClick={onClose}>
-            <FaTimes />
+          <button className="close-button" onClick={onClose}>
+            ×
           </button>
         </div>
 
         <div className="payment-modal-content">
-          {/* Payment Method Selection */}
-          <div className="payment-methods">
-            <h3>Chọn phương thức thanh toán</h3>
-            <div className="payment-method-options">
-              <button
-                className={`payment-method-btn ${selectedMethod === "momo" ? "active" : ""}`}
-                onClick={() => setSelectedMethod("momo")}
-              >
-                <img src="/placeholder.svg?height=40&width=40&text=MoMo" alt="MoMo" />
-                <span>MoMo</span>
-              </button>
-              <button
-                className={`payment-method-btn ${selectedMethod === "vnpay" ? "active" : ""}`}
-                onClick={() => setSelectedMethod("vnpay")}
-              >
-                <img src="/placeholder.svg?height=40&width=40&text=VNPay" alt="VNPay" />
-                <span>VNPay</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Payment Information */}
           <div className="payment-info">
-            <div className="payment-amount">
-              <h3>Số tiền: {formatCurrency(currentPayment.amount)}</h3>
-              <p>Mục đích: {purpose}</p>
+            <div className="amount-display">
+              <span className="amount-label">Số tiền:</span>
+              <span className="amount-value">{amount.toLocaleString("vi-VN")} đ</span>
             </div>
-
-            <div className="payment-details">
-              <div className="qr-section">
-                <h4>Quét mã QR để thanh toán</h4>
-                <div className="qr-code">
-                  <FaQrcode size={200} />
-                  <p>Mã QR {currentPayment.name}</p>
-                </div>
-              </div>
-
-              <div className="payment-instructions">
-                <h4>Hoặc chuyển khoản thủ công</h4>
-
-                {selectedMethod === "momo" ? (
-                  <div className="payment-details-list">
-                    <div className="detail-item">
-                      <span className="label">Số điện thoại:</span>
-                      <span className="value">
-                        {currentPayment.phoneNumber}
-                        <button className="copy-btn" onClick={() => copyToClipboard(currentPayment.phoneNumber)}>
-                          <FaCopy />
-                        </button>
-                      </span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Tên tài khoản:</span>
-                      <span className="value">{currentPayment.accountName}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Số tiền:</span>
-                      <span className="value">
-                        {formatCurrency(currentPayment.amount)}
-                        <button className="copy-btn" onClick={() => copyToClipboard(currentPayment.amount.toString())}>
-                          <FaCopy />
-                        </button>
-                      </span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Nội dung:</span>
-                      <span className="value">
-                        {currentPayment.content}
-                        <button className="copy-btn" onClick={() => copyToClipboard(currentPayment.content)}>
-                          <FaCopy />
-                        </button>
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="payment-details-list">
-                    <div className="detail-item">
-                      <span className="label">Ngân hàng:</span>
-                      <span className="value">{currentPayment.bankName}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Số tài khoản:</span>
-                      <span className="value">
-                        {currentPayment.bankAccount}
-                        <button className="copy-btn" onClick={() => copyToClipboard(currentPayment.bankAccount)}>
-                          <FaCopy />
-                        </button>
-                      </span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Tên tài khoản:</span>
-                      <span className="value">{currentPayment.accountName}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Số tiền:</span>
-                      <span className="value">
-                        {formatCurrency(currentPayment.amount)}
-                        <button className="copy-btn" onClick={() => copyToClipboard(currentPayment.amount.toString())}>
-                          <FaCopy />
-                        </button>
-                      </span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="label">Nội dung:</span>
-                      <span className="value">
-                        {currentPayment.content}
-                        <button className="copy-btn" onClick={() => copyToClipboard(currentPayment.content)}>
-                          <FaCopy />
-                        </button>
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {copied && (
-                  <div className="copy-success">
-                    <FaCheckCircle /> Đã sao chép!
-                  </div>
-                )}
-              </div>
+            <div className="service-description">
+              <p>Mục đích: {description}</p>
             </div>
           </div>
 
-          {/* Payment Token Input */}
-          <div className="payment-token-section">
-            <h4>Sau khi thanh toán, nhập mã giao dịch</h4>
-            <div className="token-input-group">
-              <input
-                type="text"
-                placeholder="Nhập mã giao dịch (Transaction ID)"
-                value={paymentToken}
-                onChange={(e) => setPaymentToken(e.target.value)}
-                className="token-input"
-              />
-              <button
-                className="submit-token-btn"
-                onClick={handleSubmitToken}
-                disabled={isSubmitting || !paymentToken.trim()}
-              >
-                {isSubmitting ? "Đang xác thực..." : "Xác nhận thanh toán"}
+          {!showQR ? (
+            <div className="payment-methods">
+              <div className="momo-section">
+                <div className="momo-image-placeholder">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png"
+                    alt="MoMo Payment"
+                    className="placeholder-image"
+                  />
+                </div>
+
+                <div className="momo-features">
+                  <h3>Thanh toán qua MoMo</h3>
+                  <div className="feature-list">
+                    <div className="feature-item">
+                      <span className="feature-icon">✅</span>
+                      <span>Thanh toán an toàn, bảo mật</span>
+                    </div>
+                    <div className="feature-item">
+                      <span className="feature-icon">✅</span>
+                      <span>Hỗ trợ nhiều phương thức</span>
+                    </div>
+                    <div className="feature-item">
+                      <span className="feature-icon">✅</span>
+                      <span>Xử lý nhanh chóng</span>
+                    </div>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="error-message">
+                    <span className="error-icon">⚠️</span>
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <button className="momo-payment-button" onClick={handleMoMoPayment} disabled={loading}>
+                  {loading ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Đang tạo giao dịch...
+                    </>
+                  ) : (
+                    <>
+                      <span className="momo-icon">💳</span>
+                      Thanh toán với MoMo
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="qr-payment-section">
+              <div className="qr-container">
+                <h3>Quét mã QR để thanh toán</h3>
+                <div className="qr-code-wrapper">
+                  <QRCodeSVG value={paymentData.payUrl} size={200} level="M" includeMargin={true} className="qr-code" />
+                </div>
+                <p className="qr-instruction">Mở app MoMo và quét mã QR này để thanh toán</p>
+              </div>
+
+              <div className="payment-actions">
+                <button className="copy-link-button" onClick={copyPaymentLink}>
+                  📋 Copy link thanh toán
+                </button>
+
+                <button className="open-momo-button" onClick={openMoMoPage}>
+                  🔗 Mở trang thanh toán MoMo
+                </button>
+              </div>
+
+              <button className="back-button" onClick={() => setShowQR(false)}>
+                ← Quay lại
               </button>
             </div>
-            <p className="token-note">
-              Mã giao dịch có thể tìm thấy trong lịch sử giao dịch của ví điện tử hoặc tin nhắn xác nhận từ ngân hàng.
-            </p>
-          </div>
+          )}
         </div>
       </div>
     </div>

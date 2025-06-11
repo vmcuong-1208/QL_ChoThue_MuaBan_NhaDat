@@ -194,7 +194,6 @@ const UserManager = () => {
     <div className="user-manager">
       {/* Header với thống kê */}
       <div className="user-manager-header">
-        <h2>Quản lý người dùng</h2>
         <div className="user-stats-summary">
           <span className="total-users">Tổng: {pagination.total} người dùng</span>
         </div>

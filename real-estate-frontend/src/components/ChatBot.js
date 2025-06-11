@@ -31,9 +31,9 @@ const ChatBot = () => {
     "đăng ký":
       "Để đăng ký tài khoản:\n1. Truy cập trang đăng nhập/đăng ký\n2. Điền đầy đủ thông tin: Họ tên, Email, Số điện thoại, Mật khẩu\n3. Xác nhận mật khẩu\n4. Nhấn 'Đăng ký'\n\nMật khẩu cần có ít nhất 8 ký tự và đáp ứng các tiêu chí bảo mật.",
     "đăng nhập":
-      "Để đăng nhập:\n1. Truy cập trang đăng nhập\n2. Nhập email và mật khẩu\n3. Nhấn 'Đăng nhập'\n\nNếu quên mật khẩu, vui lòng liên hệ hỗ trợ.",
+      "Để đăng nhập:\n1. Truy cập trang đăng nhập\n2. Nhập email và mật khẩu\n3. Nhấn 'Đăng nhập'\n\nBạn cũng có thể đăng nhập bằng Google hoặc sử dụng tính năng quên mật khẩu nếu cần.",
     "quên mật khẩu":
-      "Hiện tại tính năng reset mật khẩu đang được phát triển. Vui lòng liên hệ admin qua trang 'Liên hệ' để được hỗ trợ reset mật khẩu.",
+      "Để đặt lại mật khẩu:\n1. Nhấn 'Quên mật khẩu?' ở trang đăng nhập\n2. Nhập email của bạn\n3. Kiểm tra email để nhận mã OTP\n4. Nhập mã OTP để xác thực\n5. Đặt mật khẩu mới\n\nMã OTP có hiệu lực trong 10 phút.",
 
     // Đăng tin
     "đăng tin":
@@ -164,46 +164,126 @@ const ChatBot = () => {
     return null
   }
 
+  // Enhanced property types mapping với ID chính xác
+  const propertyTypeMap = {
+    "biệt thự": { variations: ["biệt thự", "villa", "biệt thự nghỉ dưỡng"], id: 6 },
+    "biệt thự nghỉ dưỡng": { variations: ["biệt thự nghỉ dưỡng", "villa resort"], id: 13 },
+    "căn hộ": { variations: ["căn hộ", "chung cư", "apartment", "condo"], id: 2 },
+    condotel: { variations: ["condotel", "condo hotel"], id: 12 },
+    "đất công nghiệp": { variations: ["đất công nghiệp", "đất khu công nghiệp"], id: 16 },
+    "đất đô thị": { variations: ["đất đô thị", "đất thổ cư"], id: 17 },
+    "đất nông nghiệp": { variations: ["đất nông nghiệp", "đất trồng trọt"], id: 15 },
+    "đất trống": { variations: ["đất trống", "đất", "land", "lô đất"], id: 1 },
+    "kho xưởng": { variations: ["kho xưởng", "nhà xưởng", "warehouse"], id: 4 },
+    "nhà mặt phố": { variations: ["nhà mặt phố", "mặt phố", "nhà phố mặt tiền"], id: 8 },
+    "nhà phố": { variations: ["nhà phố", "nhà liền kề", "townhouse"], id: 5 },
+    officetel: { variations: ["officetel", "office tel"], id: 11 },
+    shophouse: { variations: ["shophouse", "shop house", "nhà phố thương mại"], id: 10 },
+    trọ: { variations: ["trọ", "phòng trọ", "nhà trọ"], id: 19 },
+    "văn phòng": { variations: ["văn phòng", "office", "tòa nhà văn phòng"], id: 9 },
+  }
+
+  // Enhanced location detection với tên chính xác
+  const locationMap = {
+    "hà nội": { variations: ["hà nội", "hanoi", "hn", "thủ đô"], name: "Hà Nội" },
+    "hồ chí minh": {
+      variations: ["hồ chí minh", "hcm", "sài gòn", "saigon", "tp hcm", "thành phố hồ chí minh"],
+      name: "Hồ Chí Minh",
+    },
+    "đà nẵng": { variations: ["đà nẵng", "da nang", "đà nẵng"], name: "Đà Nẵng" },
+    "hải phòng": { variations: ["hải phòng", "hai phong"], name: "Hải Phòng" },
+    "cần thơ": { variations: ["cần thơ", "can tho"], name: "Cần Thơ" },
+    "an giang": { variations: ["an giang"], name: "An Giang" },
+    "bà rịa vũng tàu": { variations: ["bà rịa vũng tàu", "vũng tàu", "bà rịa"], name: "Bà Rịa - Vũng Tàu" },
+    "bắc giang": { variations: ["bắc giang"], name: "Bắc Giang" },
+    "bắc kạn": { variations: ["bắc kạn"], name: "Bắc Kạn" },
+    "bạc liêu": { variations: ["bạc liêu"], name: "Bạc Liêu" },
+    "bắc ninh": { variations: ["bắc ninh"], name: "Bắc Ninh" },
+    "bến tre": { variations: ["bến tre"], name: "Bến Tre" },
+    "bình định": { variations: ["bình định"], name: "Bình Định" },
+    "bình dương": { variations: ["bình dương"], name: "Bình Dương" },
+    "bình phước": { variations: ["bình phước"], name: "Bình Phước" },
+    "bình thuận": { variations: ["bình thuận"], name: "Bình Thuận" },
+    "cà mau": { variations: ["cà mau"], name: "Cà Mau" },
+    "cao bằng": { variations: ["cao bằng"], name: "Cao Bằng" },
+    "đắk lắk": { variations: ["đắk lắk", "dak lak"], name: "Đắk Lắk" },
+    "đắk nông": { variations: ["đắk nông", "dak nong"], name: "Đắk Nông" },
+    "điện biên": { variations: ["điện biên"], name: "Điện Biên" },
+    "đồng nai": { variations: ["đồng nai"], name: "Đồng Nai" },
+    "đồng tháp": { variations: ["đồng tháp"], name: "Đồng Tháp" },
+    "gia lai": { variations: ["gia lai"], name: "Gia Lai" },
+    "hà giang": { variations: ["hà giang"], name: "Hà Giang" },
+    "hà nam": { variations: ["hà nam"], name: "Hà Nam" },
+    "hà tĩnh": { variations: ["hà tĩnh"], name: "Hà Tĩnh" },
+    "hải dương": { variations: ["hải dương"], name: "Hải Dương" },
+    "hậu giang": { variations: ["hậu giang"], name: "Hậu Giang" },
+    "hòa bình": { variations: ["hòa bình"], name: "Hòa Bình" },
+    "hưng yên": { variations: ["hưng yên"], name: "Hưng Yên" },
+    "khánh hòa": { variations: ["khánh hòa", "nha trang"], name: "Khánh Hòa" },
+    "kiên giang": { variations: ["kiên giang", "phú quốc"], name: "Kiên Giang" },
+    "kon tum": { variations: ["kon tum"], name: "Kon Tum" },
+    "lai châu": { variations: ["lai châu"], name: "Lai Châu" },
+    "lâm đồng": { variations: ["lâm đồng", "đà lạt"], name: "Lâm Đồng" },
+    "lạng sơn": { variations: ["lạng sơn"], name: "Lạng Sơn" },
+    "lào cai": { variations: ["lào cai", "sapa"], name: "Lào Cai" },
+    "long an": { variations: ["long an"], name: "Long An" },
+    "nam định": { variations: ["nam định"], name: "Nam Định" },
+    "nghệ an": { variations: ["nghệ an"], name: "Nghệ An" },
+    "ninh bình": { variations: ["ninh bình"], name: "Ninh Bình" },
+    "ninh thuận": { variations: ["ninh thuận"], name: "Ninh Thuận" },
+    "phú thọ": { variations: ["phú thọ"], name: "Phú Thọ" },
+    "phú yên": { variations: ["phú yên"], name: "Phú Yên" },
+    "quảng bình": { variations: ["quảng bình"], name: "Quảng Bình" },
+    "quảng nam": { variations: ["quảng nam", "hội an"], name: "Quảng Nam" },
+    "quảng ngãi": { variations: ["quảng ngãi"], name: "Quảng Ngãi" },
+    "quảng ninh": { variations: ["quảng ninh", "hạ long"], name: "Quảng Ninh" },
+    "quảng trị": { variations: ["quảng trị"], name: "Quảng Trị" },
+    "sóc trăng": { variations: ["sóc trăng"], name: "Sóc Trăng" },
+    "sơn la": { variations: ["sơn la"], name: "Sơn La" },
+    "tây ninh": { variations: ["tây ninh"], name: "Tây Ninh" },
+    "thái bình": { variations: ["thái bình"], name: "Thái Bình" },
+    "thái nguyên": { variations: ["thái nguyên"], name: "Thái Nguyên" },
+    "thanh hóa": { variations: ["thanh hóa"], name: "Thanh Hóa" },
+    "thừa thiên huế": { variations: ["thừa thiên huế", "huế"], name: "Thừa Thiên Huế" },
+    "tiền giang": { variations: ["tiền giang"], name: "Tiền Giang" },
+    "trà vinh": { variations: ["trà vinh"], name: "Trà Vinh" },
+    "tuyên quang": { variations: ["tuyên quang"], name: "Tuyên Quang" },
+    "vĩnh long": { variations: ["vĩnh long"], name: "Vĩnh Long" },
+    "vĩnh phúc": { variations: ["vĩnh phúc"], name: "Vĩnh Phúc" },
+    "yên bái": { variations: ["yên bái"], name: "Yên Bái" },
+  }
+
   const extractSearchParams = (userInput) => {
     const input = userInput.toLowerCase()
     const params = {}
 
-    // Property types with more variations
-    const propertyTypeMap = {
-      nhà: ["nhà", "house", "villa", "biệt thự"],
-      đất: ["đất", "land", "lô đất", "mảnh đất"],
-      "chung cư": ["chung cư", "apartment", "căn hộ", "condo"],
-      shophouse: ["shophouse", "shop house", "nhà phố"],
-      "văn phòng": ["văn phòng", "office", "tòa nhà"],
-    }
-
-    // Enhanced property type detection
-    for (const [type, variations] of Object.entries(propertyTypeMap)) {
-      if (variations.some((variation) => input.includes(variation))) {
-        const foundType = propertyTypes.find((t) => t.TenLoai?.toLowerCase().includes(type))
-        if (foundType) params.loaiBDS = foundType.MaLoai
+    // Enhanced property type detection với ID chính xác
+    for (const [type, config] of Object.entries(propertyTypeMap)) {
+      if (config.variations.some((variation) => input.includes(variation))) {
+        params.loaiBDS = config.id
+        params.propertyTypeName = type
         break
       }
     }
 
-    // Enhanced location detection with more cities
-    const locationMap = {
-      "hà nội": ["hà nội", "hanoi", "hn"],
-      "hồ chí minh": ["hồ chí minh", "hcm", "sài gòn", "saigon", "tp hcm"],
-      "đà nẵng": ["đà nẵng", "da nang"],
-      "hải phòng": ["hải phòng", "hai phong"],
-      "cần thơ": ["cần thơ", "can tho"],
-    }
-
-    for (const [city, variations] of Object.entries(locationMap)) {
-      if (variations.some((variation) => input.includes(variation))) {
-        const foundProvince = provinces.find((p) => p.TenTinh?.toLowerCase().includes(city))
-        if (foundProvince) params.tinh = foundProvince.MaTinh
+    // Enhanced location detection
+    for (const [province, config] of Object.entries(locationMap)) {
+      if (config.variations.some((variation) => input.includes(variation))) {
+        // Tìm province trong database
+        const foundProvince = provinces.find(
+          (p) =>
+            p.TenTinh?.toLowerCase().includes(province) ||
+            config.variations.some((v) => p.TenTinh?.toLowerCase().includes(v)),
+        )
+        if (foundProvince) {
+          params.tinh = foundProvince.MaTinh
+          params.provinceName = config.name
+        }
         break
       }
     }
 
-    // Enhanced price detection with more formats
+    // Enhanced price detection (giữ nguyên logic cũ)
     const pricePatterns = [
       /(\d+(?:\.\d+)?)\s*(tỷ|ty|billion)/gi,
       /(\d+(?:\.\d+)?)\s*(triệu|tr|million)/gi,
@@ -238,7 +318,7 @@ const ChatBot = () => {
       }
     }
 
-    // Area detection
+    // Area detection (giữ nguyên)
     const areaMatch = input.match(/(\d+(?:\.\d+)?)\s*(m2|mét vuông|m²)/gi)
     if (areaMatch) {
       const areas = areaMatch.map((a) => Number.parseFloat(a))
@@ -312,6 +392,9 @@ const ChatBot = () => {
           setTimeout(() => addMessage(faqData["liên hệ"], "bot"), 1500)
         }, 500)
         break
+      default:
+        addMessage("Xin lỗi, tôi không hiểu yêu cầu này.", "bot")
+        break
     }
   }
 
@@ -340,26 +423,41 @@ const ChatBot = () => {
             if (Object.keys(searchParams).length > 0) {
               let responseText = "Tôi đã phân tích yêu cầu của bạn:\n\n"
 
-              if (searchParams.loaiBDS) {
-                const propertyType = propertyTypes.find((t) => t.MaLoai === searchParams.loaiBDS)
-                responseText += `• Loại BĐS: ${propertyType?.TenLoai}\n`
+              if (searchParams.propertyTypeName) {
+                responseText += `🏠 Loại BĐS: ${searchParams.propertyTypeName}\n`
               }
 
-              if (searchParams.tinh) {
-                const province = provinces.find((p) => p.MaTinh === searchParams.tinh)
-                responseText += `• Địa điểm: ${province?.TenTinh}\n`
+              if (searchParams.provinceName) {
+                responseText += `📍 Địa điểm: ${searchParams.provinceName}\n`
               }
 
               if (searchParams.giaMin || searchParams.giaMax) {
-                responseText += `• Khoảng giá: ${searchParams.giaMin ? (searchParams.giaMin / 1000000000).toFixed(1) + " tỷ" : "Không giới hạn"} - ${searchParams.giaMax ? (searchParams.giaMax / 1000000000).toFixed(1) + " tỷ" : "Không giới hạn"}\n`
+                const minPrice = searchParams.giaMin
+                  ? (searchParams.giaMin / 1000000000).toFixed(1) + " tỷ"
+                  : "Không giới hạn"
+                const maxPrice = searchParams.giaMax
+                  ? (searchParams.giaMax / 1000000000).toFixed(1) + " tỷ"
+                  : "Không giới hạn"
+                responseText += `💰 Khoảng giá: ${minPrice} - ${maxPrice}\n`
               }
 
-              responseText += "\nĐang chuyển đến trang kết quả tìm kiếm..."
+              if (searchParams.dienTichMin || searchParams.dienTichMax) {
+                const minArea = searchParams.dienTichMin ? searchParams.dienTichMin + " m²" : "Không giới hạn"
+                const maxArea = searchParams.dienTichMax ? searchParams.dienTichMax + " m²" : "Không giới hạn"
+                responseText += `📐 Diện tích: ${minArea} - ${maxArea}\n`
+              }
+
+              responseText += "\n🔍 Đang tìm kiếm và chuyển đến trang kết quả..."
 
               addMessage(responseText, "bot")
 
               setTimeout(() => {
-                const queryString = new URLSearchParams(searchParams).toString()
+                // Loại bỏ các field không cần thiết trước khi tạo query string
+                const cleanParams = { ...searchParams }
+                delete cleanParams.propertyTypeName
+                delete cleanParams.provinceName
+
+                const queryString = new URLSearchParams(cleanParams).toString()
                 navigate(`/tim-kiem?${queryString}`)
                 setIsOpen(false)
               }, 2000)

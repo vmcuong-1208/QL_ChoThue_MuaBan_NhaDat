@@ -9,7 +9,7 @@ CREATE TABLE NGUOIDUNG (
     MaNgDung INT AUTO_INCREMENT PRIMARY KEY,
     TenDangNhap VARCHAR(50),
     Email VARCHAR(100) NOT NULL UNIQUE,
-    MatKhau VARCHAR(255), -- CHO PHÉP NULL nếu là tài khoản Google
+    MatKhau VARCHAR(255) NULL,
     SDT VARCHAR(15),
     DiaChi TEXT,
     LoaiTaiKhoan ENUM('thường', 'môi giới', 'chủ đầu tư', 'admin') DEFAULT 'thường',
@@ -17,13 +17,12 @@ CREATE TABLE NGUOIDUNG (
     AnhDaiDien VARCHAR(255),
     MoTaBanThan TEXT,
     TrangThai ENUM('hoạt động', 'khóa', 'chờ xác thực') DEFAULT 'chờ xác thực',
-    -- THÊM CÁC TRƯỜNG DƯỚI ĐÂY
-    OAuthProvider VARCHAR(50), -- Ví dụ: 'google', 'facebook'...
-    OAuthId VARCHAR(100),      -- Lưu Google user id (sub)
+    GoogleId VARCHAR(255) NULL UNIQUE,
     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
-    
     UNIQUE(OAuthProvider, OAuthId) -- Đảm bảo không trùng một người dùng từ Google
+    CONSTRAINT chk_auth_method 
+    CHECK (MatKhau IS NOT NULL OR GoogleId IS NOT NULL) -- Constraint đảm bảo ít nhất một trong hai có giá trị
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Bảng Loại nhà đất
@@ -138,18 +137,6 @@ CREATE TABLE TINNHAN (
     FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Đánh Giá 
-CREATE TABLE DANHGIA (
-    MaDG INT AUTO_INCREMENT PRIMARY KEY,
-    MaTTND INT NOT NULL,
-    MaNgDung INT NOT NULL,
-    DiemDG TINYINT UNSIGNED NOT NULL CHECK (DiemDG BETWEEN 1 AND 5),
-    NoiDung TEXT,
-    NgayDG DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE,
-    FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- Tạo bảng lịch sử xem nếu chưa có
 CREATE TABLE IF NOT EXISTS LICHSUXEM (
     MaLichSu INT AUTO_INCREMENT PRIMARY KEY,
@@ -160,7 +147,39 @@ CREATE TABLE IF NOT EXISTS LICHSUXEM (
     FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE,
     UNIQUE KEY unique_user_property (MaNgDung, MaTTND)
 );
+CREATE TABLE IF NOT EXISTS GIAODICH (
+    MaGD INT AUTO_INCREMENT PRIMARY KEY,
+    MaNgDung INT NOT NULL,
+    OrderId VARCHAR(100) UNIQUE NOT NULL,
+    TransId VARCHAR(100),
+    Amount DECIMAL(15,2) NOT NULL,
+    OrderInfo TEXT,
+    UpgradeType VARCHAR(50),
+    TrangThai ENUM('PENDING', 'SUCCESS', 'FAILED', 'CANCELLED') DEFAULT 'PENDING',
+    NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    NgayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
+);
+-- Tạo bảng OTP cho chức năng quên mật khẩu
+CREATE TABLE IF NOT EXISTS OTP (
+    MaOTP INT AUTO_INCREMENT PRIMARY KEY,
+    Email VARCHAR(100) NOT NULL,
+    OTPCode VARCHAR(6) NOT NULL,
+    ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ThoiGianHetHan DATETIME NOT NULL,
+    DaSuDung BOOLEAN DEFAULT FALSE,
+    INDEX idx_email (Email),
+    INDEX idx_otp_code (OTPCode),
+    INDEX idx_expiry (ThoiGianHetHan),
+    FOREIGN KEY (Email) REFERENCES NGUOIDUNG(Email) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Xóa OTP cũ đã hết hạn (chạy định kỳ)
+CREATE EVENT IF NOT EXISTS delete_expired_otp
+ON SCHEDULE EVERY 1 DAY
+STARTS CURRENT_TIMESTAMP
+DO
+    DELETE FROM OTP WHERE ThoiGianHetHan < NOW();
 -- Tạo index để tối ưu hóa truy vấn
 CREATE INDEX idx_property_price ON THONGTINNHADAT(Gia);
 CREATE INDEX idx_property_area ON THONGTINNHADAT(DienTich);
@@ -172,3 +191,4 @@ CREATE INDEX idx_danhgia_property ON DANHGIA(MaTTND);
 CREATE INDEX idx_verification_status ON THONGTINNHADAT(TrangThaiXacThuc);
 CREATE INDEX idx_verification_property ON THONGTINXACTHUC(MaTTND);
 CREATE INDEX idx_verification_date ON THONGTINXACTHUC(NgayGui);
+ADD INDEX idx_google_id (GoogleId);

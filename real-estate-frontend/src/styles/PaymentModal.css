@@ -4,22 +4,34 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
-  padding: 20px;
+  backdrop-filter: blur(5px);
 }
 
 .payment-modal {
   background: white;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 100%;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .payment-modal-header {
@@ -28,307 +40,339 @@
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
 }
 
 .payment-modal-header h2 {
   margin: 0;
-  color: #1f2937;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
-.payment-modal-close {
-  background: none;
+.close-button {
+  background: rgba(255, 255, 255, 0.2);
   border: none;
-  font-size: 1.5rem;
-  color: #6b7280;
+  color: white;
+  font-size: 24px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
 }
 
-.payment-modal-close:hover {
-  background: #f3f4f6;
-  color: #374151;
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .payment-modal-content {
   padding: 24px;
 }
 
-.payment-methods {
-  margin-bottom: 32px;
+.payment-info {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border-left: 4px solid #3b82f6;
 }
 
-.payment-methods h3 {
-  margin: 0 0 16px 0;
-  color: #1f2937;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.payment-method-options {
+.amount-display {
   display: flex;
-  gap: 16px;
-}
-
-.payment-method-btn {
-  display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 16px 24px;
+  margin-bottom: 8px;
+}
+
+.amount-label {
+  font-weight: 500;
+  color: #64748b;
+}
+
+.amount-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.service-description p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+/* QR Payment Section */
+.qr-payment-section {
+  text-align: center;
+}
+
+.qr-container {
+  margin-bottom: 24px;
+}
+
+.qr-container h3 {
+  margin: 0 0 16px 0;
+  color: #1e293b;
+  font-size: 1.2rem;
+}
+
+.qr-code-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  padding: 20px;
+  background: white;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex: 1;
-}
-
-.payment-method-btn:hover {
-  border-color: #3b82f6;
-  background: #f8fafc;
-}
-
-.payment-method-btn.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
-}
-
-.payment-method-btn img {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-}
-
-.payment-method-btn span {
-  font-weight: 600;
-  color: #374151;
-}
-
-.payment-info {
-  margin-bottom: 32px;
-}
-
-.payment-amount {
-  text-align: center;
-  margin-bottom: 24px;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  color: white;
-}
-
-.payment-amount h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
-.payment-amount p {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 1.1rem;
-}
-
-.payment-details {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-}
-
-.qr-section {
-  text-align: center;
-}
-
-.qr-section h4 {
-  margin: 0 0 16px 0;
-  color: #374151;
-  font-weight: 600;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .qr-code {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 24px;
-  border: 2px dashed #d1d5db;
-  border-radius: 12px;
-  background: #f9fafb;
-}
-
-.qr-code svg {
-  color: #6b7280;
-}
-
-.qr-code p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.payment-instructions h4 {
-  margin: 0 0 16px 0;
-  color: #374151;
-  font-weight: 600;
-}
-
-.payment-details-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  padding: 12px;
-  background: #f9fafb;
   border-radius: 8px;
 }
 
-.detail-item .label {
-  font-weight: 600;
-  color: #374151;
-  min-width: 120px;
-}
-
-.detail-item .value {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: monospace;
-  color: #1f2937;
-  flex: 1;
-  text-align: right;
-}
-
-.copy-btn {
-  background: none;
-  border: none;
-  color: #3b82f6;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.copy-btn:hover {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.copy-success {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #059669;
+.qr-instruction {
+  color: #64748b;
   font-size: 0.9rem;
-  margin-top: 8px;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.payment-token-section {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 24px;
-}
-
-.payment-token-section h4 {
-  margin: 0 0 16px 0;
-  color: #374151;
-  font-weight: 600;
-}
-
-.token-input-group {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.token-input {
-  flex: 1;
-  padding: 12px 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-.token-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-}
-
-.submit-token-btn {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.submit-token-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-
-.submit-token-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.token-note {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.9rem;
+  margin: 16px 0;
   line-height: 1.5;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
+.payment-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.copy-link-button,
+.open-momo-button {
+  flex: 1;
+  min-width: 140px;
+  padding: 12px 16px;
+  border: 2px solid #3b82f6;
+  background: white;
+  color: #3b82f6;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.copy-link-button:hover,
+.open-momo-button:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.test-info {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.test-info h4 {
+  margin: 0 0 12px 0;
+  color: #92400e;
+  font-size: 1rem;
+}
+
+.test-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.test-method {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #f59e0b;
+}
+
+.test-method strong {
+  color: #92400e;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.test-method p {
+  margin: 2px 0;
+  font-size: 0.85rem;
+  color: #78716c;
+}
+
+.test-method code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.back-button {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background: #4b5563;
+}
+
+/* MoMo Section */
+.momo-section {
+  text-align: center;
+}
+
+.momo-image-placeholder {
+  margin-bottom: 20px;
+}
+
+.placeholder-image {
+  width: 100%;
+  max-width: 300px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+}
+
+.momo-features h3 {
+  margin: 0 0 16px 0;
+  color: #1e293b;
+  font-size: 1.3rem;
+}
+
+.feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.feature-icon {
+  font-size: 1.1rem;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  margin-bottom: 16px;
+}
+
+.error-icon {
+  font-size: 1.2rem;
+}
+
+.momo-payment-button {
+  width: 100%;
+  background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+  color: white;
+  border: none;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.momo-payment-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
+}
+
+.momo-payment-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.momo-icon {
+  font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
   .payment-modal {
+    width: 95%;
     margin: 10px;
-    max-height: 95vh;
   }
 
-  .payment-details {
-    grid-template-columns: 1fr;
-    gap: 24px;
+  .payment-modal-content {
+    padding: 16px;
   }
 
-  .token-input-group {
+  .payment-actions {
     flex-direction: column;
   }
 
-  .payment-method-options {
-    flex-direction: column;
+  .copy-link-button,
+  .open-momo-button {
+    min-width: auto;
   }
 
-  .detail-item {
-    flex-direction: column;
-    align-items: flex-start;
+  .test-methods {
     gap: 8px;
   }
 
-  .detail-item .value {
-    text-align: left;
+  .test-method {
+    padding: 10px;
   }
 }

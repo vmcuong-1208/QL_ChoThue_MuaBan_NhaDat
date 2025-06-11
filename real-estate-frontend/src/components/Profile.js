@@ -1,31 +1,56 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "../context/AuthContext" // Import useAuth
+import { useAuth } from "../context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaPen, FaCheck, FaTimes } from "react-icons/fa"
 import "../styles/Profile.css"
 import PaymentModal from "./PaymentModal"
 
 const Profile = () => {
-  const { currentUser, updateProfile, loading } = useAuth() // Use AuthContext
+  const { currentUser, updateProfile, loading, loadUserInfo, token } = useAuth()
   const navigate = useNavigate()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
-    HoTen: currentUser?.HoTen || "",
-    SDT: currentUser?.SDT || "",
-    DiaChi: currentUser?.DiaChi || "",
-    MoTaBanThan: currentUser?.MoTaBanThan || "",
-    AnhDaiDien: currentUser?.AnhDaiDien || "",
+    HoTen: "",
+    SDT: "",
+    DiaChi: "",
+    MoTaBanThan: "",
+    AnhDaiDien: null,
   })
-  const [previewImage, setPreviewImage] = useState(currentUser?.AnhDaiDien || "")
+  const [previewImage, setPreviewImage] = useState("")
   const [showPaymentModal, setShowPaymentModal] = useState(false)
 
+  // Load user info when component mounts or when user changes
   useEffect(() => {
-    if (!currentUser) {
-      navigate("/auth")
+    const loadData = async () => {
+      if (token && !currentUser) {
+        await loadUserInfo(token)
+      }
+    }
+    loadData()
+  }, [token, currentUser, loadUserInfo])
+
+  // Update form data when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        HoTen: currentUser.HoTen || "",
+        SDT: currentUser.SDT || "",
+        DiaChi: currentUser.DiaChi || "",
+        MoTaBanThan: currentUser.MoTaBanThan || "",
+        AnhDaiDien: null, // Always null for file input
+      })
+      // Chỉ hiển thị avatar nếu có và là local file
+      setPreviewImage(currentUser.AnhDaiDien || "")
     }
   }, [currentUser])
+
+  useEffect(() => {
+    if (!currentUser && !loading) {
+      navigate("/auth")
+    }
+  }, [currentUser, loading, navigate])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -48,23 +73,40 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const formDataToSend = new FormData()
-    Object.keys(formData).forEach((key) => {
-      formDataToSend.append(key, formData[key])
-    })
-    await updateProfile(formDataToSend)
-    setIsEditing(false)
+    try {
+      const formDataToSend = new FormData()
+
+      // Thêm tất cả các field vào FormData
+      formDataToSend.append("HoTen", formData.HoTen)
+      formDataToSend.append("SDT", formData.SDT)
+      formDataToSend.append("DiaChi", formData.DiaChi)
+      formDataToSend.append("MoTaBanThan", formData.MoTaBanThan)
+
+      // Chỉ thêm file nếu user đã chọn file mới
+      if (formData.AnhDaiDien instanceof File) {
+        formDataToSend.append("AnhDaiDien", formData.AnhDaiDien)
+      }
+
+      await updateProfile(formDataToSend)
+      setIsEditing(false)
+      alert("Cập nhật thông tin thành công!")
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      alert("Có lỗi xảy ra khi cập nhật thông tin!")
+    }
   }
 
   const handleCancel = () => {
-    setFormData({
-      HoTen: currentUser?.HoTen || "",
-      SDT: currentUser?.SDT || "",
-      DiaChi: currentUser?.DiaChi || "",
-      MoTaBanThan: currentUser?.MoTaBanThan || "",
-      AnhDaiDien: currentUser?.AnhDaiDien || "",
-    })
-    setPreviewImage(currentUser?.AnhDaiDien || "")
+    if (currentUser) {
+      setFormData({
+        HoTen: currentUser.HoTen || "",
+        SDT: currentUser.SDT || "",
+        DiaChi: currentUser.DiaChi || "",
+        MoTaBanThan: currentUser.MoTaBanThan || "",
+        AnhDaiDien: null,
+      })
+      setPreviewImage(currentUser.AnhDaiDien || "")
+    }
     setIsEditing(false)
   }
 
@@ -123,11 +165,18 @@ const Profile = () => {
       <div className="profile-content">
         <div className="profile-avatar-section">
           <div className="profile-avatar">
-            <img src={previewImage || "https://via.placeholder.com/150"} alt="Avatar" className="avatar-image" />
+            <img
+              src={previewImage || "https://via.placeholder.com/150"}
+              alt="Avatar"
+              className="avatar-image"
+              onError={(e) => {
+                e.target.src = "https://via.placeholder.com/150"
+              }}
+            />
             {isEditing && (
               <label className="avatar-upload">
                 <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
-                <FaPen /> Thay đổi
+                <FaPen /> {previewImage ? "Thay đổi" : "Thêm ảnh"}
               </label>
             )}
           </div>
@@ -137,6 +186,11 @@ const Profile = () => {
             <p className="user-email">
               <FaEnvelope /> {currentUser.Email}
             </p>
+            {!currentUser.AnhDaiDien && (
+              <p className="avatar-note">
+                <small>💡 Bạn có thể thêm ảnh đại diện bằng cách nhấn "Chỉnh sửa"</small>
+              </p>
+            )}
           </div>
         </div>
 

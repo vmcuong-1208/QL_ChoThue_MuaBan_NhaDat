@@ -64,7 +64,7 @@ const GoogleMapGuide = ({ onClose }) => {
             <p>Sao chép toàn bộ mã HTML (iframe) được cung cấp.</p>
             <div className="guide-image">
               <img src="https://light.com.vn/Files/26/thu-thuat-marketing-online/sao-chep-html-map.jpg" alt="Sao chép mã nhúng" />
-            </div>
+            </div>  
             <div className="code-example">
               <pre>
                 <code>
