@@ -1,10 +1,15 @@
 const express = require("express")
 const cors = require("cors")
+const session = require("express-session")
+const passport = require("passport")
 require("dotenv").config()
-const db = require("./config/db") 
+const db = require("./config/db")
 const path = require("path")
 const http = require("http")
-const setupSocket = require("./socket") 
+const setupSocket = require("./socket")
+
+// Import passport config
+require("./config/passport")
 
 const app = express()
 
@@ -14,9 +19,33 @@ const server = http.createServer(app)
 // Khởi tạo socket.io
 const io = setupSocket(server)
 
-app.use(cors())
+// Middleware cơ bản
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+// Session middleware (cần thiết cho Passport)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "HUTECH",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // set true nếu dùng HTTPS
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  }),
+)
+
+// Passport middleware
+app.use(passport.initialize())
+app.use(passport.session())
+
 // Cấu hình để phục vụ thư mục uploads làm thư mục tĩnh
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
@@ -54,6 +83,9 @@ app.use("/api/admin", adminRoutes)
 const verificationRoutes = require("./routes/verification")
 app.use("/api/verification", verificationRoutes)
 
+const momoPaymentRoutes = require("./routes/momo-payment")
+app.use("/api/momo-payment", momoPaymentRoutes)
+
 // Xử lý lỗi 404
 app.use((req, res) => {
   console.log(`404 Not Found: ${req.method} ${req.originalUrl}`)
@@ -69,5 +101,5 @@ app.use((err, req, res, next) => {
 // Khởi động server
 const PORT = process.env.PORT || 5000
 server.listen(PORT, () => {
-    console.log(`🚀 Server đang chạy trên cổng ${PORT}`)
+  console.log(`🚀 Server đang chạy trên cổng ${PORT}`)
 })

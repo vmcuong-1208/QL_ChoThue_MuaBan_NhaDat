@@ -378,6 +378,20 @@ router.post("/:id/view", async (req, res) => {
 router.post("/", authenticateToken, upload.array("HinhAnh", 10), async (req, res) => {
   try {
     const userId = req.user.id || req.user.MaNgDung
+    
+    // Check post limit for regular users
+    if (req.user.LoaiTaiKhoan && req.user.LoaiTaiKhoan.toLowerCase() === "thường") {
+      const [existingPosts] = await db
+        .promise()
+        .query(`SELECT COUNT(*) as count FROM THONGTINNHADAT WHERE MaNgDung = ?`, [userId])
+
+      if (existingPosts[0].count >= 1) {
+        return res.status(403).json({
+          message: "Tài khoản thường chỉ được đăng tối đa 1 tin. Vui lòng nâng cấp tài khoản để đăng thêm tin.",
+        })
+      }
+    }
+
     const { TieuDe, MoTa, Gia, DienTich, DiaChi, MaTinh, MaHuyen, MaXa, MaLoaiND, TrangThai, GoogleMapIframe } =
       req.body
     const hinhAnh = req.files.map((file) => `/uploads/properties/${file.filename}`)
