@@ -20,7 +20,6 @@ CREATE TABLE NGUOIDUNG (
     GoogleId VARCHAR(255) NULL UNIQUE,
     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE(OAuthProvider, OAuthId) -- Đảm bảo không trùng một người dùng từ Google
     CONSTRAINT chk_auth_method 
     CHECK (MatKhau IS NOT NULL OR GoogleId IS NOT NULL) -- Constraint đảm bảo ít nhất một trong hai có giá trị
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

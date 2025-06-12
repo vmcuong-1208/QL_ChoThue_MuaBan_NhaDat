@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const db = require("../config/db") // Import kết nối database
+const db = require("../config/db") 
 
 // Lấy danh sách tỉnh/thành phố
 router.get("/provinces", async (req, res) => {
