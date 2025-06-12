@@ -46,8 +46,8 @@ router.post("/register", async (req, res) => {
       const salt = await bcrypt.genSalt(10)
       const hashedPassword = await bcrypt.hash(MatKhau, salt)
 
-      // Thêm user vào database
-      const sql = `INSERT INTO NGUOIDUNG (TenDangNhap, Email, MatKhau, SDT) VALUES (?, ?, ?, ?)`
+      // Thêm user vào database với trạng thái mặc định
+      const sql = `INSERT INTO NGUOIDUNG (TenDangNhap, Email, MatKhau, SDT, TrangThai) VALUES (?, ?, ?, ?, 'hoạt động')`
       db.query(sql, [TenDangNhap, Email, hashedPassword, SDT], (err, result) => {
         if (err) return res.status(500).json({ message: "Lỗi khi tạo tài khoản", error: err })
 
@@ -86,6 +86,14 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({
         success: false,
         message: "Tài khoản không tồn tại!",
+      })
+    }
+
+    // Kiểm tra trạng thái tài khoản
+    if (user[0].TrangThai === "khóa") {
+      return res.status(403).json({
+        success: false,
+        message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ admin để được hỗ trợ.",
       })
     }
 
@@ -129,6 +137,7 @@ router.post("/login", async (req, res) => {
         SDT: user[0].SDT,
         DiaChi: user[0].DiaChi,
         LoaiTaiKhoan: user[0].LoaiTaiKhoan,
+        TrangThai: user[0].TrangThai,
         AnhDaiDien: avatarUrl,
         MoTaBanThan: user[0].MoTaBanThan,
       },
@@ -143,11 +152,28 @@ router.post("/login", async (req, res) => {
 })
 
 // Verify token endpoint
-router.get("/verify", authenticateToken, (req, res) => {
-  res.json({
-    valid: true,
-    user: req.user,
-  })
+router.get("/verify", authenticateToken, async (req, res) => {
+  try {
+    // Kiểm tra trạng thái tài khoản hiện tại
+    const [user] = await db.promise().query("SELECT TrangThai FROM NGUOIDUNG WHERE MaNgDung = ?", [req.user.MaNgDung])
+
+    if (user.length === 0 || user[0].TrangThai === "khóa") {
+      return res.status(403).json({
+        valid: false,
+        message: "Tài khoản đã bị khóa",
+      })
+    }
+
+    res.json({
+      valid: true,
+      user: req.user,
+    })
+  } catch (error) {
+    res.status(500).json({
+      valid: false,
+      message: "Lỗi server",
+    })
+  }
 })
 
 // Cập nhật thông tin cá nhân
@@ -160,6 +186,13 @@ router.put("/update", authenticateToken, upload.single("AnhDaiDien"), async (req
   }
 
   try {
+    // Kiểm tra trạng thái tài khoản
+    const [userStatus] = await db.promise().query("SELECT TrangThai FROM NGUOIDUNG WHERE MaNgDung = ?", [MaNgDung])
+
+    if (userStatus.length === 0 || userStatus[0].TrangThai === "khóa") {
+      return res.status(403).json({ message: "Tài khoản đã bị khóa" })
+    }
+
     // Lấy thông tin user hiện tại để preserve avatar nếu không upload file mới
     const [currentUser] = await db.promise().query("SELECT AnhDaiDien FROM NGUOIDUNG WHERE MaNgDung = ?", [MaNgDung])
 
@@ -185,7 +218,7 @@ router.put("/update", authenticateToken, upload.single("AnhDaiDien"), async (req
     const [updatedUser] = await db
       .promise()
       .query(
-        `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan FROM NGUOIDUNG WHERE MaNgDung = ?`,
+        `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan, TrangThai FROM NGUOIDUNG WHERE MaNgDung = ?`,
         [MaNgDung],
       )
 
@@ -219,7 +252,7 @@ router.get("/me", authenticateToken, async (req, res) => {
     const [results] = await db
       .promise()
       .query(
-        `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan FROM NGUOIDUNG WHERE MaNgDung = ?`,
+        `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan, TrangThai FROM NGUOIDUNG WHERE MaNgDung = ?`,
         [MaNgDung],
       )
 
@@ -228,6 +261,11 @@ router.get("/me", authenticateToken, async (req, res) => {
     }
 
     const user = results[0]
+
+    // Kiểm tra trạng thái tài khoản
+    if (user.TrangThai === "khóa") {
+      return res.status(403).json({ message: "Tài khoản đã bị khóa" })
+    }
 
     // Format avatar URL - chỉ xử lý local files
     if (user.AnhDaiDien) {
@@ -250,6 +288,13 @@ router.put("/upgrade", authenticateToken, async (req, res) => {
     const userId = req.user.MaNgDung
     const { paymentToken, paymentMethod, upgradeType } = req.body
 
+    // Kiểm tra trạng thái tài khoản
+    const [userStatus] = await db.promise().query("SELECT TrangThai FROM NGUOIDUNG WHERE MaNgDung = ?", [userId])
+
+    if (userStatus.length === 0 || userStatus[0].TrangThai === "khóa") {
+      return res.status(403).json({ message: "Tài khoản đã bị khóa" })
+    }
+
     // Validate payment token (in real implementation, verify with payment gateway)
     if (!paymentToken || !paymentMethod || !upgradeType) {
       return res.status(400).json({ message: "Thiếu thông tin thanh toán" })
@@ -267,7 +312,7 @@ router.put("/upgrade", authenticateToken, async (req, res) => {
 
     // Get updated user info
     const [users] = await db.promise().query(
-      `SELECT MaNgDung, Email, HoTen, SDT, DiaChi, AnhDaiDien, LoaiTaiKhoan, MoTaBanThan 
+      `SELECT MaNgDung, Email, HoTen, SDT, DiaChi, AnhDaiDien, LoaiTaiKhoan, MoTaBanThan, TrangThai 
        FROM NGUOIDUNG WHERE MaNgDung = ?`,
       [userId],
     )
@@ -299,11 +344,15 @@ router.post("/forgot-password", async (req, res) => {
   }
 
   try {
-    // Kiểm tra email có tồn tại không
+    // Kiểm tra email có tồn tại không và trạng thái tài khoản
     const [users] = await db.promise().query("SELECT * FROM NGUOIDUNG WHERE Email = ?", [email])
 
     if (users.length === 0) {
       return res.status(404).json({ message: "Email không tồn tại trong hệ thống!" })
+    }
+
+    if (users[0].TrangThai === "khóa") {
+      return res.status(403).json({ message: "Tài khoản đã bị khóa. Không thể đặt lại mật khẩu." })
     }
 
     // Tạo mã OTP 6 số
@@ -423,6 +472,11 @@ router.get(
   passport.authenticate("google", { failureRedirect: "http://localhost:3000/auth?error=google_failed" }),
   async (req, res) => {
     try {
+      // Kiểm tra trạng thái tài khoản
+      if (req.user.TrangThai === "khóa") {
+        return res.redirect("http://localhost:3000/auth?error=account_locked")
+      }
+
       // Tạo JWT token cho user
       const token = jwt.sign(
         {
@@ -451,6 +505,7 @@ router.get(
             SDT: req.user.SDT,
             DiaChi: req.user.DiaChi,
             LoaiTaiKhoan: req.user.LoaiTaiKhoan,
+            TrangThai: req.user.TrangThai,
             AnhDaiDien: avatarUrl,
             MoTaBanThan: req.user.MoTaBanThan,
           }),

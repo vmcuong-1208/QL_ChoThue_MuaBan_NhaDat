@@ -51,16 +51,9 @@ router.get("/stats", authenticateToken, requireAdmin, async (req, res) => {
       GROUP BY LoaiTaiKhoan
     `)
 
-    // Thống kê theo trạng thái
+    // Thống kê theo trạng thái - sử dụng ENUM
     const [usersByStatus] = await db.promise().query(`
-      SELECT 
-        CASE 
-          WHEN TrangThai = 1 THEN 'hoạt động'
-          WHEN TrangThai = 0 THEN 'khóa'
-          WHEN TrangThai = 2 THEN 'chờ xác thực'
-          ELSE 'khác'
-        END as status_name,
-        COUNT(*) as count 
+      SELECT TrangThai as status_name, COUNT(*) as count 
       FROM NGUOIDUNG 
       GROUP BY TrangThai
     `)
@@ -133,7 +126,7 @@ router.get("/users", authenticateToken, requireAdmin, async (req, res) => {
       .promise()
       .query(`SELECT COUNT(*) as total FROM NGUOIDUNG ${whereClause}`, queryParams)
 
-    // Lấy danh sách người dùng
+    // Lấy danh sách người dùng - sử dụng ENUM trực tiếp
     const [users] = await db.promise().query(
       `
       SELECT 
@@ -144,13 +137,7 @@ router.get("/users", authenticateToken, requireAdmin, async (req, res) => {
         SDT,
         DiaChi,
         LoaiTaiKhoan,
-        CASE 
-          WHEN TrangThai = 1 THEN 'hoạt động'
-          WHEN TrangThai = 0 THEN 'khóa'
-          WHEN TrangThai = 2 THEN 'chờ xác thực'
-          ELSE 'khác'
-        END as TrangThai,
-        TrangThai as TrangThaiValue,
+        TrangThai,
         AnhDaiDien,
         NgayTao,
         (SELECT COUNT(*) FROM THONGTINNHADAT WHERE MaNgDung = NGUOIDUNG.MaNgDung) as SoBaiDang
@@ -202,10 +189,8 @@ router.put("/users/:id", authenticateToken, requireAdmin, async (req, res) => {
       })
     }
 
-    // Validate trạng thái và chuyển đổi
-    let trangThaiValue
+    // Validate trạng thái - sử dụng ENUM trực tiếp
     const validStatuses = ["hoạt động", "khóa", "chờ xác thực"]
-
     if (!validStatuses.includes(TrangThai)) {
       return res.status(400).json({
         message: "Trạng thái không hợp lệ",
@@ -214,19 +199,7 @@ router.put("/users/:id", authenticateToken, requireAdmin, async (req, res) => {
       })
     }
 
-    switch (TrangThai) {
-      case "hoạt động":
-        trangThaiValue = 1
-        break
-      case "khóa":
-        trangThaiValue = 0
-        break
-      case "chờ xác thực":
-        trangThaiValue = 2
-        break
-    }
-
-    console.log("Converting status:", TrangThai, "to value:", trangThaiValue)
+    console.log("Using ENUM status directly:", TrangThai)
 
     // Kiểm tra user tồn tại
     const [existingUser] = await db.promise().query("SELECT MaNgDung FROM NGUOIDUNG WHERE MaNgDung = ?", [id])
@@ -235,14 +208,10 @@ router.put("/users/:id", authenticateToken, requireAdmin, async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy người dùng" })
     }
 
-    // Cập nhật
+    // Cập nhật - sử dụng ENUM trực tiếp
     const [result] = await db
       .promise()
-      .query("UPDATE NGUOIDUNG SET LoaiTaiKhoan = ?, TrangThai = ? WHERE MaNgDung = ?", [
-        LoaiTaiKhoan,
-        trangThaiValue,
-        id,
-      ])
+      .query("UPDATE NGUOIDUNG SET LoaiTaiKhoan = ?, TrangThai = ? WHERE MaNgDung = ?", [LoaiTaiKhoan, TrangThai, id])
 
     console.log("Update result:", result)
 
@@ -251,7 +220,6 @@ router.put("/users/:id", authenticateToken, requireAdmin, async (req, res) => {
       updated: {
         LoaiTaiKhoan,
         TrangThai,
-        TrangThaiValue: trangThaiValue,
       },
     })
   } catch (error) {

@@ -22,7 +22,7 @@ const PropertyList = () => {
   const [propertyTypes, setPropertyTypes] = useState([])
   const [loading, setLoading] = useState(true)
   const [locationNames, setLocationNames] = useState({})
-  const propertiesPerPage = 8
+  const propertiesPerPage = 9
 
   // Lấy danh sách loại nhà đất từ API
   useEffect(() => {
