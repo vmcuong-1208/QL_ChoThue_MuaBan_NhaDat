@@ -47,7 +47,7 @@ CREATE TABLE THONGTINNHADAT (
     TrangThai ENUM('đang bán', 'cho thuê', 'đã bán', 'đã cho thuê','chờ xác thực','đã xác thực') DEFAULT 'đang bán',
     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
-    GoogleMapIframe TEXT;
+    GoogleMapIframe TEXT,
     TrangThaiXacThuc ENUM('chưa xác thực', 'chờ xác thực', 'đã xác thực', 'từ chối') DEFAULT 'chưa xác thực';
     FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE,
 	FOREIGN KEY (MaLoaiND) REFERENCES LOAINHADAT(MaLoaiND) ON DELETE CASCADE

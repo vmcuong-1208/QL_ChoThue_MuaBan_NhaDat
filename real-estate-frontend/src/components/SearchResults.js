@@ -44,6 +44,7 @@ const SearchResults = () => {
   const [wards, setWards] = useState([])
 
   const propertiesPerPage = 12
+  
 
   // Lấy parameters từ URL và set vào form
   useEffect(() => {
@@ -423,11 +424,6 @@ const SearchResults = () => {
       {/* Results Header */}
       <div className="search-results-header">
         <h1>Kết quả tìm kiếm</h1>
-        <div className="search-summary">
-          <p>
-            Tìm thấy <strong>{totalResults}</strong> kết quả
-          </p>
-        </div>
 
         <div className="results-actions">
           <div className="sort-dropdown">

@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API_URL = "https://provinces.open-api.vn/api"
+const API_URL = "https://provinces.open-api.vn/api/v1"
 
 const locationService = {
   // Lấy danh sách tỉnh/thành phố
