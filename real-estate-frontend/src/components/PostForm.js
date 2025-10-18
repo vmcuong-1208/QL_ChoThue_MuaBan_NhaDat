@@ -6,7 +6,10 @@ import axios from "axios"
 import { FaUpload, FaTrash, FaArrowLeft, FaInfoCircle } from "react-icons/fa"
 import "../styles/PostForm.css"
 import locationService from "../services/locationService"
-import GoogleMapGuide from "./GoogleMapGuide"
+import CoordinateInput from "./CoordinateInput"
+import GoogleMapComponent from "./GoogleMapComponent"
+import GPSLocationPicker from "./GPSLocationPicker"
+
 const API_URL = "http://localhost:5000/api"
 
 const PostForm = () => {
@@ -26,12 +29,21 @@ const PostForm = () => {
     MaHuyen: "",
     MaXa: "",
     TrangThai: "đang bán",
-    GoogleMapIframe: "",
+    ToaDoVN2000: null,
+    GPS_Lat: "",
+    GPS_Lng: "",
+    VideoThuaDat: "",
     HinhAnh: [],
+    HinhAnhGiayTo: [],
   })
 
   const [imageFiles, setImageFiles] = useState([])
   const [imagePreview, setImagePreview] = useState([])
+  const [documentImageFiles, setDocumentImageFiles] = useState([])
+  const [documentImagePreview, setDocumentImagePreview] = useState([])
+  const [videoFile, setVideoFile] = useState(null)
+  const [videoPreview, setVideoPreview] = useState(null)
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
@@ -43,8 +55,11 @@ const PostForm = () => {
   const [wards, setWards] = useState([])
   const [loadingLocations, setLoadingLocations] = useState(false)
 
+  const [selectedProvinceName, setSelectedProvinceName] = useState(null)
+
   // Thêm state để hiển thị hướng dẫn
   const [showMapGuide, setShowMapGuide] = useState(false)
+
   // Lấy danh sách loại nhà đất từ API
   useEffect(() => {
     const fetchPropertyTypes = async () => {
@@ -130,22 +145,7 @@ const PostForm = () => {
 
     fetchWards()
   }, [formData.MaHuyen])
-  // Lấy danh sách loại nhà đất từ API
-  useEffect(() => {
-    const fetchPropertyTypes = async () => {
-      try {
-        const token = localStorage.getItem("token")
-        const response = await axios.get(`${API_URL}/property-types`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        setPropertyTypes(response.data)
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách loại nhà đất:", error)
-      }
-    }
 
-    fetchPropertyTypes()
-  }, [])
   // Lấy dữ liệu bài đăng nếu đang chỉnh sửa
   // Trong useEffect khi lấy dữ liệu bài đăng để chỉnh sửa
   useEffect(() => {
@@ -171,13 +171,29 @@ const PostForm = () => {
             MaHuyen: property.MaHuyen || "",
             MaXa: property.MaXa || "",
             TrangThai: property.TrangThai || "đang bán",
-            GoogleMapIframe: property.GoogleMapIframe || "",
+            ToaDoVN2000: property.ToaDoVN2000 ? JSON.parse(property.ToaDoVN2000) : null,
+            GPS_Lat: property.GPS_Lat || "",
+            GPS_Lng: property.GPS_Lng || "",
+            VideoThuaDat: property.VideoThuaDat || "",
             HinhAnh: property.HinhAnh || [],
+            HinhAnhGiayTo: property.HinhAnhGiayTo || [],
           })
 
           // Hiển thị preview ảnh đã có
           if (property.HinhAnh && property.HinhAnh.length > 0) {
             setImagePreview(property.HinhAnh)
+          }
+          if (property.HinhAnhGiayTo && property.HinhAnhGiayTo.length > 0) {
+            setDocumentImagePreview(property.HinhAnhGiayTo)
+          }
+          if (property.VideoThuaDat) {
+            setVideoPreview(property.VideoThuaDat)
+          }
+
+          // Set selected province name for CoordinateInput
+          if (property.MaTinh) {
+            const province = provinces.find((p) => p.MaTinh === property.MaTinh)
+            setSelectedProvinceName(province?.TenTinh || null)
           }
         } catch (error) {
           console.error("Lỗi khi lấy dữ liệu bài đăng:", error)
@@ -187,14 +203,14 @@ const PostForm = () => {
 
       fetchPropertyData()
     }
-  }, [id, isEditing])
+  }, [id, isEditing, provinces]) // Added provinces to dependency array
 
   // Xử lý thay đổi input
   const handleChange = (e) => {
     const { name, value } = e.target
 
     // Xử lý đặc biệt cho trường số
-    if (name === "Gia" || name === "DienTich") {
+    if (name === "Gia" || name === "DienTich" || name === "GPS_Lat" || name === "GPS_Lng") {
       const numValue = value === "" ? "" : Number(value)
       setFormData({
         ...formData,
@@ -215,6 +231,9 @@ const PostForm = () => {
         MaXa: "",
         [name]: value,
       }))
+      const province = provinces.find((p) => p.MaTinh === Number(value))
+      setSelectedProvinceName(province?.TenTinh || null)
+      console.log("[v0] Selected Province:", province) // Debug log
     } else if (name === "MaHuyen") {
       setFormData((prev) => ({
         ...prev,
@@ -224,7 +243,16 @@ const PostForm = () => {
     }
   }
 
-  // Xử lý upload ảnh
+  const handleCoordinateChange = (coordinateData) => {
+    setFormData({
+      ...formData,
+      ToaDoVN2000: coordinateData,
+      // Tự động cập nhật diện tích nếu có
+      DienTich: coordinateData.area ? coordinateData.area.toFixed(2) : formData.DienTich,
+    })
+  }
+
+  // Xử lý upload ảnh BĐS
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files)
     setImageFiles([...imageFiles, ...files])
@@ -234,7 +262,29 @@ const PostForm = () => {
     setImagePreview([...imagePreview, ...newPreviews])
   }
 
-  // Xử lý xóa ảnh
+  const handleDocumentImageUpload = (e) => {
+    const files = Array.from(e.target.files)
+    setDocumentImageFiles([...documentImageFiles, ...files])
+
+    // Tạo preview cho ảnh mới
+    const newPreviews = files.map((file) => URL.createObjectURL(file))
+    setDocumentImagePreview([...documentImagePreview, ...newPreviews])
+  }
+
+  const handleVideoUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Kiểm tra kích thước file (max 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        alert("Video không được vượt quá 50MB")
+        return
+      }
+      setVideoFile(file)
+      setVideoPreview(URL.createObjectURL(file))
+    }
+  }
+
+  // Xử lý xóa ảnh BĐS
   const handleRemoveImage = (index) => {
     const newImageFiles = [...imageFiles]
     const newImagePreview = [...imagePreview]
@@ -256,6 +306,36 @@ const PostForm = () => {
 
     setImageFiles(newImageFiles)
     setImagePreview(newImagePreview)
+  }
+
+  const handleRemoveDocumentImage = (index) => {
+    const newDocumentImageFiles = [...documentImageFiles]
+    const newDocumentImagePreview = [...documentImagePreview]
+
+    if (index >= documentImageFiles.length) {
+      const serverImageIndex = index - documentImageFiles.length
+      const newHinhAnhGiayTo = formData.HinhAnhGiayTo.filter((_, i) => i !== serverImageIndex)
+      setFormData({
+        ...formData,
+        HinhAnhGiayTo: newHinhAnhGiayTo,
+      })
+      newDocumentImagePreview.splice(index, 1)
+    } else {
+      newDocumentImageFiles.splice(index, 1)
+      newDocumentImagePreview.splice(index, 1)
+    }
+
+    setDocumentImageFiles(newDocumentImageFiles)
+    setDocumentImagePreview(newDocumentImagePreview)
+  }
+
+  const handleRemoveVideo = () => {
+    setVideoFile(null)
+    setVideoPreview(null)
+    setFormData({
+      ...formData,
+      VideoThuaDat: "",
+    })
   }
 
   // Xử lý submit form
@@ -290,25 +370,40 @@ const PostForm = () => {
         return
       }
 
-      // Tạo FormData để gửi cả file ảnh
+      // Tạo FormData để gửi cả file ảnh và video
       const postData = new FormData()
 
       // Thêm các trường dữ liệu
       Object.keys(formData).forEach((key) => {
-        if (key !== "HinhAnh") {
+        if (key !== "HinhAnh" && key !== "HinhAnhGiayTo" && key !== "ToaDoVN2000") {
           postData.append(key, formData[key])
         }
       })
+
+      if (formData.ToaDoVN2000) {
+        postData.append("ToaDoVN2000", JSON.stringify(formData.ToaDoVN2000))
+      }
 
       // Thêm ảnh đã có (nếu đang chỉnh sửa)
       if (formData.HinhAnh && formData.HinhAnh.length > 0) {
         postData.append("HinhAnhCu", JSON.stringify(formData.HinhAnh))
       }
+      if (formData.HinhAnhGiayTo && formData.HinhAnhGiayTo.length > 0) {
+        postData.append("HinhAnhGiaytoCu", JSON.stringify(formData.HinhAnhGiayTo))
+      }
 
-      // Thêm các file ảnh mới
+      // Thêm các file ảnh BĐS mới
       imageFiles.forEach((file) => {
         postData.append("HinhAnh", file)
       })
+
+      documentImageFiles.forEach((file) => {
+        postData.append("HinhAnhGiayTo", file)
+      })
+
+      if (videoFile) {
+        postData.append("VideoThuaDat", videoFile)
+      }
 
       let response
       if (isEditing) {
@@ -345,6 +440,14 @@ const PostForm = () => {
 
   // Danh sách trạng thái
   const statuses = ["đang bán", "cho thuê", "đã bán", "đã cho thuê"]
+
+  const handleGPSLocationChange = (location) => {
+    setFormData({
+      ...formData,
+      GPS_Lat: location.lat,
+      GPS_Lng: location.lng,
+    })
+  }
 
   return (
     <div className="post-form-container">
@@ -458,6 +561,7 @@ const PostForm = () => {
                 min="0"
                 required
               />
+              <div className="form-hint">Diện tích sẽ tự động tính từ tọa độ VN2000 nếu bạn nhập đầy đủ</div>
             </div>
           </div>
         </div>
@@ -535,6 +639,7 @@ const PostForm = () => {
               </select>
             </div>
           </div>
+
           <div className="form-group">
             <label htmlFor="DiaChi">
               Địa chỉ chi tiết <span className="required">*</span>
@@ -550,44 +655,89 @@ const PostForm = () => {
             />
           </div>
 
-          {/* Thêm trường nhúng Google Maps */}
-          <div className="form-group">
-            <div className="label-with-guide">
-              <label htmlFor="GoogleMapIframe">Nhúng Google Maps</label>
-              <button type="button" className="guide-button" onClick={() => setShowMapGuide(true)}>
-                <FaInfoCircle /> Hướng dẫn
-              </button>
-            </div>
-            <textarea
-              id="GoogleMapIframe"
-              name="GoogleMapIframe"
-              value={formData.GoogleMapIframe || ""}
-              onChange={handleChange}
-              placeholder="Dán mã nhúng (iframe) Google Maps vào đây..."
-              rows="4"
-            ></textarea>
-            <div className="form-hint">Dán mã iframe từ Google Maps để hiển thị vị trí bất động sản trên bản đồ.</div>
+          <GPSLocationPicker
+            onLocationChange={handleGPSLocationChange}
+            initialLat={formData.GPS_Lat}
+            initialLng={formData.GPS_Lng}
+          />
+        </div>
 
-            {/* Hiển thị xem trước nếu đã nhập iframe */}
-            {formData.GoogleMapIframe && (
-              <div className="map-preview">
-                <h4>Xem trước bản đồ:</h4>
-                <div className="iframe-container" dangerouslySetInnerHTML={{ __html: formData.GoogleMapIframe }}></div>
-              </div>
-            )}
+        <div className="form-section">
+          <h2>Tọa độ VN2000 (Khung viền thửa đất)</h2>
+          <div className="section-description">
+            <FaInfoCircle /> Nhập tọa độ các điểm góc từ giấy tờ pháp lý (sổ đỏ, trích đo địa chính, phiếu xác nhận đo
+            đạc hiện trạng thửa đất, v.v.)
+          </div>
+
+          <CoordinateInput
+            value={formData.ToaDoVN2000?.coordinates || []}
+            onChange={handleCoordinateChange}
+            provinceName={selectedProvinceName}
+          />
+
+          {/* Xem trước bản đồ nếu đã có tọa độ */}
+          {formData.ToaDoVN2000?.wgs84Coordinates && formData.ToaDoVN2000.wgs84Coordinates.length >= 3 && (
+            <div className="map-preview-section">
+              <h4>Xem trước khung viền thửa đất:</h4>
+              <GoogleMapComponent
+                center={formData.ToaDoVN2000.wgs84Coordinates[0]}
+                zoom={18}
+                propertyBoundary={formData.ToaDoVN2000.wgs84Coordinates}
+                propertyArea={formData.ToaDoVN2000.area}
+                height="400px"
+                showControls={true}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="form-section">
+          <h2>Hình ảnh giấy tờ pháp lý</h2>
+          <p className="image-hint">
+            Tải lên ảnh chụp các giấy tờ: Sổ đỏ, Trích đo địa chính, Phiếu xác nhận đo đạc, v.v. (Tối đa 10 ảnh, định
+            dạng JPG, PNG, tối đa 5MB/ảnh)
+          </p>
+
+          <div className="image-upload-container">
+            <label htmlFor="document-image-upload" className="image-upload-label">
+              <FaUpload /> Chọn ảnh giấy tờ
+              <input
+                type="file"
+                id="document-image-upload"
+                accept="image/*"
+                multiple
+                onChange={handleDocumentImageUpload}
+                style={{ display: "none" }}
+                disabled={documentImagePreview.length >= 10}
+              />
+            </label>
+
+            <div className="image-preview-container">
+              {documentImagePreview.length > 0 ? (
+                documentImagePreview.map((src, index) => (
+                  <div key={index} className="image-preview-item">
+                    <img src={src || "/placeholder.svg"} alt={`Giấy tờ ${index + 1}`} />
+                    <button type="button" className="remove-image" onClick={() => handleRemoveDocumentImage(index)}>
+                      <FaTrash />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="no-images">Chưa có hình ảnh giấy tờ nào được chọn</div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Thêm component hướng dẫn */}
-        {showMapGuide && <GoogleMapGuide onClose={() => setShowMapGuide(false)} />}
-
         <div className="form-section">
-          <h2>Hình ảnh</h2>
-          <p className="image-hint">Tối đa 10 hình ảnh, định dạng JPG, PNG (tối đa 5MB/ảnh)</p>
+          <h2>Hình ảnh & Video bất động sản</h2>
+          <p className="image-hint">
+            Tải lên ảnh chụp thực tế nhà/đất (Tối đa 10 hình ảnh, định dạng JPG, PNG, tối đa 5MB/ảnh)
+          </p>
 
           <div className="image-upload-container">
             <label htmlFor="image-upload" className="image-upload-label">
-              <FaUpload /> Chọn ảnh
+              <FaUpload /> Chọn ảnh BĐS
               <input
                 type="file"
                 id="image-upload"
@@ -613,6 +763,34 @@ const PostForm = () => {
                 <div className="no-images">Chưa có hình ảnh nào được chọn</div>
               )}
             </div>
+          </div>
+
+          <div className="video-upload-section">
+            <h3>Video thửa đất (tùy chọn)</h3>
+            <p className="video-hint">Tải lên video quay thực tế thửa đất (Tối đa 50MB, định dạng MP4, MOV, AVI)</p>
+
+            {!videoPreview ? (
+              <label htmlFor="video-upload" className="video-upload-label">
+                <FaUpload /> Chọn video
+                <input
+                  type="file"
+                  id="video-upload"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  style={{ display: "none" }}
+                />
+              </label>
+            ) : (
+              <div className="video-preview-container">
+                <video controls width="100%" height="300">
+                  <source src={videoPreview} type="video/mp4" />
+                  Trình duyệt của bạn không hỗ trợ video.
+                </video>
+                <button type="button" className="remove-video" onClick={handleRemoveVideo}>
+                  <FaTrash /> Xóa video
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

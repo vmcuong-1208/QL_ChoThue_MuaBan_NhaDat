@@ -1,6 +1,8 @@
-import React, { useState } from "react"
+"use client"
+
+import { useState } from "react"
 import { MessageCircle, X } from "lucide-react"
-import ChatbotAssistant from "./ChatbotAssistant"
+import ChatBot from "./ChatBot"
 
 const FloatingButton = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -35,8 +37,7 @@ const FloatingButton = () => {
         {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
       </div>
 
-      {/* Khung chat được tách riêng */}
-      <ChatbotAssistant isOpen={isOpen} />
+      {isOpen && <ChatBot />}
     </>
   )
 }

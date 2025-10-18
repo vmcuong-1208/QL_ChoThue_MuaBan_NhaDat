@@ -10,7 +10,14 @@ const authenticateToken = require("../middleware/authenticateToken") // Import m
 // Cấu hình multer để upload ảnh
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, "../uploads/properties")
+    let uploadDir
+    if (file.fieldname === "HinhAnhGiayTo") {
+      uploadDir = path.join(__dirname, "../uploads/documents")
+    } else if (file.fieldname === "VideoThuaDat") {
+      uploadDir = path.join(__dirname, "../uploads/videos")
+    } else {
+      uploadDir = path.join(__dirname, "../uploads/properties")
+    }
 
     // Tạo thư mục nếu chưa tồn tại
     if (!fs.existsSync(uploadDir)) {
@@ -23,17 +30,34 @@ const storage = multer.diskStorage({
     // Tạo tên file duy nhất
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
     const ext = path.extname(file.originalname)
-    cb(null, "property-" + uniqueSuffix + ext)
+
+    let prefix = "property"
+    if (file.fieldname === "HinhAnhGiayTo") {
+      prefix = "document"
+    } else if (file.fieldname === "VideoThuaDat") {
+      prefix = "video"
+    }
+
+    cb(null, prefix + "-" + uniqueSuffix + ext)
   },
 })
 
 // Lọc file
 const fileFilter = (req, file, cb) => {
-  // Chỉ chấp nhận ảnh
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true)
+  if (file.fieldname === "VideoThuaDat") {
+    // Chấp nhận video
+    if (file.mimetype.startsWith("video/")) {
+      cb(null, true)
+    } else {
+      cb(new Error("Chỉ chấp nhận file video!"), false)
+    }
   } else {
-    cb(new Error("Chỉ chấp nhận file ảnh!"), false)
+    // Chấp nhận ảnh
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true)
+    } else {
+      cb(new Error("Chỉ chấp nhận file ảnh!"), false)
+    }
   }
 }
 
@@ -41,7 +65,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: 50 * 1024 * 1024, // Tăng lên 50MB để hỗ trợ video
   },
 })
 
@@ -90,8 +114,7 @@ router.get("/", async (req, res) => {
 
     const filterQuery = filterConditions.length > 0 ? "WHERE " + filterConditions.join(" AND ") : ""
 
-    const sql = `
-      SELECT tt.*, 
+    const sql = `SELECT tt.*, 
              (SELECT DuongDanAnh 
               FROM HINHANHBDS 
               WHERE MaTTND = tt.MaTTND 
@@ -99,8 +122,7 @@ router.get("/", async (req, res) => {
       FROM THONGTINNHADAT tt
       ${filterQuery}
       ORDER BY NgayTao DESC
-      LIMIT ? OFFSET ?
-    `
+      LIMIT ? OFFSET ?`
 
     values.push(limit, offset)
 
@@ -228,8 +250,7 @@ router.get("/search", async (req, res) => {
     }
 
     // Truy vấn chính
-    const searchQuery = `
-      SELECT tt.*, 
+    const searchQuery = `SELECT tt.*, 
              l.TenLoaiND as LoaiBDS,
              (SELECT DuongDanAnh 
               FROM HINHANHBDS 
@@ -239,8 +260,7 @@ router.get("/search", async (req, res) => {
       LEFT JOIN LOAINHADAT l ON tt.MaLoaiND = l.MaLoaiND
       ${whereClause}
       ${orderClause}
-      LIMIT ? OFFSET ?
-    `
+      LIMIT ? OFFSET ?`
 
     const searchValues = [...values, Number.parseInt(limit), offset]
     const [properties] = await db.promise().query(searchQuery, searchValues)
@@ -254,12 +274,10 @@ router.get("/search", async (req, res) => {
     }
 
     // Đếm tổng số kết quả
-    const countQuery = `
-      SELECT COUNT(*) AS total 
+    const countQuery = `SELECT COUNT(*) AS total 
       FROM THONGTINNHADAT tt
       LEFT JOIN LOAINHADAT l ON tt.MaLoaiND = l.MaLoaiND
-      ${whereClause}
-    `
+      ${whereClause}`
     const [countResult] = await db.promise().query(countQuery, values)
     const total = countResult[0].total
 
@@ -335,6 +353,12 @@ router.get("/:id", async (req, res) => {
     property.HinhAnh = images.map((img) => img.DuongDanAnh)
     console.log(`Found ${property.HinhAnh.length} images for property`)
 
+    const [documentImages] = await db
+      .promise()
+      .query(`SELECT DuongDanAnh FROM HINHANHGIAYTO WHERE MaTTND = ?`, [propertyId])
+    property.HinhAnhGiayTo = documentImages.map((img) => img.DuongDanAnh)
+    console.log(`Found ${property.HinhAnhGiayTo.length} document images for property`)
+
     res.json(property)
   } catch (error) {
     console.error("Lỗi khi lấy thông tin bất động sản:", error)
@@ -375,109 +399,232 @@ router.post("/:id/view", async (req, res) => {
 })
 
 // Tạo bài đăng mới
-router.post("/", authenticateToken, upload.array("HinhAnh", 10), async (req, res) => {
-  try {
-    const userId = req.user.id || req.user.MaNgDung
-    
-    // Check post limit for regular users
-    if (req.user.LoaiTaiKhoan && req.user.LoaiTaiKhoan.toLowerCase() === "thường") {
-      const [existingPosts] = await db
-        .promise()
-        .query(`SELECT COUNT(*) as count FROM THONGTINNHADAT WHERE MaNgDung = ?`, [userId])
+router.post(
+  "/",
+  authenticateToken,
+  upload.fields([
+    { name: "HinhAnh", maxCount: 10 },
+    { name: "HinhAnhGiayTo", maxCount: 5 },
+    { name: "VideoThuaDat", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const userId = req.user.id || req.user.MaNgDung
 
-      if (existingPosts[0].count >= 1) {
-        return res.status(403).json({
-          message: "Tài khoản thường chỉ được đăng tối đa 1 tin. Vui lòng nâng cấp tài khoản để đăng thêm tin.",
-        })
+      // Check post limit for regular users
+      if (req.user.LoaiTaiKhoan && req.user.LoaiTaiKhoan.toLowerCase() === "thường") {
+        const [existingPosts] = await db
+          .promise()
+          .query(`SELECT COUNT(*) as count FROM THONGTINNHADAT WHERE MaNgDung = ?`, [userId])
+
+        if (existingPosts[0].count >= 1) {
+          return res.status(403).json({
+            message: "Tài khoản thường chỉ được đăng tối đa 1 tin. Vui lòng nâng cấp tài khoản để đăng thêm tin.",
+          })
+        }
       }
-    }
 
-    const { TieuDe, MoTa, Gia, DienTich, DiaChi, MaTinh, MaHuyen, MaXa, MaLoaiND, TrangThai, GoogleMapIframe } =
-      req.body
-    const hinhAnh = req.files.map((file) => `/uploads/properties/${file.filename}`)
-    // Thêm GoogleMapIframe vào câu lệnh SQL
-    const [result] = await db.promise().query(
-      `INSERT INTO THONGTINNHADAT (MaNgDung, TieuDe, MoTa, MaLoaiND, Gia, DienTich, DiaChi, MaTinh, MaHuyen, MaXa, TrangThai, GoogleMapIframe, SoLuotXem, NgayTao) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
-      [userId, TieuDe, MoTa, MaLoaiND, Gia, DienTich, DiaChi, MaTinh, MaHuyen, MaXa, TrangThai, GoogleMapIframe],
-    )
+      const {
+        TieuDe,
+        MoTa,
+        Gia,
+        DienTich,
+        DiaChi,
+        MaTinh,
+        MaHuyen,
+        MaXa,
+        MaLoaiND,
+        TrangThai,
+        ToaDoVN2000,
+        GPS_Lat,
+        GPS_Lng,
+      } = req.body
 
-    const propertyId = result.insertId
+      const hinhAnh = req.files["HinhAnh"]
+        ? req.files["HinhAnh"].map((file) => `/uploads/properties/${file.filename}`)
+        : []
+      const hinhAnhGiayTo = req.files["HinhAnhGiayTo"]
+        ? req.files["HinhAnhGiayTo"].map((file) => `/uploads/documents/${file.filename}`)
+        : []
+      const videoThuaDat = req.files["VideoThuaDat"] ? `/uploads/videos/${req.files["VideoThuaDat"][0].filename}` : null
 
-    // Insert images into HINHANHBDS table
-    for (const imagePath of hinhAnh) {
-      await db.promise().query(`INSERT INTO HINHANHBDS (MaTTND, DuongDanAnh) VALUES (?, ?)`, [propertyId, imagePath])
-    }
-
-    res.status(201).json({
-      message: "Đăng tin thành công",
-      property: { MaTTND: propertyId, ...req.body, HinhAnh: hinhAnh },
-    })
-  } catch (error) {
-    console.error("Lỗi khi tạo bài đăng:", error)
-    res.status(500).json({ message: "Lỗi server" })
-  }
-})
-
-// Cập nhật bài đăng
-router.put("/:id", authenticateToken, upload.array("HinhAnh", 10), async (req, res) => {
-  try {
-    const propertyId = req.params.id
-    const userId = req.user.id || req.user.MaNgDung
-    const [properties] = await db.promise().query(`SELECT * FROM THONGTINNHADAT WHERE MaTTND = ?`, [propertyId])
-    const property = properties[0]
-
-    if (!property) {
-      return res.status(404).json({ message: "Không tìm thấy bài đăng" })
-    }
-
-    if (property.MaNgDung !== userId) {
-      return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa bài đăng này" })
-    }
-
-    const {
-      TieuDe,
-      MoTa,
-      Gia,
-      DienTich,
-      DiaChi,
-      MaTinh,
-      MaHuyen,
-      MaXa,
-      MaLoaiND,
-      TrangThai,
-      GoogleMapIframe,
-      HinhAnhCu,
-    } = req.body
-    let hinhAnh = HinhAnhCu ? JSON.parse(HinhAnhCu) : []
-
-    if (req.files && req.files.length > 0) {
-      const newImages = req.files.map((file) => `/uploads/properties/${file.filename}`)
-      hinhAnh = [...hinhAnh, ...newImages]
-    }
-
-    await db
-      .promise()
-      .query(
-        `UPDATE THONGTINNHADAT SET TieuDe = ?, MoTa = ?, MaLoaiND = ?, Gia = ?, DienTich = ?, DiaChi = ?, MaTinh = ?, MaHuyen = ?, MaXa = ?, TrangThai = ?, GoogleMapIframe = ? WHERE MaTTND = ?`,
-        [TieuDe, MoTa, MaLoaiND, Gia, DienTich, DiaChi, MaTinh, MaHuyen, MaXa, TrangThai, GoogleMapIframe, propertyId],
+      const [result] = await db.promise().query(
+        `INSERT INTO THONGTINNHADAT (
+        MaNgDung, TieuDe, MoTa, MaLoaiND, Gia, DienTich, DiaChi, 
+        MaTinh, MaHuyen, MaXa, TrangThai, 
+        ToaDoVN2000, GPS_Lat, GPS_Lng, VideoThuaDat,
+        SoLuotXem, NgayTao
+      ) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+        [
+          userId,
+          TieuDe,
+          MoTa,
+          MaLoaiND,
+          Gia,
+          DienTich,
+          DiaChi,
+          MaTinh,
+          MaHuyen,
+          MaXa,
+          TrangThai,
+          ToaDoVN2000 || null,
+          GPS_Lat || null,
+          GPS_Lng || null,
+          videoThuaDat,
+        ],
       )
 
-    // Update images in HINHANHBDS table
-    await db.promise().query(`DELETE FROM HINHANHBDS WHERE MaTTND = ?`, [propertyId])
-    for (const imagePath of hinhAnh) {
-      await db.promise().query(`INSERT INTO HINHANHBDS (MaTTND, DuongDanAnh) VALUES (?, ?)`, [propertyId, imagePath])
-    }
+      const propertyId = result.insertId
 
-    res.json({
-      message: "Cập nhật bài đăng thành công",
-      property: { MaTTND: propertyId, ...req.body, HinhAnh: hinhAnh },
-    })
-  } catch (error) {
-    console.error("Lỗi khi cập nhật bài đăng:", error)
-    res.status(500).json({ message: "Lỗi server" })
-  }
-})
+      // Insert images into HINHANHBDS table
+      for (const imagePath of hinhAnh) {
+        await db.promise().query(`INSERT INTO HINHANHBDS (MaTTND, DuongDanAnh) VALUES (?, ?)`, [propertyId, imagePath])
+      }
+
+      for (const imagePath of hinhAnhGiayTo) {
+        await db
+          .promise()
+          .query(`INSERT INTO HINHANHGIAYTO (MaTTND, DuongDanAnh) VALUES (?, ?)`, [propertyId, imagePath])
+      }
+
+      res.status(201).json({
+        message: "Đăng tin thành công",
+        property: {
+          MaTTND: propertyId,
+          ...req.body,
+          HinhAnh: hinhAnh,
+          HinhAnhGiayTo: hinhAnhGiayTo,
+          VideoThuaDat: videoThuaDat,
+        },
+      })
+    } catch (error) {
+      console.error("Lỗi khi tạo bài đăng:", error)
+      res.status(500).json({ message: "Lỗi server", error: error.message })
+    }
+  },
+)
+
+// Cập nhật bài đăng
+router.put(
+  "/:id",
+  authenticateToken,
+  upload.fields([
+    { name: "HinhAnh", maxCount: 10 },
+    { name: "HinhAnhGiayTo", maxCount: 5 },
+    { name: "VideoThuaDat", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const propertyId = req.params.id
+      const userId = req.user.id || req.user.MaNgDung
+      const [properties] = await db.promise().query(`SELECT * FROM THONGTINNHADAT WHERE MaTTND = ?`, [propertyId])
+      const property = properties[0]
+
+      if (!property) {
+        return res.status(404).json({ message: "Không tìm thấy bài đăng" })
+      }
+
+      if (property.MaNgDung !== userId) {
+        return res.status(403).json({ message: "Bạn không có quyền chỉnh sửa bài đăng này" })
+      }
+
+      const {
+        TieuDe,
+        MoTa,
+        Gia,
+        DienTich,
+        DiaChi,
+        MaTinh,
+        MaHuyen,
+        MaXa,
+        MaLoaiND,
+        TrangThai,
+        ToaDoVN2000,
+        GPS_Lat,
+        GPS_Lng,
+        HinhAnhCu,
+        HinhAnhGiaytoCu,
+      } = req.body
+
+      let hinhAnh = HinhAnhCu ? JSON.parse(HinhAnhCu) : []
+      if (req.files && req.files["HinhAnh"] && req.files["HinhAnh"].length > 0) {
+        const newImages = req.files["HinhAnh"].map((file) => `/uploads/properties/${file.filename}`)
+        hinhAnh = [...hinhAnh, ...newImages]
+      }
+
+      let hinhAnhGiayTo = HinhAnhGiaytoCu ? JSON.parse(HinhAnhGiaytoCu) : []
+      if (req.files && req.files["HinhAnhGiayTo"] && req.files["HinhAnhGiayTo"].length > 0) {
+        const newDocImages = req.files["HinhAnhGiayTo"].map((file) => `/uploads/documents/${file.filename}`)
+        hinhAnhGiayTo = [...hinhAnhGiayTo, ...newDocImages]
+      }
+
+      let videoThuaDat = property.VideoThuaDat
+      if (req.files && req.files["VideoThuaDat"] && req.files["VideoThuaDat"].length > 0) {
+        // Xóa video cũ nếu có
+        if (property.VideoThuaDat) {
+          const oldVideoPath = path.join(__dirname, "..", property.VideoThuaDat)
+          if (fs.existsSync(oldVideoPath)) {
+            fs.unlinkSync(oldVideoPath)
+          }
+        }
+        videoThuaDat = `/uploads/videos/${req.files["VideoThuaDat"][0].filename}`
+      }
+
+      await db.promise().query(
+        `UPDATE THONGTINNHADAT SET 
+          TieuDe = ?, MoTa = ?, MaLoaiND = ?, Gia = ?, DienTich = ?, 
+          DiaChi = ?, MaTinh = ?, MaHuyen = ?, MaXa = ?, TrangThai = ?,
+          ToaDoVN2000 = ?, GPS_Lat = ?, GPS_Lng = ?, VideoThuaDat = ?
+        WHERE MaTTND = ?`,
+        [
+          TieuDe,
+          MoTa,
+          MaLoaiND,
+          Gia,
+          DienTich,
+          DiaChi,
+          MaTinh,
+          MaHuyen,
+          MaXa,
+          TrangThai,
+          ToaDoVN2000 || null,
+          GPS_Lat || null,
+          GPS_Lng || null,
+          videoThuaDat,
+          propertyId,
+        ],
+      )
+
+      // Update images in HINHANHBDS table
+      await db.promise().query(`DELETE FROM HINHANHBDS WHERE MaTTND = ?`, [propertyId])
+      for (const imagePath of hinhAnh) {
+        await db.promise().query(`INSERT INTO HINHANHBDS (MaTTND, DuongDanAnh) VALUES (?, ?)`, [propertyId, imagePath])
+      }
+
+      await db.promise().query(`DELETE FROM HINHANHGIAYTO WHERE MaTTND = ?`, [propertyId])
+      for (const imagePath of hinhAnhGiayTo) {
+        await db
+          .promise()
+          .query(`INSERT INTO HINHANHGIAYTO (MaTTND, DuongDanAnh) VALUES (?, ?)`, [propertyId, imagePath])
+      }
+
+      res.json({
+        message: "Cập nhật bài đăng thành công",
+        property: {
+          MaTTND: propertyId,
+          ...req.body,
+          HinhAnh: hinhAnh,
+          HinhAnhGiayTo: hinhAnhGiayTo,
+          VideoThuaDat: videoThuaDat,
+        },
+      })
+    } catch (error) {
+      console.error("Lỗi khi cập nhật bài đăng:", error)
+      res.status(500).json({ message: "Lỗi server", error: error.message })
+    }
+  },
+)
 
 // Xóa bài đăng
 router.delete("/:id", authenticateToken, async (req, res) => {
@@ -506,6 +653,28 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
     // Xóa hình ảnh từ bảng HINHANHBDS
     await db.promise().query(`DELETE FROM HINHANHBDS WHERE MaTTND = ?`, [propertyId])
+
+    // Xóa hình ảnh giấy tờ từ bảng HINHANHGIAYTO
+    const [documentImages] = await db
+      .promise()
+      .query(`SELECT DuongDanAnh FROM HINHANHGIAYTO WHERE MaTTND = ?`, [propertyId])
+    for (const { DuongDanAnh } of documentImages) {
+      const fullPath = path.join(__dirname, "..", DuongDanAnh)
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath)
+      }
+    }
+
+    // Xóa hình ảnh giấy tờ từ bảng HINHANHGIAYTO
+    await db.promise().query(`DELETE FROM HINHANHGIAYTO WHERE MaTTND = ?`, [propertyId])
+
+    // Xóa video từ bảng THONGTINNHADAT
+    if (property.VideoThuaDat) {
+      const videoPath = path.join(__dirname, "..", property.VideoThuaDat)
+      if (fs.existsSync(videoPath)) {
+        fs.unlinkSync(videoPath)
+      }
+    }
 
     // Xóa bài đăng từ bảng THONGTINNHADAT
     await db.promise().query(`DELETE FROM THONGTINNHADAT WHERE MaTTND = ?`, [propertyId])

@@ -1,0 +1,457 @@
+/* Styles cho Google Map Component */
+
+.google-map-container {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.google-map-container.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  border-radius: 0;
+}
+
+/* Map controls */
+.map-controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  max-width: 350px;
+}
+
+.control-group {
+  margin-bottom: 15px;
+}
+
+.control-group:last-child {
+  margin-bottom: 0;
+}
+
+.control-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 14px;
+}
+
+/* Button group */
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.button-group button {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.button-group button:hover {
+  background: #f5f5f5;
+  border-color: #4285f4;
+}
+
+.button-group button.active {
+  background: #4285f4;
+  color: white;
+  border-color: #4285f4;
+}
+
+/* Toggle button */
+.toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+
+.toggle-button:hover {
+  background: #f5f5f5;
+  border-color: #4285f4;
+}
+
+.toggle-button.active {
+  background: #4285f4;
+  color: white;
+  border-color: #4285f4;
+}
+
+/* Opacity control */
+.opacity-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+.opacity-control label {
+  font-size: 12px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.opacity-control input[type="range"] {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  background: #ddd;
+}
+
+.opacity-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+}
+
+.opacity-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+  border: none;
+}
+
+.opacity-control span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Measurement info */
+.measurement-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px;
+  background: #e3f2fd;
+  border-radius: 4px;
+}
+
+.measurement-info span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.measurement-info .clear-button {
+  padding: 4px 12px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.measurement-info .clear-button:hover {
+  background: #d32f2f;
+}
+
+/* Redesigned map controls - compact với icon buttons và thanh opacity dọc */
+.map-controls-redesign {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 200px;
+}
+
+.control-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Icon button group */
+.icon-button-group {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  color: #666;
+  flex: 1;
+}
+
+.icon-button .button-text {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.icon-button:hover {
+  background: #f5f5f5;
+  border-color: #4285f4;
+  color: #4285f4;
+}
+
+.icon-button.active {
+  background: #4285f4;
+  color: white;
+  border-color: #4285f4;
+}
+
+/* Opacity section với thanh dọc */
+.opacity-section {
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+.opacity-slider-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.opacity-slider-vertical input[type="range"] {
+  width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  background: linear-gradient(to right, #ddd 0%, #4285f4 100%);
+  cursor: pointer;
+}
+
+.opacity-slider-vertical input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.opacity-slider-vertical input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.opacity-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4285f4;
+}
+
+/* Measurement info compact */
+.measurement-info-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: #e3f2fd;
+  border-radius: 6px;
+}
+
+.measurement-distance {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1976d2;
+  text-align: center;
+}
+
+.clear-btn {
+  padding: 6px 12px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.clear-btn:hover {
+  background: #d32f2f;
+}
+
+/* Measurement guide */
+.measurement-guide {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  z-index: 1000;
+  white-space: nowrap;
+}
+
+/* Point info window */
+.point-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.point-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Loading and error states */
+.map-loading,
+.map-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 500px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.map-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4285f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.map-loading p,
+.map-error p {
+  color: #666;
+  font-size: 14px;
+}
+
+.map-error p {
+  color: #f44336;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .map-controls {
+    max-width: calc(100% - 20px);
+    font-size: 12px;
+  }
+
+  .control-group label {
+    font-size: 12px;
+  }
+
+  .button-group button,
+  .toggle-button {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  .measurement-guide {
+    font-size: 11px;
+    padding: 8px 15px;
+  }
+
+  .map-controls-redesign {
+    max-width: 160px;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .control-label {
+    font-size: 10px;
+  }
+
+  .icon-button {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .icon-button .button-text {
+    font-size: 10px;
+  }
+}

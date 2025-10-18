@@ -17,19 +17,17 @@ import {
   FaShareAlt,
   FaCommentDots,
   FaCheckCircle,
+  FaFileAlt,
 } from "react-icons/fa"
 import { useAuth } from "../context/AuthContext"
 import locationService from "../services/locationService"
 import ChatBox from "./ChatBox"
+import GoogleMapComponent from "./GoogleMapComponent"
+import { loadPlanningData } from "../utils/planningDataLoader"
 import "../styles/PropertyDetail.css"
 
 const API_URL = "http://localhost:5000/api"
 const SERVER_URL = "http://localhost:5000"
-
-const mapContainerStyle = {
-  width: "100%",
-  height: "400px",
-}
 
 const PropertyDetail = () => {
   const { id } = useParams()
@@ -46,6 +44,10 @@ const PropertyDetail = () => {
   const [relatedProperties, setRelatedProperties] = useState([])
   const [mapCoordinates, setMapCoordinates] = useState({ lat: 10.8231, lng: 106.6297 }) // Mặc định TP.HCM
   const sliderRef = useRef(null)
+
+  const [currentDocumentImageIndex, setCurrentDocumentImageIndex] = useState(0)
+  const [showDocumentImages, setShowDocumentImages] = useState(false)
+  const [planningData, setPlanningData] = useState(null)
 
   // Lấy thông tin chi tiết bất động sản
   useEffect(() => {
@@ -70,6 +72,24 @@ const PropertyDetail = () => {
         }
 
         setProperty(response.data)
+
+        if (response.data.ToaDoVN2000) {
+          try {
+            const parsedCoordinates = JSON.parse(response.data.ToaDoVN2000)
+            response.data.ToaDoVN2000 = parsedCoordinates
+          } catch (e) {
+            console.error("Error parsing ToaDoVN2000:", e)
+          }
+        }
+
+        if (response.data.GPS_Lat && response.data.GPS_Lng) {
+          setMapCoordinates({
+            lat: Number.parseFloat(response.data.GPS_Lat),
+            lng: Number.parseFloat(response.data.GPS_Lng),
+          })
+        } else if (response.data.ToaDoVN2000?.wgs84Coordinates?.length > 0) {
+          setMapCoordinates(response.data.ToaDoVN2000.wgs84Coordinates[0])
+        }
 
         // Lấy thông tin người bán
         if (response.data.MaNgDung) {
@@ -98,13 +118,6 @@ const PropertyDetail = () => {
 
         // Lấy thông tin địa điểm
         await fetchLocationNames(response.data)
-
-        // Kiểm tra xem bất động sản có trong danh sách yêu thích không
-        // const savedFavorites = localStorage.getItem("propertyFavorites")
-        // if (savedFavorites) {
-        //   const favorites = JSON.parse(savedFavorites)
-        //   setIsFavorite(favorites.includes(Number.parseInt(id)))
-        // }
 
         setLoading(false)
 
@@ -171,6 +184,15 @@ const PropertyDetail = () => {
             if (district) {
               locationNamesObj.district = district.TenHuyen
 
+              const data = await loadPlanningData(district.TenHuyen)
+              if (data) {
+                console.log("[v0] Planning data loaded successfully")
+                setPlanningData(data)
+              } else {
+                console.log("[v0] No planning data available for this district")
+                setPlanningData(null)
+              }
+
               // Lấy thông tin phường/xã
               if (property.MaXa) {
                 const wards = await locationService.getWards(property.MaHuyen)
@@ -185,13 +207,6 @@ const PropertyDetail = () => {
       }
 
       setLocationNames(locationNamesObj)
-
-      // Giả lập tọa độ dựa trên địa chỉ (trong thực tế nên dùng Geocoding API)
-      // Đây chỉ là ví dụ, bạn nên thay thế bằng tọa độ thực từ API
-      setMapCoordinates({
-        lat: 10.8231 + Math.random() * 0.1,
-        lng: 106.6297 + Math.random() * 0.1,
-      })
     } catch (error) {
       console.error("Lỗi khi lấy thông tin địa điểm:", error)
     }
@@ -207,6 +222,18 @@ const PropertyDetail = () => {
   const handleNextImage = () => {
     if (property?.HinhAnh?.length > 0) {
       setCurrentImageIndex((prevIndex) => (prevIndex === property.HinhAnh.length - 1 ? 0 : prevIndex + 1))
+    }
+  }
+
+  const handlePrevDocumentImage = () => {
+    if (property?.HinhAnhGiayTo?.length > 0) {
+      setCurrentDocumentImageIndex((prevIndex) => (prevIndex === 0 ? property.HinhAnhGiayTo.length - 1 : prevIndex - 1))
+    }
+  }
+
+  const handleNextDocumentImage = () => {
+    if (property?.HinhAnhGiayTo?.length > 0) {
+      setCurrentDocumentImageIndex((prevIndex) => (prevIndex === property.HinhAnhGiayTo.length - 1 ? 0 : prevIndex + 1))
     }
   }
 
@@ -403,6 +430,75 @@ const PropertyDetail = () => {
             </div>
           )}
 
+          {property.HinhAnhGiayTo && property.HinhAnhGiayTo.length > 0 && (
+            <div className="property-section">
+              <h2 className="section-title">
+                <FaFileAlt /> Giấy tờ pháp lý
+              </h2>
+              <button className="toggle-documents-button" onClick={() => setShowDocumentImages(!showDocumentImages)}>
+                {showDocumentImages ? "Ẩn giấy tờ" : "Xem giấy tờ"}
+              </button>
+
+              {showDocumentImages && (
+                <>
+                  <div className="property-image-slider document-slider">
+                    <img
+                      src={`${SERVER_URL}${property.HinhAnhGiayTo[currentDocumentImageIndex]}`}
+                      alt={`Giấy tờ ${currentDocumentImageIndex + 1}`}
+                      className="property-detail-image"
+                      onError={(e) => {
+                        e.target.src = "/placeholder.svg?height=500&width=800"
+                      }}
+                    />
+                    {property.HinhAnhGiayTo.length > 1 && (
+                      <>
+                        <button className="slider-button prev" onClick={handlePrevDocumentImage}>
+                          <FaChevronLeft />
+                        </button>
+                        <button className="slider-button next" onClick={handleNextDocumentImage}>
+                          <FaChevronRight />
+                        </button>
+                        <div className="image-counter">
+                          {currentDocumentImageIndex + 1}/{property.HinhAnhGiayTo.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="property-thumbnails">
+                    {property.HinhAnhGiayTo.map((image, index) => (
+                      <div
+                        key={index}
+                        className={`thumbnail ${index === currentDocumentImageIndex ? "active" : ""}`}
+                        onClick={() => setCurrentDocumentImageIndex(index)}
+                      >
+                        <img
+                          src={`${SERVER_URL}${image}`}
+                          alt={`Giấy tờ thumbnail ${index + 1}`}
+                          onError={(e) => {
+                            e.target.src = "/placeholder.svg?height=80&width=80"
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {property.VideoThuaDat && (
+            <div className="property-section">
+              <h2 className="section-title">Video thửa đất</h2>
+              <div className="property-video">
+                <video controls width="100%">
+                  <source src={`${SERVER_URL}${property.VideoThuaDat}`} type="video/mp4" />
+                  Trình duyệt của bạn không hỗ trợ video.
+                </video>
+              </div>
+            </div>
+          )}
+
           {/* Thông tin chính */}
           <div className="property-main-info">
             <div className="property-header">
@@ -459,21 +555,33 @@ const PropertyDetail = () => {
             </div>
           </div>
 
-          {/* Bản đồ */}
           <div className="property-section">
             <h2 className="section-title">Vị trí trên bản đồ</h2>
             <div className="property-map">
-              {property.GoogleMapIframe ? (
-                <div className="google-map-iframe" dangerouslySetInnerHTML={{ __html: property.GoogleMapIframe }}></div>
-              ) : (
-                <div className="no-map-container">
-                  <FaMapMarkerAlt className="no-map-icon" />
-                  <p>Không có bản đồ cho bất động sản này</p>
-                </div>
-              )}
+              <GoogleMapComponent
+                center={mapCoordinates}
+                zoom={property.ToaDoVN2000?.wgs84Coordinates ? 18 : 15}
+                propertyBoundary={property.ToaDoVN2000?.wgs84Coordinates || null}
+                propertyArea={property.ToaDoVN2000?.area || null}
+                planningData={planningData}
+                height="500px"
+                showControls={true}
+              />
               <p className="map-address">
                 <FaMapMarkerAlt /> {getFullAddress()}
               </p>
+              {property.ToaDoVN2000?.muiChieu && (
+                <div className="coordinate-info">
+                  <p>
+                    <strong>Múi chiếu VN2000:</strong> {property.ToaDoVN2000.muiChieu}
+                  </p>
+                  {property.ToaDoVN2000.area && (
+                    <p>
+                      <strong>Diện tích tính từ tọa độ:</strong> {property.ToaDoVN2000.area.toFixed(2)} m²
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
