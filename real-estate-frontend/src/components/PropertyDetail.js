@@ -42,12 +42,36 @@ const PropertyDetail = () => {
   const [showChat, setShowChat] = useState(false)
   const [locationNames, setLocationNames] = useState({})
   const [relatedProperties, setRelatedProperties] = useState([])
-  const [mapCoordinates, setMapCoordinates] = useState({ lat: 10.8231, lng: 106.6297 }) // Mặc định TP.HCM
+  const [mapCoordinates, setMapCoordinates] = useState({ lat: 10.8231, lng: 106.6297 })
   const sliderRef = useRef(null)
 
   const [currentDocumentImageIndex, setCurrentDocumentImageIndex] = useState(0)
   const [showDocumentImages, setShowDocumentImages] = useState(false)
   const [planningData, setPlanningData] = useState(null)
+
+  const getFullAddress = (property) => {
+    if (!property) return ""
+
+    const addressParts = []
+
+    if (property.DiaChi) {
+      addressParts.push(property.DiaChi)
+    }
+
+    if (locationNames.ward) {
+      addressParts.push(locationNames.ward)
+    }
+
+    if (locationNames.district) {
+      addressParts.push(locationNames.district)
+    }
+
+    if (locationNames.province) {
+      addressParts.push(locationNames.province)
+    }
+
+    return addressParts.join(", ")
+  }
 
   // Lấy thông tin chi tiết bất động sản
   useEffect(() => {
@@ -91,7 +115,6 @@ const PropertyDetail = () => {
           setMapCoordinates(response.data.ToaDoVN2000.wgs84Coordinates[0])
         }
 
-        // Lấy thông tin người bán
         if (response.data.MaNgDung) {
           try {
             console.log(`Đang lấy thông tin người bán có ID: ${response.data.MaNgDung}`)
@@ -101,11 +124,9 @@ const PropertyDetail = () => {
             const sellerResponse = await axios.get(`${API_URL}/users/${response.data.MaNgDung}`, { headers })
             console.log("Dữ liệu người bán:", sellerResponse.data)
 
-            // Kiểm tra xem người bán có phải là người dùng hiện tại không
             if (sellerResponse.data.MaNgDung !== currentUser?.MaNgDung) {
               setSeller(sellerResponse.data)
             } else {
-              // Nếu người bán là người dùng hiện tại, hiển thị thông tin phù hợp
               setSeller({
                 ...sellerResponse.data,
                 HoTen: sellerResponse.data.HoTen + " (Bạn)",
@@ -116,13 +137,10 @@ const PropertyDetail = () => {
           }
         }
 
-        // Lấy thông tin địa điểm
         await fetchLocationNames(response.data)
 
         setLoading(false)
 
-        // Thêm vào cuối hàm fetchPropertyDetail, sau setLoading(false)
-        // Lưu lịch sử xem nếu đã đăng nhập
         if (currentUser && response.data) {
           try {
             const token = localStorage.getItem("token")
@@ -146,7 +164,6 @@ const PropertyDetail = () => {
     fetchPropertyDetail()
   }, [id])
 
-  // Thay thế useEffect cho favorites
   useEffect(() => {
     const checkFavoriteStatus = async () => {
       if (!currentUser || !id) return
@@ -165,19 +182,16 @@ const PropertyDetail = () => {
     checkFavoriteStatus()
   }, [id, currentUser])
 
-  // Lấy thông tin địa điểm
   const fetchLocationNames = async (property) => {
     try {
       const locationNamesObj = {}
 
-      // Lấy thông tin tỉnh/thành phố
       if (property.MaTinh) {
         const provinces = await locationService.getProvinces()
         const province = provinces.find((p) => p.MaTinh === Number.parseInt(property.MaTinh))
         if (province) {
           locationNamesObj.province = province.TenTinh
 
-          // Lấy thông tin quận/huyện
           if (property.MaHuyen) {
             const districts = await locationService.getDistricts(property.MaTinh)
             const district = districts.find((d) => d.MaHuyen === Number.parseInt(property.MaHuyen))
@@ -193,7 +207,6 @@ const PropertyDetail = () => {
                 setPlanningData(null)
               }
 
-              // Lấy thông tin phường/xã
               if (property.MaXa) {
                 const wards = await locationService.getWards(property.MaHuyen)
                 const ward = wards.find((w) => w.MaXa === Number.parseInt(property.MaXa))
@@ -212,7 +225,6 @@ const PropertyDetail = () => {
     }
   }
 
-  // Xử lý chuyển ảnh
   const handlePrevImage = () => {
     if (property?.HinhAnh?.length > 0) {
       setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? property.HinhAnh.length - 1 : prevIndex - 1))
@@ -237,10 +249,8 @@ const PropertyDetail = () => {
     }
   }
 
-  // Xử lý thêm/xóa yêu thích
   const toggleFavorite = async () => {
     if (!currentUser) {
-      // Chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
       window.location.href = "/auth"
       return
     }
@@ -269,7 +279,6 @@ const PropertyDetail = () => {
     }
   }
 
-  // Định dạng giá tiền
   const formatPrice = (price) => {
     if (price >= 1000000000) {
       return (price / 1000000000).toFixed(1) + " tỷ"
@@ -279,7 +288,6 @@ const PropertyDetail = () => {
     return price.toLocaleString() + " VNĐ"
   }
 
-  // Định dạng ngày tháng
   const formatDate = (dateString) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("vi-VN", {
@@ -289,36 +297,6 @@ const PropertyDetail = () => {
     })
   }
 
-  // Lấy địa chỉ đầy đủ
-  const getFullAddress = () => {
-    if (!property) return ""
-
-    const addressParts = []
-
-    // Thêm địa chỉ chi tiết
-    if (property.DiaChi) {
-      addressParts.push(property.DiaChi)
-    }
-
-    // Thêm phường/xã
-    if (locationNames.ward) {
-      addressParts.push(locationNames.ward)
-    }
-
-    // Thêm quận/huyện
-    if (locationNames.district) {
-      addressParts.push(locationNames.district)
-    }
-
-    // Thêm tỉnh/thành phố
-    if (locationNames.province) {
-      addressParts.push(locationNames.province)
-    }
-
-    return addressParts.join(", ")
-  }
-
-  // Xử lý chia sẻ
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
@@ -327,7 +305,6 @@ const PropertyDetail = () => {
         url: window.location.href,
       })
     } else {
-      // Fallback: Copy link to clipboard
       navigator.clipboard.writeText(window.location.href)
       alert("Đã sao chép liên kết vào clipboard!")
     }
@@ -364,9 +341,12 @@ const PropertyDetail = () => {
     )
   }
 
+  const boundary = property.ToaDoVN2000?.wgs84Coordinates || null
+  const area = property.ToaDoVN2000?.area || property.DienTich
+  console.log("Property ToaDoVN2000 (no parse needed):", property.ToaDoVN2000)
+
   return (
     <div className="property-detail-container">
-      {/* Breadcrumb */}
       <div className="breadcrumb">
         <Link to="/">Trang chủ</Link> &gt; <Link to="/bat-dong-san">Bất động sản</Link> &gt;{" "}
         <span>{property?.TieuDe || `Bất động sản #${id}`}</span>
@@ -374,7 +354,6 @@ const PropertyDetail = () => {
 
       <div className="property-detail-content">
         <div className="property-detail-main">
-          {/* Slider hình ảnh */}
           <div className="property-image-slider" ref={sliderRef}>
             {property.HinhAnh && property.HinhAnh.length > 0 ? (
               <>
@@ -409,7 +388,6 @@ const PropertyDetail = () => {
             )}
           </div>
 
-          {/* Thumbnails */}
           {property.HinhAnh && property.HinhAnh.length > 1 && (
             <div className="property-thumbnails">
               {property.HinhAnh.map((image, index) => (
@@ -499,7 +477,6 @@ const PropertyDetail = () => {
             </div>
           )}
 
-          {/* Thông tin chính */}
           <div className="property-main-info">
             <div className="property-header">
               <div className="property-title-section">
@@ -522,7 +499,7 @@ const PropertyDetail = () => {
             </div>
 
             <p className="property-address">
-              <FaMapMarkerAlt /> {getFullAddress()}
+              <FaMapMarkerAlt /> {getFullAddress(property)}
             </p>
 
             <div className="property-price-area">
@@ -547,7 +524,6 @@ const PropertyDetail = () => {
             </div>
           </div>
 
-          {/* Mô tả chi tiết */}
           <div className="property-section">
             <h2 className="section-title">Mô tả chi tiết</h2>
             <div className="property-description">
@@ -559,16 +535,19 @@ const PropertyDetail = () => {
             <h2 className="section-title">Vị trí trên bản đồ</h2>
             <div className="property-map">
               <GoogleMapComponent
-                center={mapCoordinates}
+                center={boundary?.[0] || { lat: property.GPS_Lat, lng: property.GPS_Lng }}
                 zoom={property.ToaDoVN2000?.wgs84Coordinates ? 18 : 15}
-                propertyBoundary={property.ToaDoVN2000?.wgs84Coordinates || null}
-                propertyArea={property.ToaDoVN2000?.area || null}
+                propertyBoundary={boundary}
+                propertyArea={area}
                 planningData={planningData}
                 height="500px"
                 showControls={true}
+                showMode="property"
+                propertyProvince={property.MaTinh}
+                propertyDistrict={property.MaHuyen}
               />
               <p className="map-address">
-                <FaMapMarkerAlt /> {getFullAddress()}
+                <FaMapMarkerAlt /> {getFullAddress(property)}
               </p>
               {property.ToaDoVN2000?.muiChieu && (
                 <div className="coordinate-info">
@@ -586,9 +565,7 @@ const PropertyDetail = () => {
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="property-detail-sidebar">
-          {/* Thông tin người bán */}
           <div className="seller-info">
             <div className="seller-header">
               <div className="seller-avatar">
@@ -626,7 +603,6 @@ const PropertyDetail = () => {
             </button>
           </div>
 
-          {/* Thông tin chi tiết */}
           <div className="property-details-card">
             <h3>Thông tin chi tiết</h3>
             <ul className="details-list">
@@ -665,7 +641,6 @@ const PropertyDetail = () => {
         </div>
       </div>
 
-      {/* Chat box */}
       {showChat && (
         <ChatBox
           sellerId={property.MaNgDung}

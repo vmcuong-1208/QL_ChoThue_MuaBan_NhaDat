@@ -1,0 +1,79 @@
+.map-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.map-page-controls {
+  padding: 16px 20px;
+  background-color: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.map-page-controls h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.map-page-controls p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.location-selector {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.selector-group label {
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.select-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  min-width: 250px;
+  transition: border-color 0.2s;
+}
+
+.select-input:hover {
+  border-color: #999;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+}
+
+.loading-spinner {
+  padding: 8px 12px;
+  color: #4285f4;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.map-page-content {
+  flex: 1;
+  overflow: hidden;
+}

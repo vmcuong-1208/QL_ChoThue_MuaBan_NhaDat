@@ -455,3 +455,169 @@
     font-size: 10px;
   }
 }
+
+/* Map location selector */
+.map-location-selector {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  max-width: calc(100% - 20px);
+}
+
+.selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.selector-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.select-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  background-color: white;
+  cursor: pointer;
+  min-width: 200px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.select-input:hover {
+  border-color: #4285f4;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+}
+
+@media (max-width: 768px) {
+  .map-location-selector {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 12px;
+    gap: 10px;
+    max-width: none;
+  }
+
+  .selector-group {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .select-input {
+    min-width: 100%;
+  }
+}
+
+/* Boundary opacity panel */
+.boundary-opacity-panel {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  z-index: 999;
+  min-width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.boundary-opacity-panel h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.opacity-control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.opacity-control-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.opacity-control-item label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+.opacity-control-item input[type="range"] {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  accent-color: #4285f4;
+  border-radius: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, #ddd 0%, #4285f4 100%);
+}
+
+.opacity-control-item input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.opacity-control-item input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Scrollbar styling cho boundary panel */
+.boundary-opacity-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.boundary-opacity-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.boundary-opacity-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.boundary-opacity-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

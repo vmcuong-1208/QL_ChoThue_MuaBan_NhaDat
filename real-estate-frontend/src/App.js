@@ -18,10 +18,10 @@ import ChatBot from "./components/ChatBot"
 import MoMoCallback from "./components/MoMoCallback"
 import PaymentSuccess from "./components/PaymentSuccess"
 import GoogleAuthSuccess from "./components/GoogleAuthSuccess"
+import MapPage from "./components/MapPage"
 import "./App.css"
 
 function App() {
-  
   return (
     <AuthProvider>
       <Router>
@@ -33,6 +33,7 @@ function App() {
               <Route path="/auth" element={<LoginRegister />} />
               <Route path="/lien-he" element={<Contact />} />
               <Route path="/tim-kiem" element={<SearchResults />} />
+              <Route path="/ban-do" element={<MapPage />} />
               <Route path="/bat-dong-san/:id" element={<PropertyDetail />} />
               <Route path="/payment/momo/callback" element={<MoMoCallback />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />

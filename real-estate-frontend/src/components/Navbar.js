@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import { FaUser, FaHeart } from "react-icons/fa"
+import { FaHeart, FaMap } from "react-icons/fa"
 import { toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import "../styles/Navbar.css"
@@ -40,23 +40,30 @@ const Navbar = () => {
 
         <ul className="navbar-menu">
           <li className="navbar-item">
-            <Link to="/" className="navbar-link">Trang chủ</Link>
+            <Link to="/" className="navbar-link">
+              Trang chủ
+            </Link>
           </li>
           <li className="navbar-item">
-            <Link to="/tim-kiem" className="navbar-link">Tìm kiếm</Link>
+            <Link to="/ban-do" className="navbar-link">
+              <FaMap style={{ marginRight: "5px" }} /> Bản đồ
+            </Link>
           </li>
           <li className="navbar-item">
-            <Link to="/lien-he" className="navbar-link">Liên hệ</Link>
+            <Link to="/tim-kiem" className="navbar-link">
+              Tìm kiếm
+            </Link>
+          </li>
+          <li className="navbar-item">
+            <Link to="/lien-he" className="navbar-link">
+              Liên hệ
+            </Link>
           </li>
 
           {currentUser ? (
             <li className="navbar-item user-profile">
               <div className="avatar-container" onClick={toggleDropdown}>
-                <img
-                  src={currentUser?.AnhDaiDien || "/placeholder.svg"}
-                  alt="Avatar"
-                  className="user-avatar"
-                />
+                <img src={currentUser?.AnhDaiDien || "/placeholder.svg"} alt="Avatar" className="user-avatar" />
               </div>
 
               {showDropdown && (
