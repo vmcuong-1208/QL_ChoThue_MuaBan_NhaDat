@@ -24,6 +24,7 @@ import locationService from "../services/locationService"
 import ChatBox from "./ChatBox"
 import GoogleMapComponent from "./GoogleMapComponent"
 import { loadPlanningData } from "../utils/planningDataLoader"
+import PromotionalPopup from "./PromotionalPopup"
 import "../styles/PropertyDetail.css"
 
 const API_URL = "http://localhost:5000/api"
@@ -49,6 +50,8 @@ const PropertyDetail = () => {
   const [showDocumentImages, setShowDocumentImages] = useState(false)
   const [planningData, setPlanningData] = useState(null)
 
+  const [showPromotionalPopup, setShowPromotionalPopup] = useState(false)
+
   const getFullAddress = (property) => {
     if (!property) return ""
 
@@ -72,6 +75,10 @@ const PropertyDetail = () => {
 
     return addressParts.join(", ")
   }
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [id])
 
   // Lấy thông tin chi tiết bất động sản
   useEffect(() => {
@@ -181,6 +188,12 @@ const PropertyDetail = () => {
 
     checkFavoriteStatus()
   }, [id, currentUser])
+
+  useEffect(() => {
+    if (!currentUser) {
+      setShowPromotionalPopup(true)
+    }
+  }, [currentUser])
 
   const fetchLocationNames = async (property) => {
     try {
@@ -347,6 +360,8 @@ const PropertyDetail = () => {
 
   return (
     <div className="property-detail-container">
+      {showPromotionalPopup && <PromotionalPopup onClose={() => setShowPromotionalPopup(false)} />}
+
       <div className="breadcrumb">
         <Link to="/">Trang chủ</Link> &gt; <Link to="/bat-dong-san">Bất động sản</Link> &gt;{" "}
         <span>{property?.TieuDe || `Bất động sản #${id}`}</span>
@@ -487,14 +502,6 @@ const PropertyDetail = () => {
                     <span>Đã xác thực</span>
                   </div>
                 )}
-              </div>
-              <div className="property-actions">
-                <button className="action-button share" onClick={handleShare}>
-                  <FaShareAlt /> Chia sẻ
-                </button>
-                <button className="action-button favorite" onClick={toggleFavorite}>
-                  {isFavorite ? <FaHeart className="active" /> : <FaRegHeart />} Yêu thích
-                </button>
               </div>
             </div>
 
@@ -637,6 +644,15 @@ const PropertyDetail = () => {
                 <span className="detail-value">BDS{property.MaTTND}</span>
               </li>
             </ul>
+          </div>
+
+          <div className="property-actions-card">
+            <button className="action-button share" onClick={handleShare}>
+              <FaShareAlt /> Chia sẻ
+            </button>
+            <button className="action-button favorite" onClick={toggleFavorite}>
+              {isFavorite ? <FaHeart className="active" /> : <FaRegHeart />} Yêu thích
+            </button>
           </div>
         </div>
       </div>

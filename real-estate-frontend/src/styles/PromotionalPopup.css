@@ -1,0 +1,290 @@
+.promotional-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+  /* thêm backdrop blur để làm mờ nội dung phía sau */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.promotional-popup {
+  background: white;
+  border-radius: 12px;
+  max-width: 450px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.4s ease-out;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  z-index: 10;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: #000;
+  }
+}
+
+.promotional-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 32px 24px;
+  text-align: center;
+  border-radius: 12px 12px 0 0;
+}
+
+.gift-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.promotional-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.promotional-content {
+  padding: 24px;
+}
+
+.promo-subtitle {
+  text-align: center;
+  color: #666;
+  margin: 0 0 24px 0;
+  font-size: 14px;
+}
+
+.promotion-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.benefit-icon {
+  background: #667eea;
+  color: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.benefit-text h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.benefit-text p {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.promo-code-section {
+  background: #f5f7ff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.promo-code-label {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.promo-code-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: white;
+  border: 2px dashed #667eea;
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.promo-code {
+  font-size: 18px;
+  font-weight: 700;
+  color: #667eea;
+  letter-spacing: 2px;
+}
+
+.copy-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.copy-button:hover {
+  background: #5568d3;
+}
+
+.promotional-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 24px 20px;
+}
+
+.btn-dismiss {
+  background: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-size: 14px;
+}
+
+.btn-dismiss:hover {
+  background: #e0e0e0;
+}
+
+.btn-login {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.2s;
+  font-size: 14px;
+  display: block;
+}
+
+.btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.promotional-footer {
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+  padding: 0 24px 24px;
+  margin: 0;
+}
+
+.promotional-footer a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.promotional-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .promotional-popup {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .promotional-header {
+    padding: 24px 16px;
+  }
+
+  .promotional-header h2 {
+    font-size: 20px;
+  }
+
+  .promotional-content {
+    padding: 16px;
+  }
+
+  .promotion-benefits {
+    gap: 12px;
+  }
+
+  .benefit-text h3 {
+    font-size: 13px;
+  }
+
+  .benefit-text p {
+    font-size: 12px;
+  }
+}

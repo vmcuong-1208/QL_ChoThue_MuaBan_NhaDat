@@ -167,6 +167,18 @@ const Home = () => {
     return price.toLocaleString() + " VNĐ"
   }
 
+  useEffect(() => {
+    const scrollPosition = sessionStorage.getItem("homeScrollPosition")
+    if (scrollPosition) {
+      // Use setTimeout to ensure DOM is fully rendered before scrolling
+      const timer = setTimeout(() => {
+        window.scrollTo(0, Number.parseInt(scrollPosition))
+        sessionStorage.removeItem("homeScrollPosition")
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   return (
     <div className="home-container">
       {/* Hero Section */}
