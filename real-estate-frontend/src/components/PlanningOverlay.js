@@ -1,73 +1,99 @@
 "use client"
 
-// Component quản lý GroundOverlay instances cho lớp quy hoạch
 import { useEffect, useRef } from "react"
 
 const PlanningOverlay = ({ mapRef, planningData, showPlanningLayer, planningOpacity = 0.7 }) => {
-  // Ref để lưu trữ tất cả GroundOverlay instances
   const overlaysRef = useRef([])
 
-  // Load và hiển thị GroundOverlay
   useEffect(() => {
+    // 1. Kiểm tra điều kiện cơ bản
     if (!mapRef?.current || !planningData || !window.google) {
       return
     }
 
-    // Cleanup: xóa tất cả overlay cũ
+    // 2. Cleanup overlay cũ
     overlaysRef.current.forEach((overlay) => {
       overlay.setMap(null)
     })
     overlaysRef.current = []
 
-    // Nếu không hiển thị lớp, không tạo overlay
     if (!showPlanningLayer) {
       return
     }
 
-    // Tạo GroundOverlay cho mỗi ảnh trong planningData
+    console.log(`[PlanningOverlay] Bắt đầu vẽ ${planningData.overlays?.length || 0} lớp phủ...`)
+
     if (planningData.overlays && Array.isArray(planningData.overlays)) {
-      planningData.overlays.forEach((item) => {
+      
+      // --- DEBUG: Log phần tử đầu tiên để xem cấu trúc JSON ---
+      if (planningData.overlays.length > 0) {
+        console.log("[PlanningOverlay] Cấu trúc phần tử đầu tiên:", planningData.overlays[0]);
+        console.log("[PlanningOverlay] Bounds của phần tử đầu:", planningData.overlays[0].bounds);
+      }
+      // --------------------------------------------------------
+
+      planningData.overlays.forEach((item, index) => {
         try {
-          // Tạo bounds từ LatLonBox
+          // Kiểm tra an toàn: Đảm bảo item.bounds tồn tại
+          if (!item.bounds) {
+            console.warn(`[PlanningOverlay] Bỏ qua item ${index}: Không có bounds`, item);
+            return;
+          }
+
+          // Xử lý trường hợp key viết hoa/thường hoặc dùng min/max
+          // (Điều chỉnh fallback tùy theo dữ liệu thực tế của bạn)
+          const north = parseFloat(item.bounds.north || item.bounds.North || item.bounds.maxLat);
+          const south = parseFloat(item.bounds.south || item.bounds.South || item.bounds.minLat);
+          const east = parseFloat(item.bounds.east || item.bounds.East || item.bounds.maxLng || item.bounds.maxLon);
+          const west = parseFloat(item.bounds.west || item.bounds.West || item.bounds.minLng || item.bounds.minLon);
+
+          // Kiểm tra tọa độ hợp lệ (không phải NaN)
+          if (isNaN(north) || isNaN(south) || isNaN(east) || isNaN(west)) {
+            if (index === 0) console.error(`[PlanningOverlay] Tọa độ không hợp lệ tại item 0:`, { north, south, east, west });
+            return;
+          }
+
           const bounds = new window.google.maps.LatLngBounds(
-            new window.google.maps.LatLng(item.bounds.south, item.bounds.west),
-            new window.google.maps.LatLng(item.bounds.north, item.bounds.east),
+            new window.google.maps.LatLng(south, west), // SW
+            new window.google.maps.LatLng(north, east), // NE
           )
 
-          // Tạo GroundOverlay
           const overlay = new window.google.maps.GroundOverlay(item.url, bounds, {
             clickable: false,
             opacity: planningOpacity,
+            map: mapRef.current, // Gán map trực tiếp tại đây
           })
 
-          // Thêm vào map
-          overlay.setMap(mapRef.current)
           overlaysRef.current.push(overlay)
+          
+          // Chỉ log item đầu tiên thành công để đỡ rác console
+          if (index === 0) {
+            console.log(`[PlanningOverlay] ✅ Đã vẽ thành công overlay đầu tiên: ${item.name || 'Unknown'}`, item.url);
+          }
 
-          console.log(`[v0] Loaded GroundOverlay: ${item.name}`)
         } catch (error) {
-          console.error(`[v0] Lỗi khi load GroundOverlay ${item.name}:`, error)
+          console.error(`[PlanningOverlay] Lỗi item ${index}:`, error)
         }
       })
+      
+      console.log(`[PlanningOverlay] Hoàn tất vẽ ${overlaysRef.current.length} overlay lên bản đồ.`);
     }
 
-    // Cleanup function
     return () => {
-      overlaysRef.current.forEach((overlay) => {
-        overlay.setMap(null)
-      })
+      overlaysRef.current.forEach((overlay) => overlay.setMap(null))
       overlaysRef.current = []
     }
-  }, [mapRef, planningData, showPlanningLayer, planningOpacity])
+  }, [mapRef, planningData, showPlanningLayer]) // Bỏ planningOpacity ra khỏi đây để tránh vẽ lại toàn bộ khi đổi opacity
 
-  // Cập nhật opacity khi thay đổi
+  // Effect riêng để đổi opacity mượt hơn
   useEffect(() => {
-    overlaysRef.current.forEach((overlay) => {
-      overlay.setOpacity(planningOpacity)
-    })
+    if (overlaysRef.current.length > 0) {
+      overlaysRef.current.forEach((overlay) => {
+        overlay.setOpacity(planningOpacity)
+      })
+    }
   }, [planningOpacity])
 
-  // Component này không render gì, chỉ quản lý GroundOverlay
   return null
 }
 

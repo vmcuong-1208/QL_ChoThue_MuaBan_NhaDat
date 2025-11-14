@@ -8,7 +8,7 @@ export default function PlaceDetailCard({ place, boundaries = [], onClose, onBou
 
   if (!place) return null
 
-  const { name, displayName, address = {}, type, lat, lng } = place
+  const { name = 'Unknown', display_name = 'No display name', address = {}, type = 'Unknown', lat = 0, lng = 0 } = place  // Default values to avoid empty
 
   return (
     <div className="place-detail-card">
@@ -40,7 +40,7 @@ export default function PlaceDetailCard({ place, boundaries = [], onClose, onBou
             <div className="info-group">
               <div className="info-row">
                 <span className="label">Địa chỉ:</span>
-                <span className="value">{displayName}</span>
+                <span className="value">{display_name}</span>
               </div>
               <div className="info-row">
                 <span className="label">Loại:</span>
@@ -49,7 +49,7 @@ export default function PlaceDetailCard({ place, boundaries = [], onClose, onBou
               <div className="info-row">
                 <span className="label">Tọa độ:</span>
                 <span className="value">
-                  {lat.toFixed(6)}, {lng.toFixed(6)}
+                  {typeof lat === 'number' ? lat.toFixed(6) : lat}, {typeof lng === 'number' ? lng.toFixed(6) : lng}
                 </span>
               </div>
             </div>

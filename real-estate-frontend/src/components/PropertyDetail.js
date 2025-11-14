@@ -144,8 +144,16 @@ const PropertyDetail = () => {
           }
         }
 
-        await fetchLocationNames(response.data)
-
+        const locationData = await fetchLocationNames(response.data)
+        if (locationData.province && locationData.district) {
+          const planning = await loadPlanningData(locationData.province, locationData.district)
+          setPlanningData(planning)
+          if (!planning) {
+            console.log("Không có dữ liệu quy hoạch cho Tỉnh/Huyện này.")
+          }
+        } else {
+          setPlanningData(null)
+        }
         setLoading(false)
 
         if (currentUser && response.data) {
@@ -211,14 +219,7 @@ const PropertyDetail = () => {
             if (district) {
               locationNamesObj.district = district.TenHuyen
 
-              const data = await loadPlanningData(district.TenHuyen)
-              if (data) {
-                console.log("[v0] Planning data loaded successfully")
-                setPlanningData(data)
-              } else {
-                console.log("[v0] No planning data available for this district")
-                setPlanningData(null)
-              }
+
 
               if (property.MaXa) {
                 const wards = await locationService.getWards(property.MaHuyen)
@@ -233,8 +234,10 @@ const PropertyDetail = () => {
       }
 
       setLocationNames(locationNamesObj)
+      return locationNamesObj
     } catch (error) {
       console.error("Lỗi khi lấy thông tin địa điểm:", error)
+      return {}
     }
   }
 

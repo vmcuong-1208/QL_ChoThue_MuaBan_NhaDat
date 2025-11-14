@@ -38,6 +38,8 @@ const GoogleMapComponent = ({
   showControls = true,
   onMapClick = null,
   showMode = "property", // Thêm từ version mới: "map" hoặc "property"
+  onBoundaryAdd,
+  onDistrictSelect,
 }) => {
   // Load Google Maps API
   const { isLoaded, loadError } = useJsApiLoader({
@@ -98,169 +100,186 @@ const GoogleMapComponent = ({
   const onLoad = useCallback((map) => {
     mapRef.current = map
   }, [])
-
-
+  // Xóa một ranh giới cụ thể
+  const handleRemoveBoundary = (id) => {
+    setSelectedBoundaries(prev => prev.filter(b => b.id !== id))
+    setBoundaryOpacities(prev => {
+      const { [id]: _, ...rest } = prev
+      return rest
+    })
+    // ✅ Có thể gọi onBoundaryRemove nếu bạn muốn thông báo cho component cha (nếu có)
+    // if (onBoundaryRemove) onBoundaryRemove(id)
+    console.log("[v0] Boundary removed:", id)
+  }
+  // Xóa tất cả ranh giới
+  const handleClearAllBoundaries = () => {
+    setSelectedBoundaries([])
+    setBoundaryOpacities({})
+    // ✅ Có thể gọi onBoundaryRemove nếu bạn muốn thông báo cho component cha (nếu có)
+    // if (onBoundaryRemove) onBoundaryRemove('all')
+    console.log("[v0] All boundaries cleared.")
+  }
   const loadLevel3sGeoJSON = async (level1_id, level1NameRomanized, level3Name) => {
-  try {
-    // Giữ nguyên filename không prefix (ví dụ: binhduong.json)
-    const fileName = `${level1NameRomanized}.json`
-    const response = await fetch(`/data/gis/level3s/${fileName}`)
+    try {
+      // Giữ nguyên filename không prefix (ví dụ: binhduong.json)
+      const fileName = `${level1NameRomanized}.json`
+      const response = await fetch(`/data/gis/level3s/${fileName}`)
 
-    if (!response.ok) {
-      console.warn(`[v0] Level3s file not found: ${fileName}`)
-      return null
-    }
-
-    const geoJSON = await response.json()
-    console.log(`[v0] Loaded level3s GeoJSON: ${fileName}`, geoJSON)
-
-    // Lọc features theo NAME_3
-    if (geoJSON.features && Array.isArray(geoJSON.features)) {
-      // Chuẩn hóa tên Level 3 từ input và LOẠI BỎ KHOẢNG TRẮNG
-      const level3NameNormalizedNoSpace = normalizeVietnamese(level3Name).replace(/\s+/g, "")
-
-      const matchedFeature = geoJSON.features.find((f) => {
-        const properties = f.properties || {}
-        const name3 = properties.NAME_3 || ""
-        
-        // Chuẩn hóa tên NAME_3 từ GeoJSON và LOẠI BỎ KHOẢNG TRẮNG
-        const name3NormalizedNoSpace = normalizeVietnamese(name3).replace(/\s+/g, "")
-        
-        // So sánh hai chuỗi KHÔNG DẤU và KHÔNG KHOẢNG TRẮNG
-        return name3NormalizedNoSpace === level3NameNormalizedNoSpace
-      })
-
-      if (matchedFeature && matchedFeature.geometry) {
-        console.log(`[v0] Found geometry for level3: ${level3Name}`)
-        return { geometry: matchedFeature.geometry, matchedFeature };  // Return object để có properties
-      } else {
-        console.warn(`[v0] No geometry found for level3: ${level3Name}`)
+      if (!response.ok) {
+        console.warn(`[v0] Level3s file not found: ${fileName}`)
         return null
       }
-    }
 
-    return null
-  } catch (err) {
-    console.error(`[v0] Error loading or parsing Level 3 GeoJSON:`, err.message);
-    console.warn("[v0] No level3 geometry found, falling back to level2 parent.");
-    return null
+      const geoJSON = await response.json()
+      console.log(`[v0] Loaded level3s GeoJSON: ${fileName}`, geoJSON)
+
+      // Lọc features theo NAME_3
+      if (geoJSON.features && Array.isArray(geoJSON.features)) {
+        // Chuẩn hóa tên Level 3 từ input và LOẠI BỎ KHOẢNG TRẮNG
+        const level3NameNormalizedNoSpace = normalizeVietnamese(level3Name).replace(/\s+/g, "")
+
+        const matchedFeature = geoJSON.features.find((f) => {
+          const properties = f.properties || {}
+          const name3 = properties.NAME_3 || ""
+
+          // Chuẩn hóa tên NAME_3 từ GeoJSON và LOẠI BỎ KHOẢNG TRẮNG
+          const name3NormalizedNoSpace = normalizeVietnamese(name3).replace(/\s+/g, "")
+
+          // So sánh hai chuỗi KHÔNG DẤU và KHÔNG KHOẢNG TRẮNG
+          return name3NormalizedNoSpace === level3NameNormalizedNoSpace
+        })
+
+        if (matchedFeature && matchedFeature.geometry) {
+          console.log(`[v0] Found geometry for level3: ${level3Name}`)
+          return { geometry: matchedFeature.geometry, matchedFeature };  // Return object để có properties
+        } else {
+          console.warn(`[v0] No geometry found for level3: ${level3Name}`)
+          return null
+        }
+      }
+
+      return null
+    } catch (err) {
+      console.error(`[v0] Error loading or parsing Level 3 GeoJSON:`, err.message);
+      console.warn("[v0] No level3 geometry found, falling back to level2 parent.");
+      return null
+    }
   }
-}
 
   const handleSearchSelect = async (result) => {
-  try {
-    if (!result.level1_id) {
-      console.error("[v0] Missing level1_id in result:", result)
-      return
-    }
-
-    const level1_id = result.level1_id
-    console.log(
-      "[v0] Loading GIS data for level1_id:",
-      level1_id,
-      "search level:",
-      result.level,
-      "level2_id:",
-      result.level2_id,
-    )
-
-    const gisResponse = await fetch(`/data/gis/${level1_id}.json`)
-    if (!gisResponse.ok) {
-      console.error("[v0] GIS file not found:", `${level1_id}.json`)
-      return
-    }
-
-    const gisData = await gisResponse.json()
-    console.log("[v0] GIS data loaded successfully. Province:", gisData.name)
-
-    let coords = []
-    let bbox = null
-    let displayName = result.name
-    let level = result.level  // Init level từ result
-
-    if (result.level === "level1") {
-      // Tỉnh: dùng coordinates top-level
-      const rawCoords = gisData.coordinates || []
-      coords = convertCoordinates(rawCoords)
-      bbox = gisData.bbox
-      displayName = gisData.name
-      console.log("[v0] Rendering level1 (province):", displayName, "raw coords length:", rawCoords.length, "converted length:", coords.length)
-    } else if (result.level === "level2") {
-      // Huyện/Quận: tìm trong level2s theo level2_id
-
-      // Sửa đổi: Tìm kiếm theo level2_id (chuẩn) HOẶC internal_id (nội bộ, ví dụ: '760')
-      const searchId = result.level2_id;
-
-      const level2 = gisData.level2s?.find((l2) =>
-        // 1. So sánh với ID mà SearchPanel gửi tới (ví dụ: '760')
-        l2.level2_id === searchId ||
-        // 2. PHẢI đảm bảo Level 2 trong gisData của bạn có trường internalId/id
-        l2.id === searchId ||
-        l2.internal_id === searchId // Hoặc bất kỳ trường ID nội bộ nào khác mà bạn đang sử dụng
-      );
-
-      if (level2) {
-        const rawCoords = level2.coordinates || []
-        coords = convertCoordinates(rawCoords)
-        bbox = level2.bbox
-        // Luôn sử dụng tên từ file GIS để đảm bảo tính nhất quán
-        displayName = level2.name
-        console.log("[v1] Rendering level2 (district):", displayName, "raw coords length:", rawCoords.length, "converted length:", coords.length)
-      } else {
-        // Lỗi này giờ sẽ chỉ xảy ra nếu ID SearchPanel gửi tới không khớp với ID nào
-        console.warn("[v1] level2_id not found:", searchId, "in province:", level1_id)
+    try {
+      if (!result.level1_id) {
+        console.error("[v0] Missing level1_id in result:", result)
         return
       }
-    } else if (result.level === "level3") {
-      const rawProvinceName = gisData.name.replace(/^(Tỉnh|Thành phố)\s*/, ''); // Bỏ "Tỉnh" / "Thành phố"
-      // Cần romanized name của tỉnh để build URL
-      const level1NameRomanized = gisData.romanized || normalizeVietnamese(rawProvinceName).replace(/\s+/g, "").toLowerCase();
 
-      const level3Data = await loadLevel3sGeoJSON(level1_id, level1NameRomanized, result.name)
+      const level1_id = result.level1_id
+      console.log(
+        "[v0] Loading GIS data for level1_id:",
+        level1_id,
+        "search level:",
+        result.level,
+        "level2_id:",
+        result.level2_id,
+      )
 
-      if (level3Data && level3Data.geometry) {
-        // ✅ THÀNH CÔNG: SỬ DỤNG TỌA ĐỘ CHÍNH XÁC CẤP XÃ
-        const rawCoords = level3Data.geometry.coordinates;
-        coords = convertCoordinates(rawCoords);
-        // 🛑 KIỂM TRA ĐỘ DÀI TỌA ĐỘ SAU KHI CHUYỂN ĐỔI
-        if (coords.length === 0) {
-          console.error("[v0] Level 3 Feature found, but coordinates are empty after conversion.");
-          console.setError("Tọa độ ranh giới cấp Xã không hợp lệ.");
-          return;
-        }
-        bbox = level3Data.matchedFeature.properties.bbox || gisData.bbox;  // Sử dụng bbox từ matchedFeature nếu có
-        displayName = level3Data.matchedFeature.properties.NAME_3 || result.name;  // Ưu tiên NAME_3, fallback result.name
-        level = 'level3';
-        console.log(`[v0] Rendering level3 (ward) successful: ${displayName}, converted paths: ${coords.length}`);
-      } else {
-        // 🛑 FALLBACK (SỬ DỤNG DỮ LIỆU TỈNH/HUYỆN)
-        const level2 = gisData.level2s?.find(l2 =>
-          // Dùng ID để tìm (phù hợp với cấu trúc '725' của Thuận An)
-          l2.level2_id === result.level2_id ||
-          l2.id === result.level2_id
+      const gisResponse = await fetch(`/data/gis/${level1_id}.json`)
+      if (!gisResponse.ok) {
+        console.error("[v0] GIS file not found:", `${level1_id}.json`)
+        return
+      }
+
+      const gisData = await gisResponse.json()
+      console.log("[v0] GIS data loaded successfully. Province:", gisData.name)
+
+      let coords = []
+      let bbox = null
+      let displayName = result.name
+      let level = result.level  // Init level từ result
+
+      if (result.level === "level1") {
+        // Tỉnh: dùng coordinates top-level
+        const rawCoords = gisData.coordinates || []
+        coords = convertCoordinates(rawCoords)
+        bbox = gisData.bbox
+        displayName = gisData.name
+        console.log("[v0] Rendering level1 (province):", displayName, "raw coords length:", rawCoords.length, "converted length:", coords.length)
+      } else if (result.level === "level2") {
+        // Huyện/Quận: tìm trong level2s theo level2_id
+
+        // Sửa đổi: Tìm kiếm theo level2_id (chuẩn) HOẶC internal_id (nội bộ, ví dụ: '760')
+        const searchId = result.level2_id;
+
+        const level2 = gisData.level2s?.find((l2) =>
+          // 1. So sánh với ID mà SearchPanel gửi tới (ví dụ: '760')
+          l2.level2_id === searchId ||
+          // 2. PHẢI đảm bảo Level 2 trong gisData có trường internalId/id
+          l2.id === searchId ||
+          l2.internal_id === searchId
         );
 
         if (level2) {
-          const rawCoords = level2.coordinates || [];
+          const rawCoords = level2.coordinates || []
+          coords = convertCoordinates(rawCoords)
+          bbox = level2.bbox
+          // Luôn sử dụng tên từ file GIS để đảm bảo tính nhất quán
+          displayName = level2.name
+          console.log("[v1] Rendering level2 (district):", displayName, "raw coords length:", rawCoords.length, "converted length:", coords.length)
+        } else {
+          // Lỗi này giờ sẽ chỉ xảy ra nếu ID SearchPanel gửi tới không khớp với ID nào
+          console.warn("[v1] level2_id not found:", searchId, "in province:", level1_id)
+          return
+        }
+      } else if (result.level === "level3") {
+        const rawProvinceName = gisData.name.replace(/^(Tỉnh|Thành phố)\s*/, ''); // Bỏ "Tỉnh" / "Thành phố"
+        // Cần romanized name của tỉnh để build URL
+        const level1NameRomanized = gisData.romanized || normalizeVietnamese(rawProvinceName).replace(/\s+/g, "").toLowerCase();
+
+        const level3Data = await loadLevel3sGeoJSON(level1_id, level1NameRomanized, result.name)
+
+        if (level3Data && level3Data.geometry) {
+          // ✅ THÀNH CÔNG: SỬ DỤNG TỌA ĐỘ CHÍNH XÁC CẤP XÃ
+          const rawCoords = level3Data.geometry.coordinates;
           coords = convertCoordinates(rawCoords);
-          // 🛑 KIỂM TRA ĐỘ DÀI TỌA ĐỘ FALLBACK
+          // 🛑 KIỂM TRA ĐỘ DÀI TỌA ĐỘ SAU KHI CHUYỂN ĐỔI
           if (coords.length === 0) {
-            console.error(`[v0] Fallback Level 2 found (${level2.name}) but coordinates are empty/invalid.`);
-            console.setError(`Tọa độ ranh giới cấp Huyện (${level2.name}) không hợp lệ.`);
+            console.error("[v0] Level 3 Feature found, but coordinates are empty after conversion.");
+            console.error("Tọa độ ranh giới cấp Xã không hợp lệ.");
             return;
           }
-
-          bbox = level2.bbox;
-          displayName = result.name; // Tên Xã/Phường
-          level = 'level3_fallback';
-          console.warn(`[v0] Fallback to Level 2 parent: ${level2.name} successful. Converted paths: ${coords.length}`);
+          bbox = level3Data.matchedFeature.properties.bbox || gisData.bbox;  // Sử dụng bbox từ matchedFeature nếu có
+          displayName = level3Data.matchedFeature.properties.NAME_3 || result.name;  // Ưu tiên NAME_3, fallback result.name
+          level = 'level3';
+          console.log(`[v0] Rendering level3 (ward) successful: ${displayName}, converted paths: ${coords.length}`);
         } else {
-          console.error(`[v0] Could not find Level 2 parent for Level 3 ID: ${result.id} (searching for: ${result.level2_id}).`);
-          console.setError("Lỗi: Không tìm thấy ranh giới cấp Huyện cho Xã này.");
-          return;
+          // 🛑 FALLBACK (SỬ DỤNG DỮ LIỆU TỈNH/HUYỆN)
+          const level2 = gisData.level2s?.find(l2 =>
+            // Dùng ID để tìm (phù hợp với cấu trúc '725' của Thuận An)
+            l2.level2_id === result.level2_id ||
+            l2.id === result.level2_id
+          );
+
+          if (level2) {
+            const rawCoords = level2.coordinates || [];
+            coords = convertCoordinates(rawCoords);
+            // 🛑 KIỂM TRA ĐỘ DÀI TỌA ĐỘ FALLBACK
+            if (coords.length === 0) {
+              console.error(`[v0] Fallback Level 2 found (${level2.name}) but coordinates are empty/invalid.`);
+              console.error(`Tọa độ ranh giới cấp Huyện (${level2.name}) không hợp lệ.`);
+              return;
+            }
+
+            bbox = level2.bbox;
+            displayName = result.name; // Tên Xã/Phường
+            level = 'level3_fallback';
+            console.warn(`[v0] Fallback to Level 2 parent: ${level2.name} successful. Converted paths: ${coords.length}`);
+          } else {
+            console.error(`[v0] Could not find Level 2 parent for Level 3 ID: ${result.id} (searching for: ${result.level2_id}).`);
+            console.error("Lỗi: Không tìm thấy ranh giới cấp Huyện cho Xã này.");
+            return;
+          }
         }
       }
-    }
 
       if (coords.length === 0) {
         console.warn("[v0] No coordinates found for:", result.name)
@@ -270,18 +289,18 @@ const GoogleMapComponent = ({
       const BRIGHT_COLORS = ["#39FF14", "#7DF9FF", "#FF10F0", "#FF6700", "#FFFF54", "#FF00FF", "#00FFAA"]
       const uniqueId = `${result.level}-${result.id}-${Date.now()}`
       const selectedColor = BRIGHT_COLORS[selectedBoundaries.length % BRIGHT_COLORS.length]
-
+      const newBoundary = {
+        id: uniqueId,
+        level: result.level,
+        name: displayName,
+        coordinates: coords,
+        color: selectedColor,
+      };
       setSelectedBoundaries((prev) => [
         ...prev,
-        {
-          id: uniqueId,
-          level: result.level,
-          name: displayName,
-          coordinates: coords,
-          color: selectedColor,
-        },
+        newBoundary,
       ])
-
+      if (onBoundaryAdd) onBoundaryAdd(newBoundary);
       setBoundaryOpacities((prev) => ({ ...prev, [uniqueId]: 0.5 }))
 
       // Fit map bounds
@@ -299,7 +318,7 @@ const GoogleMapComponent = ({
     }
   }
 
-  // Sửa SearchPanel toggle (FIX duplicate render)
+  // SearchPanel toggle 
   const handleToggleSearch = () => {
     if (showSearch) {
       // Đóng panel: xóa dữ liệu cũ
@@ -311,51 +330,6 @@ const GoogleMapComponent = ({
       setShowSearch(true)
     }
   }
-
-  // Handle remove chip từ SearchPanel - xóa ranh tương ứng
-  const handleRemoveChip = (chipId) => {
-    // Xóa boundary với ID matching
-    setSelectedBoundaries((prev) => prev.filter((b) => b.id !== `${chipId}-*`)) // Match pattern
-    setBoundaryOpacities((prev) => {
-      const updated = { ...prev }
-      Object.keys(updated).forEach((key) => {
-        if (key.startsWith(chipId)) {
-          delete updated[key]
-        }
-      })
-      return updated
-    })
-    console.log("[v0] Chip/boundary removed:", chipId)
-  }
-
-  // Xử lý click trên map (giữ nguyên)
-  const handleMapClick = useCallback(
-    (e) => {
-      if (measurementMode) {
-        const newPoint = {
-          lat: e.latLng.lat(),
-          lng: e.latLng.lng(),
-        }
-        const newPoints = [...measurementPoints, newPoint]
-        setMeasurementPoints(newPoints)
-
-        // Tính tổng khoảng cách
-        if (newPoints.length > 1) {
-          let totalDistance = 0
-          for (let i = 0; i < newPoints.length - 1; i++) {
-            totalDistance += calculateDistance(newPoints[i], newPoints[i + 1])
-          }
-          setMeasurementDistance(totalDistance)
-        }
-      }
-
-      // Callback tùy chỉnh
-      if (onMapClick) {
-        onMapClick(e)
-      }
-    },
-    [measurementMode, measurementPoints, onMapClick],
-  )
 
   // Xóa đo đạc (giữ nguyên)
   const clearMeasurement = () => {
@@ -812,7 +786,7 @@ const GoogleMapComponent = ({
         <SearchPanel
           onClose={() => setShowSearch(false)}
           onSelect={handleSearchSelect}
-          onRemoveChip={handleRemoveChip}
+          onDistrictSelect={onDistrictSelect}
         />
       )}
 
@@ -893,13 +867,24 @@ const GoogleMapComponent = ({
         )}
 
         {/* Planning Overlay */}
-        {planningData && showPlanningLayer && <PlanningOverlay data={planningData} opacity={planningOpacity} />}
+        <PlanningOverlay
+          mapRef={mapRef} // Truyền ref bản đồ
+          planningData={planningData} // Truyền đúng tên prop
+          showPlanningLayer={showPlanningLayer} // Truyền state hiển thị
+          planningOpacity={planningOpacity} // Truyền state độ mờ
+        />
       </GoogleMap>
 
       {/* Thêm Sliders Opacity cho từng lớp boundary được chọn */}
       {selectedBoundaries.length > 0 && (
         <div className="boundary-opacity-panel">
           <h4>Độ mờ các lớp ranh giới</h4>
+
+          {/* THÊM NÚT XÓA TẤT CẢ */}
+          <div className="boundary-panel-header">
+            <button className="clear-all-btn" onClick={handleClearAllBoundaries}>Xóa tất cả</button>
+          </div>
+
           {selectedBoundaries.map((boundary) => (
             <div key={boundary.id} className="opacity-control-item">
               <label>
@@ -915,6 +900,10 @@ const GoogleMapComponent = ({
                   setBoundaryOpacities((prev) => ({ ...prev, [boundary.id]: Number.parseFloat(e.target.value) }))
                 }
               />
+              {/* THÊM NÚT TẮT VÀ XÓA TỪNG RANH GIỚI */}
+              <div className="opacity-control-buttons">
+                <button onClick={() => handleRemoveBoundary(boundary.id)}>Xóa</button>
+              </div>
             </div>
           ))}
         </div>

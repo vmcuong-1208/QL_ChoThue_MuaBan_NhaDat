@@ -1,99 +1,194 @@
 // Utility để load planning data (index.json) từ thư mục /public/quyhoach/
-// Normalize tên huyện để match với tên folder
+// Cập nhật: Hỗ trợ cấu trúc nested /quyhoach/[province]/[district_year]/index.json
+// Cải tiến: Thử nhiều variants folder để match pattern lung tung (dot/underscore, abbrev prefix từ type)
 
 import unorm from "unorm"
 
-// Hàm normalize tên đơn vị hành chính để match với tên folder theo PascalCase
-// Cải tiến: Tự động loại bỏ tiền tố hành chính (Huyện, Thị xã, Thành phố)
-function normalizeDistrictName(districtName) {
-  if (!districtName) return ""
-
-  // 1. Tách dấu và loại bỏ tiền tố hành chính (Huyện, Thị xã, Thành phố)
-  let processedName = unorm
-    .nfd(districtName) // Tách dấu
-    .replace(/[\u0300-\u036f]/g, "") // Loại bỏ dấu (Ví dụ: "Huyen Go Cong Tay")
-
-  // Loại bỏ tiền tố hành chính: Huyen, Thi Xa, Thanh Pho (case-insensitive)
-  // Sử dụng regex với \s* để bắt cả khoảng trắng và dấu gạch dưới nếu có.
-  processedName = processedName.replace(/^(Huyen|Thi Xa|Thanh Pho)\s*/i, "") 
-  // (Kết quả: "Go Cong Tay" hoặc "My Tho")
-
-  // 2. Chuyển sang Pascal Case (và dùng gạch dưới thay vì khoảng trắng)
-  const pascalCase = processedName
-    .toLowerCase() // Chuyển sang chữ thường để xử lý các từ
-    .replace(/[^a-z0-9\s]/g, "") // Loại bỏ ký tự đặc biệt, giữ lại khoảng trắng
-    .trim() 
-    .split(/\s+/) // Tách các từ bằng khoảng trắng
-    .map(word => {
-      if (!word) return ""
-      return word.charAt(0).toUpperCase() + word.slice(1)
-    })
-    .join("_") // Nối các từ lại bằng dấu gạch dưới
-
-  return pascalCase // Ví dụ: "Huyện Gò Công Tây" -> "Go_Cong_Tay"
+// Map type district → abbrev prefix (Dựa trên tên KMZ đã xử lý)
+const DISTRICT_TYPE_ABBREV = {
+    "Huyện": "",
+    "Thành phố": "TP.", // Ví dụ: 2030.TP.Thuan An
+    "Quận": "Quan_", // Ví dụ: 2021.Quan_11
+    "Thị xã": "TX.",
+    // Thêm nếu có type khác từ sorted.json
 }
 
-// Hàm load planning data từ index.json
-export async function loadPlanningData(districtName) {
-  if (!districtName) {
-    console.log("[v0] District name is empty, skipping planning data load")
-    return null
-  }
+// Hàm normalize tên (chung cho province/district)
+function normalizeName(name, isProvince = false) {
+    if (!name) return ""
 
-  try {
-    // Chuỗi sẽ là: Go_Cong_Tay, My_Tho, Cai_Lay (Không có prefix hành chính)
-    const folderNameBase = normalizeDistrictName(districtName) 
-    console.log(`[v0] Loading planning data for district: ${districtName}`)
-    console.log(`[v0] Normalized name (No Prefix, PascalCase): ${folderNameBase}`)
+    let processedName = unorm.nfd(name).replace(/[\u0300-\u036f]/g, "") // Loại dấu
 
-    // Thử load index.json từ folder có tên bắt đầu với normalized name
-    // Cấu trúc: /public/quyhoach/[folder-name]/index.json
-    // Các pattern này KHÔNG chứa tiền tố hành chính để khớp với Go_Cong_Tay_2030
-    const possibleFolders = [
-      `${folderNameBase}_2030`, // Ví dụ: Go_Cong_Tay_2030 (Khớp)
-      `${folderNameBase}_2035`,
-      `${folderNameBase}_2025`,
-      `${folderNameBase}`, // Ví dụ: My_Tho (Nếu không có năm)
-    ]
+    // Loại bỏ tiền tố hành chính (Quan, Huyen, Thi Xa, Thanh Pho, Tinh)
+    const prefixRegex = isProvince ? /^(Tinh|Thanh Pho)\s*/i : /^(Huyen|Thi Xa|Thanh Pho|Quan)\s*/i
+    processedName = processedName.replace(prefixRegex, "").trim()
 
-    // Thử load từng folder
-    for (const folder of possibleFolders) {
-      try {
-        const response = await fetch(`/quyhoach/${folder}/index.json`)
-        if (response.ok) {
-          const data = await response.json()
-          console.log(`[v0] Successfully loaded planning data from: /quyhoach/${folder}/index.json`)
-          console.log(`[v0] Total overlays: ${data.totalOverlays}`)
-          return data
+    // 💡 SỬA LỖI: Chuẩn hóa thành Pascal_Underscore (e.g., "Bac Tan Uyen" → "Bac_Tan_Uyen")
+    // Giúp cho districtBase luôn là dạng underscore, dễ dàng xử lý khi tạo variants.
+    const pascalUnderscore = processedName
+        .split(/\s+/) // Tách bằng khoảng trắng
+        .map(word => {
+            if (!word) return ""
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        })
+        .join("_")
+
+    return pascalUnderscore
+}
+
+// Hàm lấy type district từ sorted.json (async load nếu cần)
+let sortedDataCache = null
+async function getDistrictType(provinceName, districtName) {
+    if (!sortedDataCache) {
+        try {
+            // Lưu ý: Cần đảm bảo đường dẫn này đúng trong môi trường Front-end (e.g., /public/data/sorted.json)
+            const response = await fetch("/data/sorted.json")
+            if (!response.ok) throw new Error("Failed to load sorted.json")
+            sortedDataCache = await response.json()
+        } catch (err) {
+            console.error("[v1] Error loading sorted.json for type:", err)
+            return null
         }
-      } catch (error) {
-        // Tiếp tục thử folder tiếp theo
-        continue
-      }
     }
 
-    console.log(`[v0] No planning data found for district: ${districtName}`)
+    const normProv = normalizeName(provinceName, true)
+    const normDist = normalizeName(districtName)
+
+    // Tìm kiếm trong cấu trúc cache [code, name, type, children]
+    for (const l1 of sortedDataCache) {
+        // l1[1] là tên Tỉnh
+        if (normalizeName(l1[1], true) === normProv) {
+            for (const l2 of l1[4]) {
+                // l2[1] là tên Huyện, l2[2] là loại
+                if (normalizeName(l2[1]) === normDist) {
+                    return l2[2] // type e.g., "Huyện"
+                }
+            }
+        }
+    }
     return null
-  } catch (error) {
-    console.error("[v0] Error loading planning data:", error)
-    return null
-  }
 }
 
-// Hàm load planning data từ URL cụ thể (nếu biết đường dẫn chính xác)
-export async function loadPlanningDataFromUrl(folderPath) {
-  if (!folderPath) return null
-
-  try {
-    const response = await fetch(`/quyhoach/${folderPath}/index.json`)
-    if (response.ok) {
-      const data = await response.json()
-      console.log(`[v0] Successfully loaded planning data from: /quyhoach/${folderPath}/index.json`)
-      return data
+// Hàm load planning data
+export async function loadPlanningData(provinceName, districtName) {
+    if (!districtName) {
+        console.log("[v1] District name is empty, skipping.")
+        return null
     }
+
+    const provinceFolder = provinceName ? normalizeName(provinceName, true) : null
+    const districtBase = normalizeName(districtName) // e.g., "Thuan_An"
+    console.log(`[v1] Loading for province: ${provinceName || 'None'}, district: ${districtName}`)
+    console.log(`[v1] Normalized: province ${provinceFolder || 'None'}, district base ${districtBase}`)
+
+    const possibleYears = ['2020', '2021', '2023', '2024', '2030', '2035', '2025', '2040']
+    const distType = await getDistrictType(provinceName, districtName)
+    const abbrev = DISTRICT_TYPE_ABBREV[distType] || ""
+
+    const possibleDistrictFolders = []
+
+    // 💡 TÊN KHÔNG DÙNG UNDERSCORE (dot format): Lấy districtBase nhưng bỏ dấu gạch dưới
+    const districtBaseNoUnderscore = districtBase.replace(/_/g, '') // e.g., "ThuanAn"
+
+    possibleYears.forEach(year => {
+        // Variant 1: Year.[Abbrev]Name (dot, e.g., 2030.TP.ThuanAn) - no underscore
+        if (abbrev) possibleDistrictFolders.push(`${year}.${abbrev}${districtBaseNoUnderscore}`)
+
+        // Variant 2: Year.Name (dot, no abbrev, no underscore, e.g., 2030.CuChi)
+        possibleDistrictFolders.push(`${year}.${districtBaseNoUnderscore}`)
+
+        // Variant 3: Year.Name (dot, no abbrev, with underscore, e.g., 2030.Bac_Tan_Uyen)
+        possibleDistrictFolders.push(`${year}.${districtBase}`)
+
+        // Variant 4: Name.Year (dot, e.g., Cai_Be.2030) - no underscore
+        possibleDistrictFolders.push(`${districtBaseNoUnderscore}.${year}`)
+
+        // Variant 5: Name_Year (underscore, e.g., Bac_Tan_Uyen_2030)
+        possibleDistrictFolders.push(`${districtBase}_${year}`)
+
+        // Variant 6: Year.Name.Suffix (dot, .QHSDD, e.g., 2021.NhaBe.QHSDD) - no underscore
+        possibleDistrictFolders.push(`${year}.${districtBaseNoUnderscore}.QHSDD`)
+
+        // Variant 7: Year.Name_Suffix (dot, _QHSDD, e.g., 2021.NhaBe_QHSDD) - no underscore
+        possibleDistrictFolders.push(`${year}.${districtBaseNoUnderscore}_QHSDD`)
+
+        // Variant 8: Year.Name_Suffix (dot, _QHSDD, with underscore, e.g., if have 2021.Binh_Chanh_QHSDD)
+        possibleDistrictFolders.push(`${year}.${districtBase}_QHSDD`)
+    })
+
+    // Thêm tên folder không có năm (ví dụ: CuChi, Binh_Chanh)
+    possibleDistrictFolders.push(districtBaseNoUnderscore)
+    possibleDistrictFolders.push(districtBase) // With underscore
+
+    const basePath = provinceFolder ? `/quyhoach/${provinceFolder}` : '/quyhoach'
+
+    for (const districtFolder of possibleDistrictFolders) {
+        try {
+            const url = `${basePath}/${districtFolder}/index.json`
+            const response = await fetch(url)
+            if (response.ok) {
+                const data = await response.json()
+                console.log(`[v1] Loaded from: ${url}, overlays: ${data.totalOverlays}`)
+                // Xử lý tiền tố cho URL ảnh (giải quyết vấn đề relative path)
+                const imageBasePath = `${basePath}/${districtFolder}`
+                if (data.overlays && Array.isArray(data.overlays)) {
+                    data.overlays = data.overlays.map(overlay => {
+                        let cleanUrl = overlay.url.startsWith('/') ? overlay.url.substring(1) : overlay.url;
+                        if (cleanUrl.includes('files/')) {
+                            cleanUrl = cleanUrl.substring(cleanUrl.indexOf('files/'));
+                        }
+                        return {
+                            ...overlay,
+                            url: `${imageBasePath}/${cleanUrl}`
+                        }
+                    })
+                }
+                return data
+            }
+        } catch (error) {
+            // Không cần in error message nếu chỉ là lỗi fetch 404
+            // console.warn(`[v1] Failed ${url}: ${error.message}`)
+        }
+    }
+
+    console.log(`[v1] No data found for ${districtName}`)
     return null
-  } catch (error) {
-    console.error("[v0] Error loading planning data from URL:", error)
-    return null
-  }
+}
+
+// loadPlanningDataFromUrl
+export async function loadPlanningDataFromUrl(folderPath) {
+    if (!folderPath) return null;
+
+    // folderPath là "Tien_Giang/Go_Cong_Tay_2030"
+    const imageBasePath = `/quyhoach/${folderPath}`;
+    const url = `${imageBasePath}/index.json`;
+
+    try {
+        const response = await fetch(url);
+        if (response.ok) {
+            const data = await response.json();
+            console.log(`[v1] Loaded from: ${url}`);
+
+            // === 💡 THÊM ĐOẠN NÀY VÀO ===
+            if (data.overlays && Array.isArray(data.overlays)) {
+                data.overlays = data.overlays.map(overlay => {
+                    let cleanUrl = overlay.url.startsWith('/') ? overlay.url.substring(1) : overlay.url;
+                    if (cleanUrl.includes('files/')) {
+                        cleanUrl = cleanUrl.substring(cleanUrl.indexOf('files/'));
+                    }
+                    return {
+                        ...overlay,
+                        url: `${imageBasePath}/${cleanUrl}`
+                    };
+                });
+            }
+            // =============================
+
+            return data; // Trả về data đã được xử lý
+        }
+        return null;
+    } catch (error) {
+        console.error("[v1] Error from URL:", error);
+        return null;
+    }
 }

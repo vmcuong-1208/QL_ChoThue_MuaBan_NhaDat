@@ -1,35 +1,37 @@
 "use client"
 
-import { useState } from "react" // Loại bỏ useEffect và locationService
+import { useState } from "react"
 // import locationService from "../services/locationService" // Đã loại bỏ
 import GoogleMapComponent from "./GoogleMapComponent"
 import { loadPlanningData } from "../utils/planningDataLoader"
 import "../styles/MapPage.css"
 
 const MapPage = () => {
-    // ⚠️ Đã loại bỏ các state dư thừa: selectedProvince, districts, provinces
-    
     // Giữ lại các state cần thiết:
-    const [mapCenter] = useState({ lat: 10.8231, lng: 106.6297 }) // Khai báo ban đầu
-    const [zoom] = useState(10) // Khai báo ban đầu
+    const [mapCenter] = useState({ lat: 10.8231, lng: 106.6297 })
+    const [zoom] = useState(10)
     const [planningData, setPlanningData] = useState(null)
     const [loading, setLoading] = useState(false)
 
-    // Loại bỏ hoàn toàn các useEffect không còn sử dụng
-
-    // Logic xử lý load Planning Data được truyền vào GoogleMapComponent
-    const handleDistrictSelectForPlanning = async (districtName) => {
+    // 🚀 CẬP NHẬT: Nhận province và district, sau đó gọi loadPlanningData(province, district)
+    const handleDistrictSelectForPlanning = async (provinceName, districtName) => {
+        // Dùng districtName là điều kiện chính để tải quy hoạch
         if (!districtName) {
             setPlanningData(null);
             return;
         }
+
         setLoading(true);
+        console.log(`[MapPage] Loading planning for: ${districtName} (Province: ${provinceName})`);
         try {
-            // Tải dữ liệu Quy hoạch dựa trên tên/ID khu vực
-            const data = await loadPlanningData(districtName);
+            // Gọi hàm loadPlanningData đã được cập nhật logic (v1)
+            const data = await loadPlanningData(provinceName, districtName);
             setPlanningData(data);
+            if (!data) {
+                console.log(`[MapPage] No planning data found for ${districtName}.`);
+            }
         } catch (error) {
-            console.error("Lỗi khi load planning data:", error);
+            console.error("[MapPage] Lỗi khi load planning data:", error);
             setPlanningData(null);
         } finally {
             setLoading(false);
@@ -45,8 +47,10 @@ const MapPage = () => {
                     planningData={planningData}
                     height="calc(100vh - 150px)"
                     showControls={true}
-                    onDistrictSelect={handleDistrictSelectForPlanning} 
-                    showMode="map" 
+                    // 🚀 CẬP NHẬT: Truyền hàm với 2 tham số
+                    onDistrictSelect={(province, district) => handleDistrictSelectForPlanning(province, district)}
+                    showMode="map"
+                    onBoundaryAdd={(callback) => callback}
                 />
             </div>
         </div>
