@@ -19,6 +19,7 @@ import MoMoCallback from "./components/MoMoCallback"
 import PaymentSuccess from "./components/PaymentSuccess"
 import GoogleAuthSuccess from "./components/GoogleAuthSuccess"
 import MapPage from "./components/MapPage"
+import PriceReference from "./components/PriceReference"
 import "./App.css"
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
               <Route path="/lien-he" element={<Contact />} />
               <Route path="/tim-kiem" element={<SearchResults />} />
               <Route path="/ban-do" element={<MapPage />} />
+              <Route path="/tham-khao-gia" element={<PriceReference />} />
               <Route path="/bat-dong-san/:id" element={<PropertyDetail />} />
               <Route path="/payment/momo/callback" element={<MoMoCallback />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
@@ -89,7 +91,7 @@ function App() {
               <Route
                 path="/admin-panel"
                 element={
-                  <ProtectedRoute requiredRole="admin">
+                  <ProtectedRoute requiredRoles={["admin"]}>
                     <AdminPanel />
                   </ProtectedRoute>
                 }
