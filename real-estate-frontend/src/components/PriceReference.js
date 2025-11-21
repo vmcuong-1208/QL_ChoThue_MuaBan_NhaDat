@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import locationService from "../services/locationService"
 import "../styles/PriceReference.css"
 
 const API_URL = "http://localhost:5000/api"
@@ -15,42 +16,40 @@ const normalizeString = (str) => {
     .replace(/[\u0300-\u036f]/g, "")
 }
 
+const normalizeDistrictName = (districtName) => {
+  if (!districtName) return ""
+
+  // Loại bỏ các tiền tố "Quận", "Huyện", "Thị xã", "Thành phố"
+  let normalized = normalizeString(districtName)
+  normalized = normalized
+    .replace(/^quan\s+/i, "")
+    .replace(/^huyen\s+/i, "")
+    .replace(/^thi xa\s+/i, "")
+    .replace(/^thanh pho\s+/i, "")
+    .trim()
+
+  return normalized
+}
+
 const getPropertyType = (property) => {
   return (
-    property.TenLoai ||
-    property.LoaiNha ||
-    property.Loai ||
-    property.propertyType ||
-    property.propertyTypeName ||
-    ""
+    property.TenLoai || property.LoaiNha || property.Loai || property.propertyType || property.propertyTypeName || ""
   )
 }
 
 const getAddress = (property) => {
-  return (
-    property.DiaChi ||
-    property.Dia_Chi ||
-    property.address ||
-    property.dia_chi_chi_tiet ||
-    ""
-  )
+  return property.DiaChi || property.Dia_Chi || property.address || property.dia_chi_chi_tiet || ""
 }
 
 const getPrice = (property) => {
-  const price =
-    property.Gia ||
-    property.GiaBan ||
-    property.Tien ||
-    property.price ||
-    property.MucGia ||
-    0
+  const price = property.Gia || property.GiaBan || property.Tien || property.price || property.MucGia || 0
   return price ? price : 0
 }
 
 export default function PriceReference() {
   const [searchParams, setSearchParams] = useState({
     propertyType: "",
-    location: "",
+    district: "", // Đổi từ TenHuyen sang MaHuyen
   })
 
   const [priceData, setPriceData] = useState([])
@@ -60,67 +59,53 @@ export default function PriceReference() {
   const [minPrice, setMinPrice] = useState(0)
   const [maxPrice, setMaxPrice] = useState(0)
   const [propertyTypes, setPropertyTypes] = useState([])
-  const [locations, setLocations] = useState([])
+  const [provinces, setProvinces] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [selectedProvince, setSelectedProvince] = useState("")
   const [loading, setLoading] = useState(false)
   const [regionalData, setRegionalData] = useState([])
   const [error, setError] = useState(null)
 
-  // Fetch property types and locations on mount
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setError(null)
-        console.log("[v0] Fetching initial data...")
 
-        const [typesRes, propsRes] = await Promise.all([
+        const [typesRes, propsRes, provincesData] = await Promise.all([
           fetch(`${API_URL}/property-types`),
           fetch(`${API_URL}/properties?limit=1000`),
+          locationService.getProvinces(),
         ])
 
         const types = await typesRes.json()
         const props = await propsRes.json()
 
-        console.log("[v0] Property types:", types)
-        console.log("[v0] Properties response:", props)
-        if (props.properties && props.properties.length > 0) {
-          console.log("[v0] First property structure:", props.properties[0])
-          console.log("[v0] Field names:", Object.keys(props.properties[0]))
-          console.log("[v0] Sample property type:", getPropertyType(props.properties[0]))
-          console.log("[v0] Sample address:", getAddress(props.properties[0]))
-          console.log("[v0] Sample price:", getPrice(props.properties[0]))
-        }
-
         setPropertyTypes(Array.isArray(types) ? types : [])
+        setProvinces(provincesData)
 
-        // Extract unique locations from properties
-        const locationSet = new Set()
-        if (props.properties && Array.isArray(props.properties)) {
-          props.properties.forEach((p) => {
-            const addr = getAddress(p)
-            if (addr) locationSet.add(addr)
-          })
-        }
-        const uniqueLocations = Array.from(locationSet).slice(0, 10)
-
-        console.log("[v0] Locations found:", uniqueLocations)
-
-        setLocations(uniqueLocations)
-
-        // Set default values
         if (types && types.length > 0) {
           setSearchParams((prev) => ({
             ...prev,
-            propertyType: getPropertyType(types[0]) || types[0].TenLoai || "",
+            propertyType: types[0].MaLoai || "",
           }))
         }
-        if (uniqueLocations.length > 0) {
-          setSearchParams((prev) => ({
-            ...prev,
-            location: uniqueLocations[0],
-          }))
+
+        if (provincesData.length > 0) {
+          const firstProvince = provincesData[0]
+          setSelectedProvince(firstProvince.MaTinh)
+
+          const districtsData = await locationService.getDistricts(firstProvince.MaTinh)
+          setDistricts(districtsData)
+
+          if (districtsData.length > 0) {
+            setSearchParams((prev) => ({
+              ...prev,
+              district: districtsData[0].MaHuyen,
+            }))
+          }
         }
       } catch (error) {
-        console.error("[v0] Error fetching initial data:", error)
+        console.error("Error fetching initial data:", error)
         setError("Lỗi khi tải dữ liệu ban đầu")
       }
     }
@@ -129,8 +114,30 @@ export default function PriceReference() {
   }, [])
 
   useEffect(() => {
-    if (!searchParams.propertyType || !searchParams.location) {
-      console.log("[v0] Missing search params, skipping fetch")
+    const fetchDistricts = async () => {
+      if (!selectedProvince) return
+
+      try {
+        const districtsData = await locationService.getDistricts(selectedProvince)
+        setDistricts(districtsData)
+
+        if (districtsData.length > 0) {
+          setSearchParams((prev) => ({
+            ...prev,
+            district: districtsData[0].MaHuyen,
+          }))
+        }
+      } catch (error) {
+        console.error("Error fetching districts:", error)
+        setError("Lỗi khi tải danh sách quận/huyện")
+      }
+    }
+
+    fetchDistricts()
+  }, [selectedProvince])
+
+  useEffect(() => {
+    if (!searchParams.propertyType || !searchParams.district) {
       return
     }
 
@@ -138,66 +145,34 @@ export default function PriceReference() {
       setLoading(true)
       setError(null)
       try {
-        console.log("[v0] Fetching price data for:", searchParams)
-
-        const response = await fetch(`${API_URL}/properties?limit=1000`)
-        const data = await response.json()
-
-        console.log("[v0] All properties count:", data.properties?.length)
-
-        const normalizedSearchType = normalizeString(searchParams.propertyType)
-        const normalizedSearchLocation = normalizeString(searchParams.location)
-
-        console.log(
-          "[v0] Normalized search params - Type:",
-          normalizedSearchType,
-          "Location:",
-          normalizedSearchLocation,
-        )
-
-        const filtered = (data.properties || []).filter((p) => {
-          const propType = normalizeString(getPropertyType(p))
-          const propAddress = normalizeString(getAddress(p))
-
-          const typeMatch =
-            propType === normalizedSearchType ||
-            propType.includes(normalizedSearchType) ||
-            normalizedSearchType.includes(propType)
-
-          const locationMatch =
-            propAddress &&
-            (propAddress === normalizedSearchLocation ||
-              propAddress.includes(normalizedSearchLocation) ||
-              normalizedSearchLocation.includes(propAddress))
-
-          if (p.MaTTND === 1 || p.MaTTND === 2) {
-            // Log first 2 properties for debugging
-            console.log("[v0] Checking property:", {
-              MaTTND: p.MaTTND,
-              type: getPropertyType(p),
-              normalizedType: propType,
-              address: getAddress(p),
-              normalizedAddress: propAddress,
-              typeMatch,
-              locationMatch,
-              willInclude: typeMatch && locationMatch,
-            })
-          }
-
-          return typeMatch && locationMatch
+        const queryParams = new URLSearchParams({
+          loaiBDS: searchParams.propertyType,
+          huyen: searchParams.district,
+          limit: 1000,
         })
 
-        console.log("[v0] Filtered properties count:", filtered.length)
+        if (selectedProvince) {
+          queryParams.append("tinh", selectedProvince)
+        }
+
+        console.log("[v0] Fetching from API:", `${API_URL}/properties/search?${queryParams.toString()}`)
+
+        const response = await fetch(`${API_URL}/properties/search?${queryParams.toString()}`)
+        const data = await response.json()
+
+        const filtered = data.properties || []
+
+        console.log("[v0] Properties found from search API:", filtered.length)
 
         if (filtered.length > 0) {
           const prices = filtered
             .map((p) => {
-              const price = getPrice(p)
+              const price = p.Gia || 0
               return price > 0 ? price / 1000000 : 0
             })
             .filter((p) => p > 0)
 
-          console.log("[v0] Prices extracted:", prices)
+          console.log("[v0] Valid prices extracted:", prices.length)
 
           if (prices.length === 0) {
             setCurrentPrice(0)
@@ -211,17 +186,18 @@ export default function PriceReference() {
           const min = Math.min(...prices)
           const max = Math.max(...prices)
 
-          console.log("[v0] Price statistics - Avg:", avgPrice, "Min:", min, "Max:", max)
-
           setCurrentPrice(Math.round(avgPrice * 10) / 10)
           setMinPrice(Math.round(min * 10) / 10)
           setMaxPrice(Math.round(max * 10) / 10)
           setPriceLastMonth(Math.round(avgPrice * 0.96 * 10) / 10)
           setPriceLastYear(Math.round(avgPrice * 0.98 * 10) / 10)
 
-          // Generate price trend data for last 12 months
           const trend = Array.from({ length: 12 }, (_, i) => {
-            const month = ((i - 11 + new Date().getMonth()) % 12) + 1
+            const currentMonth = new Date().getMonth() + 1 // 1-12
+            const monthsBack = 11 - i
+            let month = currentMonth - monthsBack
+            if (month <= 0) month += 12
+
             return {
               month: `T${month}`,
               price: avgPrice - (i - 5) * 0.5,
@@ -231,81 +207,70 @@ export default function PriceReference() {
           })
           setPriceData(trend)
 
-          // Fetch regional comparison data
-          const locSet = new Set()
-          ;(data.properties || []).forEach((p) => {
-            const addr = getAddress(p)
-            if (addr) locSet.add(addr)
-          })
-          const uniqueLocations = Array.from(locSet).slice(0, 5)
+          const regional = []
+          for (const dist of districts) {
+            if (regional.length >= 5) break // Dừng khi đã có 5 quận
 
-          const regional = uniqueLocations
-            .map((loc) => {
-              const normalizedLoc = normalizeString(loc)
-              const normalizedSearchTypeForRegion = normalizeString(
-                searchParams.propertyType,
-              )
-
-              const locProps = (data.properties || []).filter((p) => {
-                const propType = normalizeString(getPropertyType(p))
-                const propAddress = normalizeString(getAddress(p))
-
-                const typeMatch =
-                  propType === normalizedSearchTypeForRegion ||
-                  propType.includes(normalizedSearchTypeForRegion) ||
-                  normalizedSearchTypeForRegion.includes(propType)
-
-                const locationMatch =
-                  propAddress &&
-                  (propAddress === normalizedLoc ||
-                    propAddress.includes(normalizedLoc) ||
-                    normalizedLoc.includes(propAddress))
-
-                return typeMatch && locationMatch
+            try {
+              const distQueryParams = new URLSearchParams({
+                loaiBDS: searchParams.propertyType,
+                huyen: dist.MaHuyen,
+                limit: 100,
               })
+              if (selectedProvince) {
+                distQueryParams.append("tinh", selectedProvince)
+              }
 
-              if (locProps.length === 0) return null
+              console.log("[v0] Fetching regional data for:", dist.TenHuyen)
+              const distResponse = await fetch(`${API_URL}/properties/search?${distQueryParams.toString()}`)
+              const distData = await distResponse.json()
+              const distProps = distData.properties || []
 
-              const locPrices = locProps
+              console.log("[v0] District", dist.TenHuyen, "properties found:", distProps.length)
+
+              if (distProps.length === 0) {
+                console.log("[v0] Skipping", dist.TenHuyen, "- no data available")
+                continue // Bỏ qua quận này, tiếp tục lặp
+              }
+
+              const distPrices = distProps
                 .map((p) => {
-                  const price = getPrice(p)
+                  const price = p.Gia || 0
                   return price > 0 ? price / 1000000 : 0
                 })
                 .filter((p) => p > 0)
 
-              if (locPrices.length === 0) return null
-
-              const locAvg =
-                locPrices.reduce((a, b) => a + b, 0) / locPrices.length
-              return {
-                name: loc,
-                price: Math.round(locAvg * 10) / 10,
-                minPrice: Math.round(Math.min(...locPrices) * 10) / 10,
-                maxPrice: Math.round(Math.max(...locPrices) * 10) / 10,
+              if (distPrices.length === 0) {
+                console.log("[v0] Skipping", dist.TenHuyen, "- no valid prices")
+                continue
               }
-            })
-            .filter((r) => r !== null)
 
+              const distAvg = distPrices.reduce((a, b) => a + b, 0) / distPrices.length
+              regional.push({
+                name: dist.TenHuyen,
+                price: Math.round(distAvg * 10) / 10,
+                minPrice: Math.round(Math.min(...distPrices) * 10) / 10,
+                maxPrice: Math.round(Math.max(...distPrices) * 10) / 10,
+              })
+
+              console.log("[v0] Added to regional:", dist.TenHuyen, "with avg price:", Math.round(distAvg * 10) / 10)
+            } catch (error) {
+              console.error(`[v0] Error fetching data for district ${dist.TenHuyen}:`, error)
+            }
+          }
+
+          console.log("[v0] Total regional data collected:", regional.length)
           setRegionalData(regional)
           setError(null)
         } else {
-          console.log("[v0] No properties found matching criteria")
-          console.log("[v0] Debug - checking all properties:")
-          ;(data.properties || []).slice(0, 5).forEach((p) => {
-            console.log("[v0] Property:", {
-              type: getPropertyType(p),
-              address: getAddress(p),
-            })
-          })
+          console.log("[v0] ✗ No properties found matching criteria")
           setCurrentPrice(0)
           setPriceData([])
           setRegionalData([])
-          setError(
-            "Không tìm thấy dữ liệu giá cho lựa chọn này. Vui lòng thử chọn loại nhà hoặc khu vực khác.",
-          )
+          setError("Không tìm thấy dữ liệu giá cho lựa chọn này. Vui lòng thử chọn loại nhà hoặc quận/huyện khác.")
         }
       } catch (error) {
-        console.error("[v0] Error fetching price data:", error)
+        console.error("Error fetching price data:", error)
         setError("Lỗi khi tải dữ liệu giá")
       } finally {
         setLoading(false)
@@ -313,23 +278,25 @@ export default function PriceReference() {
     }
 
     fetchPriceData()
-  }, [searchParams])
+  }, [searchParams, districts, selectedProvince])
 
-  const percentChangeMonth =
-    priceLastMonth > 0 ? (((currentPrice - priceLastMonth) / priceLastMonth) * 100).toFixed(1) : 0
-  const percentChangeYear = priceLastYear > 0 ? (((currentPrice - priceLastYear) / priceLastYear) * 100).toFixed(1) : 0
+  const getSelectedPropertyTypeName = () => {
+    const type = propertyTypes.find((t) => t.MaLoai === Number.parseInt(searchParams.propertyType))
+    return type ? type.TenLoai : ""
+  }
 
-  const maxChartPrice = Math.max(...priceData.map((d) => d.maxPrice), maxPrice, 1)
+  const getSelectedDistrictName = () => {
+    const district = districts.find((d) => d.MaHuyen === Number.parseInt(searchParams.district))
+    return district ? district.TenHuyen : ""
+  }
 
   return (
     <div className="price-reference">
-      {/* Header */}
       <div className="price-header">
         <h1>Tham Khảo Giá Bất Động Sản</h1>
-        <p>Xem giá trung bình bất động sản tại các khu vực khác nhau</p>
+        <p>Xem giá trung bình bất động sản tại các quận/huyện khác nhau</p>
       </div>
 
-      {/* Search Form */}
       <div className="price-search-section">
         <h2>Xem Giá Bất Động Sản</h2>
         <div className="search-form">
@@ -338,31 +305,46 @@ export default function PriceReference() {
             <select
               value={searchParams.propertyType}
               onChange={(e) => {
-                console.log("[v0] Property type changed:", e.target.value)
                 setSearchParams({ ...searchParams, propertyType: e.target.value })
               }}
             >
               <option value="">-- Chọn loại nhà --</option>
               {propertyTypes.map((type) => (
-                <option key={type.MaLoai} value={type.TenLoai}>
+                <option key={type.MaLoai} value={type.MaLoai}>
                   {type.TenLoai}
                 </option>
               ))}
             </select>
           </div>
           <div className="form-group">
-            <label>Khu vực</label>
+            <label>Tỉnh/Thành phố</label>
             <select
-              value={searchParams.location}
+              value={selectedProvince}
               onChange={(e) => {
-                console.log("[v0] Location changed:", e.target.value)
-                setSearchParams({ ...searchParams, location: e.target.value })
+                setSelectedProvince(e.target.value)
               }}
             >
-              <option value="">-- Chọn khu vực --</option>
-              {locations.map((loc) => (
-                <option key={loc} value={loc}>
-                  {loc}
+              <option value="">-- Chọn tỉnh/thành phố --</option>
+              {provinces.map((prov) => (
+                <option key={prov.MaTinh} value={prov.MaTinh}>
+                  {prov.TenTinh}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Quận/Huyện</label>
+            <select
+              value={searchParams.district}
+              onChange={(e) => {
+                setSearchParams({ ...searchParams, district: e.target.value })
+              }}
+              disabled={!selectedProvince || districts.length === 0}
+            >
+              <option value="">-- Chọn quận/huyện --</option>
+              {districts.map((dist) => (
+                <option key={dist.MaHuyen} value={dist.MaHuyen}>
+                  {dist.TenHuyen}
                 </option>
               ))}
             </select>
@@ -376,7 +358,6 @@ export default function PriceReference() {
         <div style={{ textAlign: "center", padding: "40px" }}>Đang tải dữ liệu...</div>
       ) : (
         <>
-          {/* Price Summary */}
           {currentPrice > 0 && (
             <>
               <div className="price-summary">
@@ -387,24 +368,23 @@ export default function PriceReference() {
                 </div>
                 <div className="price-card">
                   <div className={`price-change-up`}>
-                    {percentChangeMonth > 0 ? "+" : ""}
-                    {percentChangeMonth}%
+                    {(((currentPrice - priceLastMonth) / priceLastMonth) * 100).toFixed(1) > 0 ? "+" : ""}
+                    {(((currentPrice - priceLastMonth) / priceLastMonth) * 100).toFixed(1)}%
                   </div>
                   <div className="price-label">So với tháng trước</div>
                 </div>
                 <div className="price-card">
                   <div className={`price-change-up`}>
-                    {percentChangeYear > 0 ? "+" : ""}
-                    {percentChangeYear}%
+                    {(((currentPrice - priceLastYear) / priceLastYear) * 100).toFixed(1) > 0 ? "+" : ""}
+                    {(((currentPrice - priceLastYear) / priceLastYear) * 100).toFixed(1)}%
                   </div>
                   <div className="price-label">So với năm trước</div>
                 </div>
               </div>
 
-              {/* Price Range Chart */}
               <div className="price-range-section">
                 <h2>
-                  {searchParams.propertyType} tại {searchParams.location}
+                  {getSelectedPropertyTypeName()} tại {getSelectedDistrictName()}
                 </h2>
                 <div className="price-range-chart">
                   <div className="range-label">
@@ -420,18 +400,17 @@ export default function PriceReference() {
                     <div
                       className="range-bar"
                       style={{
-                        left: `${(minPrice / maxChartPrice) * 100}%`,
-                        width: `${((maxPrice - minPrice) / maxChartPrice) * 100}%`,
+                        left: `${(minPrice / Math.max(maxPrice, 1)) * 100}%`,
+                        width: `${((maxPrice - minPrice) / Math.max(maxPrice, 1)) * 100}%`,
                       }}
                     ></div>
                   </div>
                 </div>
               </div>
 
-              {/* Trend Chart */}
               {priceData.length > 0 && (
                 <div className="trend-section">
-                  <h2>Xu Hướng Giá {searchParams.propertyType}</h2>
+                  <h2>Xu Hướng Giá {getSelectedPropertyTypeName()}</h2>
                   <div className="trend-chart">
                     <div className="chart-container">
                       <svg viewBox="0 0 1200 300" className="chart-svg">
@@ -478,20 +457,24 @@ export default function PriceReference() {
                 </div>
               )}
 
-              {/* Regional Comparison */}
               {regionalData.length > 0 && (
                 <div className="regional-section">
-                  <h2>So Sánh Giá Các Khu Vực</h2>
+                  <h2>So Sánh Giá {getSelectedPropertyTypeName()} Ở Các Quận/Huyện Khác</h2>
                   <div className="regional-comparison">
                     {regionalData.map((region, idx) => (
                       <div key={idx} className="region-card">
                         <h3>{region.name}</h3>
                         <div className="price-display">{region.price} triệu/m2</div>
+                        <div style={{ fontSize: "12px", color: "#666", marginBottom: "15px" }}>
+                          {region.price > currentPrice
+                            ? `Cao hơn ${(region.price - currentPrice).toFixed(1)} triệu/m² so với ${getSelectedDistrictName()}`
+                            : `Thấp hơn ${(currentPrice - region.price).toFixed(1)} triệu/m² so với ${getSelectedDistrictName()}`}
+                        </div>
                         <div className="range-bar-container">
                           <div
                             className="range-bar"
                             style={{
-                              width: `${(region.price / maxChartPrice) * 100}%`,
+                              width: `${(region.price / Math.max(...regionalData.map((r) => r.maxPrice), maxPrice, 1)) * 100}%`,
                               backgroundColor: idx % 2 === 0 ? "#3b82f6" : "#10b981",
                             }}
                           ></div>
@@ -512,4 +495,8 @@ export default function PriceReference() {
       )}
     </div>
   )
+}
+
+const maxChartPrice = (priceData, maxPrice) => {
+  return Math.max(...priceData.map((d) => d.maxPrice), maxPrice, 1)
 }
