@@ -46,6 +46,26 @@ const getPrice = (property) => {
   return price ? price : 0
 }
 
+const getPriceForTimeRange = (properties, monthsAgo) => {
+  const now = new Date()
+  const targetDate = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1)
+  const nextMonth = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 1)
+
+  const filteredPrices = properties
+    .filter((p) => {
+      const propDate = new Date(p.NgayTao)
+      return propDate >= targetDate && propDate < nextMonth
+    })
+    .map((p) => {
+      const price = getPrice(p)
+      return price > 0 ? price / 1000000 : 0
+    })
+    .filter((p) => p > 0)
+
+  if (filteredPrices.length === 0) return 0
+  return Math.round((filteredPrices.reduce((a, b) => a + b, 0) / filteredPrices.length) * 10) / 10
+}
+
 export default function PriceReference() {
   const [searchParams, setSearchParams] = useState({
     propertyType: "",
@@ -186,11 +206,19 @@ export default function PriceReference() {
           const min = Math.min(...prices)
           const max = Math.max(...prices)
 
+          const priceLastMonthReal = getPriceForTimeRange(filtered, 1)
+          const priceLastYearReal = getPriceForTimeRange(filtered, 12)
+
           setCurrentPrice(Math.round(avgPrice * 10) / 10)
           setMinPrice(Math.round(min * 10) / 10)
           setMaxPrice(Math.round(max * 10) / 10)
-          setPriceLastMonth(Math.round(avgPrice * 0.96 * 10) / 10)
-          setPriceLastYear(Math.round(avgPrice * 0.98 * 10) / 10)
+          // Nếu không có dữ liệu tháng/năm trước, sử dụng giá hiện tại làm fallback
+          setPriceLastMonth(priceLastMonthReal > 0 ? priceLastMonthReal : Math.round(avgPrice * 10) / 10)
+          setPriceLastYear(priceLastYearReal > 0 ? priceLastYearReal : Math.round(avgPrice * 10) / 10)
+
+          console.log("[v0] Price this month:", Math.round(avgPrice * 10) / 10)
+          console.log("[v0] Price last month:", priceLastMonthReal > 0 ? priceLastMonthReal : "No data")
+          console.log("[v0] Price last year:", priceLastYearReal > 0 ? priceLastYearReal : "No data")
 
           const trend = Array.from({ length: 12 }, (_, i) => {
             const currentMonth = new Date().getMonth() + 1 // 1-12
@@ -209,7 +237,7 @@ export default function PriceReference() {
 
           const regional = []
           for (const dist of districts) {
-            if (regional.length >= 5) break // Dừng khi đã có 5 quận
+            if (regional.length >= 5) break
 
             try {
               const distQueryParams = new URLSearchParams({
@@ -230,7 +258,7 @@ export default function PriceReference() {
 
               if (distProps.length === 0) {
                 console.log("[v0] Skipping", dist.TenHuyen, "- no data available")
-                continue // Bỏ qua quận này, tiếp tục lặp
+                continue
               }
 
               const distPrices = distProps

@@ -12,10 +12,20 @@ const SOCKET_URL = "http://localhost:5000"
 const SERVER_URL = "http://localhost:5000"
 
 // Thêm prop embedded vào danh sách props
-const ChatBox = ({ sellerId, propertyId, propertyTitle, sellerName, sellerAvatar, onClose, embedded = false }) => {
+const ChatBox = ({
+  sellerId,
+  propertyId,
+  propertyTitle,
+  sellerName,
+  sellerAvatar,
+  onClose,
+  embedded = false,
+  initialMessage = "",
+}) => {
   const { currentUser } = useAuth()
   const [messages, setMessages] = useState([])
-  const [newMessage, setNewMessage] = useState("")
+  // Khởi tạo newMessage với initialMessage nếu có
+  const [newMessage, setNewMessage] = useState(initialMessage)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [socket, setSocket] = useState(null)
@@ -314,6 +324,7 @@ const ChatBox = ({ sellerId, propertyId, propertyTitle, sellerName, sellerAvatar
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={handleTyping}
           disabled={sending}
+          autoFocus={initialMessage ? true : false}
         />
         <button type="submit" disabled={sending || !newMessage.trim()}>
           {sending ? <FaSpinner className="spinner" /> : <FaPaperPlane />}

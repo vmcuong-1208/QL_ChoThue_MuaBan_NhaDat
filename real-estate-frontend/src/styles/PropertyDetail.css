@@ -316,66 +316,217 @@
 
 /* Thông tin người bán */
 .seller-info {
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+  color: white;
+}
+
+.seller-header-badge {
+  background-color: rgba(255, 255, 255, 0.15);
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.seller-badge-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+}
+
+.seller-profile {
   padding: 20px;
+  text-align: center;
+  background: white;
 }
 
-.seller-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.seller-avatar {
-  width: 60px;
-  height: 60px;
+.seller-avatar-large {
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #4f46e5;
+  border: 4px solid #17a2b8;
+  margin: 0 auto 15px;
+  background-color: #f0f0f0;
+  position: relative;
 }
 
-.seller-avatar img {
+.seller-avatar-large img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.seller-name-role {
+.seller-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Thống kê người bán */
+.seller-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #17a2b8;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
   flex: 1;
 }
 
-.seller-name-role h3 {
-  margin: 0 0 5px 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.seller-role {
+/* Sửa stat-label: màu trắng rõ, weight đậm hơn */
+.seller-stats .stat-label {
   font-size: 14px;
-  color: #666;
-  background-color: #f3f4f6;
-  padding: 3px 8px;
-  border-radius: 4px;
-  display: inline-block;
+  color: #ffffff ;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
 }
 
-.seller-contact {
-  margin-bottom: 20px;
+.seller-stats .stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff !important;
 }
 
-.contact-item {
+.stat-divider {
+  width: 1px;
+  height: 30px;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Link xem trang cá nhân */
+.view-profile-link {
+  display: block;
+  padding: 12px 20px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background-color 0.2s;
+}
+
+.view-profile-link:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.view-profile-link span {
+  margin-left: 5px;
+  font-size: 18px;
+}
+
+/* Nút điện thoại */
+.phone-button {
+  width: calc(100% - 40px);
+  margin: 15px 20px;
+  padding: 12px 15px;
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  color: #333;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  border: 2px solid white;
 }
 
-.contact-icon {
-  color: #4f46e5;
+.phone-button:hover {
+  background-color: #138496;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.phone-button svg {
+  font-size: 16px;
+}
+
+/* Nút Contact */
+.contact-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 20px;
+  margin-bottom: 15px;
+}
+
+.chat-btn,
+.zalo-btn {
+  padding: 10px 12px;
+  border: 2px solid white;
+  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.chat-btn:hover,
+.zalo-btn:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-btn svg,
+.zalo-btn img {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Tin nhắn mẫu */
+.seller-messages {
+  padding: 15px 20px 20px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.message-label {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.message-box {
+  padding: 10px 12px;
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.message-box p {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+}
+
+.message-box:last-child {
+  margin-bottom: 0;
 }
 
 /* Added styling for sidebar action buttons */
@@ -632,6 +783,26 @@
 }
 
 @media (max-width: 768px) {
+  .seller-info {
+    border-radius: 10px;
+  }
+
+  .seller-avatar-large {
+    width: 90px;
+    height: 90px;
+  }
+
+  .seller-name {
+    font-size: 18px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .contact-buttons {
+    grid-template-columns: 1fr 1fr;
+  }
   .property-header {
     flex-direction: column;
     align-items: flex-start;

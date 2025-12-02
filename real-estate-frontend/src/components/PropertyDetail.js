@@ -11,7 +11,6 @@ import {
   FaHeart,
   FaRegHeart,
   FaPhone,
-  FaEnvelope,
   FaChevronLeft,
   FaChevronRight,
   FaShareAlt,
@@ -51,6 +50,9 @@ const PropertyDetail = () => {
   const [planningData, setPlanningData] = useState(null)
 
   const [showPromotionalPopup, setShowPromotionalPopup] = useState(false)
+  const [sellerStats, setSellerStats] = useState({ propertyCount: 0, joinDate: null })
+  const [showFullPhone, setShowFullPhone] = useState(false)
+  const [suggestedMessage, setSuggestedMessage] = useState("")
 
   const getFullAddress = (property) => {
     if (!property) return ""
@@ -139,6 +141,69 @@ const PropertyDetail = () => {
                 HoTen: sellerResponse.data.HoTen + " (Bạn)",
               })
             }
+
+            try {
+              const propertiesResponse = await axios.get(`${API_URL}/properties`)
+
+              console.log("[v0] Property MaNgDung:", response.data.MaNgDung, "Type:", typeof response.data.MaNgDung)
+              console.log("[v0] All properties count:", propertiesResponse.data.length)
+              if (propertiesResponse.data.length > 0) {
+                console.log(
+                  "[v0] First property MaNgDung:",
+                  propertiesResponse.data[0].MaNgDung,
+                  "Type:",
+                  typeof propertiesResponse.data[0].MaNgDung,
+                )
+              }
+
+              let allProperties = []
+              if (Array.isArray(propertiesResponse.data)) {
+                allProperties = propertiesResponse.data
+              } else if (propertiesResponse.data?.data && Array.isArray(propertiesResponse.data.data)) {
+                allProperties = propertiesResponse.data.data
+              } else if (propertiesResponse.data?.properties && Array.isArray(propertiesResponse.data.properties)) {
+                allProperties = propertiesResponse.data.properties
+              }
+
+              const sellerProperties = allProperties.filter(
+                (p) => String(p.MaNgDung) === String(response.data.MaNgDung),
+              )
+
+              console.log("[v0] Seller properties found:", sellerProperties.length)
+
+              // Tính ngày tham gia từ bài đăng cũ nhất
+              let oldestDate = null
+              if (sellerProperties.length > 0) {
+                console.log(
+                  "[v0] Seller properties NgayTao values:",
+                  sellerProperties.map((p) => ({ id: p.MaTTND, NgayTao: p.NgayTao })),
+                )
+
+                const dates = sellerProperties
+                  .filter((p) => p.NgayTao)
+                  .map((p) => new Date(p.NgayTao))
+                  .filter((d) => !isNaN(d.getTime()))
+
+                console.log("[v0] Valid dates found:", dates.length)
+
+                if (dates.length > 0) {
+                  oldestDate = new Date(Math.min(...dates))
+                  console.log("[v0] Oldest date:", oldestDate)
+                }
+              }
+
+              setSellerStats({
+                propertyCount: sellerProperties.length,
+                joinDate: oldestDate,
+              })
+
+              console.log("[v0] Seller stats:", {
+                propertyCount: sellerProperties.length,
+                joinDate: oldestDate,
+              })
+            } catch (err) {
+              console.error("Lỗi khi lấy danh sách tin đăng của seller:", err)
+            }
           } catch (error) {
             console.error("Lỗi khi lấy thông tin người bán:", error)
           }
@@ -198,8 +263,19 @@ const PropertyDetail = () => {
   }, [id, currentUser])
 
   useEffect(() => {
-    if (!currentUser) {
-      setShowPromotionalPopup(true)
+    // Kiểm tra cả localStorage token để đảm bảo không hiển thị popup sai
+    const token = localStorage.getItem("token")
+    if (!currentUser && !token) {
+      // Delay một chút để AuthContext có thời gian load
+      const timer = setTimeout(() => {
+        const tokenCheck = localStorage.getItem("token")
+        if (!tokenCheck) {
+          setShowPromotionalPopup(true)
+        }
+      }, 500)
+      return () => clearTimeout(timer)
+    } else {
+      setShowPromotionalPopup(false)
     }
   }, [currentUser])
 
@@ -218,8 +294,6 @@ const PropertyDetail = () => {
             const district = districts.find((d) => d.MaHuyen === Number.parseInt(property.MaHuyen))
             if (district) {
               locationNamesObj.district = district.TenHuyen
-
-
 
               if (property.MaXa) {
                 const wards = await locationService.getWards(property.MaHuyen)
@@ -324,6 +398,22 @@ const PropertyDetail = () => {
       navigator.clipboard.writeText(window.location.href)
       alert("Đã sao chép liên kết vào clipboard!")
     }
+  }
+
+  const togglePhoneDisplay = () => {
+    setShowFullPhone(!showFullPhone)
+  }
+
+  const handleContactClick = (platform) => {
+    if (platform === "zalo" && seller?.SDT) {
+      const zaloUrl = `https://zalo.me/${seller.SDT.replace(/\s/g, "")}`
+      window.open(zaloUrl, "_blank")
+    }
+  }
+
+  const handleSuggestedMessageClick = (message) => {
+    setSuggestedMessage(message)
+    setShowChat(true)
   }
 
   if (loading) {
@@ -577,45 +667,116 @@ const PropertyDetail = () => {
 
         <div className="property-detail-sidebar">
           <div className="seller-info">
-            <div className="seller-header">
-              <div className="seller-avatar">
+            {/* Header với tiêu đề xanh */}
+            <div className="seller-header-badge">
+              <h3 className="seller-badge-title">Thông tin môi giới</h3>
+            </div>
+
+            {/* Thông tin cơ bản */}
+            <div className="seller-profile">
+              <div className="seller-avatar-large">
                 <img
-                  src={seller?.AnhDaiDien || "/placeholder.svg?height=60&width=60"}
+                  src={seller?.AnhDaiDien || "/placeholder.svg?height=120&width=120"}
                   alt={seller?.HoTen || "Người bán"}
                   onError={(e) => {
-                    e.target.src = "/placeholder.svg?height=60&width=60"
+                    e.target.src = "/placeholder.svg?height=120&width=120"
                   }}
                 />
               </div>
-              <div className="seller-name-role">
-                <h3>{seller?.HoTen || "Người bán"}</h3>
-                <span className="seller-role">{seller?.LoaiTaiKhoan || "Người dùng"}</span>
+              <h2 className="seller-name">{seller?.HoTen || "Người bán"}</h2>
+            </div>
+
+            {/* Thống kê */}
+            <div className="seller-stats">
+              <div className="stat-item">
+                <span className="stat-label">Tham Gia</span>
+                <span className="stat-value">
+                  {sellerStats.joinDate
+                    ? (() => {
+                        const now = new Date()
+                        const yearsAgo = now.getFullYear() - sellerStats.joinDate.getFullYear()
+                        return yearsAgo > 0 ? `${yearsAgo} năm` : "Mới"
+                      })()
+                    : "Mới"}
+                </span>
+              </div>
+              <div className="stat-divider"></div>
+              <div className="stat-item">
+                <span className="stat-label">Tin Đăng</span>
+                <span className="stat-value">{sellerStats.propertyCount}</span>
               </div>
             </div>
 
-            <div className="seller-contact">
-              {seller?.SDT && (
-                <div className="contact-item">
-                  <FaPhone className="contact-icon" />
-                  <span>{seller.SDT}</span>
-                </div>
-              )}
-              {seller?.Email && (
-                <div className="contact-item">
-                  <FaEnvelope className="contact-icon" />
-                  <span>{seller.Email}</span>
-                </div>
-              )}
+            {/* Link xem trang cá nhân */}
+            <a href={`/profile/${seller?.MaNgDung}`} className="view-profile-link">
+              Xem trang cá nhân <span>›</span>
+            </a>
+
+            {/* Nút điện thoại lớn */}
+            {seller?.SDT && (
+              <button className="phone-button" onClick={togglePhoneDisplay}>
+                <FaPhone /> {showFullPhone ? seller.SDT : seller.SDT.slice(0, -4) + "***"} -{" "}
+                {showFullPhone ? "Ẩn số" : "Hiện số"}
+                
+              </button>
+            )}
+
+            {/* Nút Chat và Zalo */}
+            <div className="contact-buttons">
+              <button className="chat-btn" onClick={() => setShowChat(true)}>
+                <FaCommentDots /> Chat
+              </button>
+              <button
+                className="contact-btn zalo-btn"
+                onClick={() => handleContactClick("zalo")}
+                title="Liên hệ qua Zalo"
+              >
+                <img
+                  src="/zalo.png"
+                  alt="Zalo"
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "3px",
+                  }}
+                />
+                Zalo
+              </button>
             </div>
 
-            <button className="chat-button" onClick={() => setShowChat(true)}>
-              <FaCommentDots /> Nhắn tin cho người bán
-            </button>
+            {/* Tin nhắn mẫu */}
+            <div className="seller-messages">
+              <p className="message-label">Chat ngay với người đăng tin</p>
+              <div
+                className="message-box"
+                onClick={() => handleSuggestedMessageClick("Cần hỏi còn không? Tôi muốn hỏi thêm thông tin")}
+                style={{ cursor: "pointer" }}
+              >
+                <p>Cần hỏi còn không? Tôi muốn hỏi thêm thông tin</p>
+              </div>
+              <div
+                className="message-box"
+                onClick={() => handleSuggestedMessageClick("Gửi cho tôi thêm hình/video nhé!")}
+                style={{ cursor: "pointer" }}
+              >
+                <p>Gửi cho tôi thêm hình/video nhé!</p>
+              </div>
+            </div>
           </div>
 
           <div className="property-details-card">
             <h3>Thông tin chi tiết</h3>
             <ul className="details-list">
+              <li>
+                <span className="detail-label">Ngày tham gia:</span>
+                <span className="detail-value">
+                  {sellerStats.joinDate ? sellerStats.joinDate.toLocaleDateString("vi-VN") : "Chưa xác định"}
+                </span>
+              </li>
+              <li>
+                <span className="detail-label">Số tin đăng:</span>
+                <span className="detail-value">{sellerStats.propertyCount}</span>
+              </li>
               <li>
                 <span className="detail-label">Loại bất động sản:</span>
                 <span className="detail-value">{property.LoaiBDS || "Không xác định"}</span>
@@ -668,6 +829,7 @@ const PropertyDetail = () => {
           sellerName={seller?.HoTen || "Người bán"}
           sellerAvatar={seller?.AnhDaiDien}
           onClose={() => setShowChat(false)}
+          initialMessage={suggestedMessage}
         />
       )}
     </div>

@@ -20,6 +20,7 @@ import PaymentSuccess from "./components/PaymentSuccess"
 import GoogleAuthSuccess from "./components/GoogleAuthSuccess"
 import MapPage from "./components/MapPage"
 import PriceReference from "./components/PriceReference"
+import BrokerProfile from "./components/BrokerProfile"
 import "./App.css"
 
 function App() {
@@ -96,6 +97,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/profile/:id" element={<BrokerProfile />} />
             </Routes>
           </main>
           <Footer />
