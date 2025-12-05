@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
-import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow } from "@react-google-maps/api"
+import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow, OverlayView } from "@react-google-maps/api"
 import {
   FaMap,
   FaSatellite,
@@ -15,588 +15,296 @@ import {
   FaSearch,
 } from "react-icons/fa"
 import { calculateDistance } from "../utils/coordinateConverter"
+import { calculatePolygonArea } from "../utils/gisUtils"
 import PlanningOverlay from "./PlanningOverlay"
 import DirectionsPanel from "./DirectionsPanel"
 import NearbyPlacesPanel from "./NearbyPlacesPanel"
 import SearchPanel from "./SearchPanel"
 import PlaceDetailCard from "./PlaceDetailCard"
 import { getPlaceByCoordinates } from "../utils/nominatimService"
-import { findBoundariesContainingPoint as findBoundariesByPoint } from "../utils/pointInPolygon"
-import { normalizeVietnamese } from "../utils/textNormalizer"
 import "../styles/GoogleMapComponent.css"
-import { convertCoordinates } from "../utils/gisUtils"
+import useGISLogic from "../hooks/useGISLogic"
+import usePropertyLogic from "../hooks/usePropertyLogic"
+
 const GOOGLE_MAPS_API_KEY = "AIzaSyDhjP2YOGxpCbsp7HatnQXGsKutiIXwmuo"
 const libraries = ["drawing", "geometry", "places"]
 
 const GoogleMapComponent = ({
-  center = { lat: 10.8231, lng: 106.6297 }, // Mặc định TP.HCM
+  center = { lat: 10.8231, lng: 106.6297 },
   zoom = 15,
-  propertyBoundary = null, // Tọa độ khung viền thửa đất [{lat, lng}, ...]
-  propertyArea = null, // Diện tích thửa đất (m2)
-  planningData = null, // Thêm prop planningData (JSON Index)
+  propertyBoundary = null,
+  propertyArea = null,
+  planningData = null,
   height = "500px",
   showControls = true,
   onMapClick = null,
-  showMode = "property", // Thêm từ version mới: "map" hoặc "property"
+  showMode = "property",
   onBoundaryAdd,
   onDistrictSelect,
 }) => {
-  // Load Google Maps API
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries,
   })
 
   const [propertyCenter, setPropertyCenter] = useState(center)
-
-  const [mapType, setMapType] = useState("roadmap") // roadmap hoặc satellite
+  const [mapType, setMapType] = useState("roadmap")
   const [showBoundaryLayer, setShowBoundaryLayer] = useState(true)
   const [showPlanningLayer, setShowPlanningLayer] = useState(false)
   const [boundaryOpacity, setBoundaryOpacity] = useState(0.5)
 
-  // State công cụ đo
   const [measurementMode, setMeasurementMode] = useState(false)
   const [measurementPoints, setMeasurementPoints] = useState([])
   const [measurementDistance, setMeasurementDistance] = useState(0)
 
-  // State fullscreen
   const [isFullscreen, setIsFullscreen] = useState(false)
-
-  // State info window
   const [selectedPoint, setSelectedPoint] = useState(null)
-
   const [showDirections, setShowDirections] = useState(false)
   const [showNearbyPlaces, setShowNearbyPlaces] = useState(false)
   const [routeData, setRouteData] = useState(null)
-
-  // Ref cho map
   const mapRef = useRef(null)
   const containerRef = useRef(null)
-
-  // Ref cho measurement layers
   const polylineRef = useRef(null)
   const markersRef = useRef([])
-
-  // Ref cho route polyline
   const routePolylineRef = useRef(null)
-
   const [planningOpacity, setPlanningOpacity] = useState(0.7)
-
-  // **START: Thêm/Điều chỉnh States từ Bản Vá**
   const [showAdminBoundary, setShowAdminBoundary] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const [clickPointMode, setClickPointMode] = useState(false)
+  const [selectedPlace, setSelectedPlace] = useState(null)
+  const [placeDetailBoundaries, setPlaceDetailBoundaries] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState(null)
+  const [clickMarker, setClickMarker] = useState(null)
 
-  // **END: Thêm/Điều chỉnh States từ Bản Vá**
+  const [boundaryCalculatedArea, setBoundaryCalculatedArea] = useState(null)
 
-  const [showSearch, setShowSearch] = useState(false) // Toggle search riêng
-  const [selectedBoundaries, setSelectedBoundaries] = useState([]) // Để vẽ polygon từ search (chồng lớp)
-  const [boundaryOpacities, setBoundaryOpacities] = useState({}) // Opacity riêng cho mỗi lớp (id: opacity)
+  const {
+    selectedBoundaries,
+    boundaryOpacities,
+    setBoundaryOpacities,
+    handleSearchSelect,
+    handleRemoveBoundary,
+    handleClearAllBoundaries,
+    calculatedArea,
+    sortedData,
+    mapNameToId,
+    handleSelectByCoordinates,
+  } = useGISLogic(mapRef, setPlaceDetailBoundaries)
 
-  const [clickPointMode, setClickPointMode] = useState(false) // Mode chọn điểm trên map
-  const [selectedPlace, setSelectedPlace] = useState(null) // Place info từ Nominatim
-  const [placeDetailBoundaries, setPlaceDetailBoundaries] = useState([]) // Boundaries cho place
-  const [clickMarker, setClickMarker] = useState(null) // Marker khi click
+  const {
+    selectedProperty,
+    setSelectedProperty,
+    propertyMarkers,
+    relatedProperties,
+    fetchProperties,
+    handlePropertySelect,
+  } = usePropertyLogic(mapRef)
 
-  // Callback khi map load xong
   const onLoad = useCallback((map) => {
     mapRef.current = map
   }, [])
-  // Xóa một ranh giới cụ thể
-  const handleRemoveBoundary = (id) => {
-    setSelectedBoundaries(prev => prev.filter(b => b.id !== id))
-    setBoundaryOpacities(prev => {
-      const { [id]: _, ...rest } = prev
-      return rest
+
+  useEffect(() => {
+    if (propertyBoundary && propertyBoundary.length >= 3 && isLoaded) {
+      // propertyBoundary là mảng [{lat, lng}, ...] - cần chuyển sang format đúng
+      const area = calculatePolygonArea([propertyBoundary])
+      setBoundaryCalculatedArea(area)
+    }
+  }, [propertyBoundary, isLoaded])
+
+  const getPolygonCenter = useCallback((coords) => {
+    if (!coords || coords.length === 0) return null
+
+    let totalLat = 0
+    let totalLng = 0
+    const points = Array.isArray(coords[0]) ? coords.flat() : coords
+
+    points.forEach((point) => {
+      totalLat += point.lat
+      totalLng += point.lng
     })
-    // ✅ Có thể gọi onBoundaryRemove nếu bạn muốn thông báo cho component cha (nếu có)
-    // if (onBoundaryRemove) onBoundaryRemove(id)
-    console.log("[v0] Boundary removed:", id)
-  }
-  // Xóa tất cả ranh giới
-  const handleClearAllBoundaries = () => {
-    setSelectedBoundaries([])
-    setBoundaryOpacities({})
-    // ✅ Có thể gọi onBoundaryRemove nếu bạn muốn thông báo cho component cha (nếu có)
-    // if (onBoundaryRemove) onBoundaryRemove('all')
-    console.log("[v0] All boundaries cleared.")
-  }
-  const loadLevel3sGeoJSON = async (level1_id, level1NameRomanized, level3Name) => {
+
+    return {
+      lat: totalLat / points.length,
+      lng: totalLng / points.length,
+    }
+  }, [])
+
+  const handleSearchCommit = async (query) => {
+    setSearchLoading(true)
+    setSearchError(null)
     try {
-      // Giữ nguyên filename không prefix (ví dụ: binhduong.json)
-      const fileName = `${level1NameRomanized}.json`
-      const response = await fetch(`/data/gis/level3s/${fileName}`)
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=vn&limit=1&addressdetails=1`
+      const response = await fetch(url)
+      const data = await response.json()
+      const result = data.length > 0 ? data[0] : null
 
-      if (!response.ok) {
-        console.warn(`[v0] Level3s file not found: ${fileName}`)
-        return null
-      }
-
-      const geoJSON = await response.json()
-      console.log(`[v0] Loaded level3s GeoJSON: ${fileName}`, geoJSON)
-
-      // Lọc features theo NAME_3
-      if (geoJSON.features && Array.isArray(geoJSON.features)) {
-        // Chuẩn hóa tên Level 3 từ input và LOẠI BỎ KHOẢNG TRẮNG
-        const level3NameNormalizedNoSpace = normalizeVietnamese(level3Name).replace(/\s+/g, "")
-
-        const matchedFeature = geoJSON.features.find((f) => {
-          const properties = f.properties || {}
-          const name3 = properties.NAME_3 || ""
-
-          // Chuẩn hóa tên NAME_3 từ GeoJSON và LOẠI BỎ KHOẢNG TRẮNG
-          const name3NormalizedNoSpace = normalizeVietnamese(name3).replace(/\s+/g, "")
-
-          // So sánh hai chuỗi KHÔNG DẤU và KHÔNG KHOẢNG TRẮNG
-          return name3NormalizedNoSpace === level3NameNormalizedNoSpace
-        })
-
-        if (matchedFeature && matchedFeature.geometry) {
-          console.log(`[v0] Found geometry for level3: ${level3Name}`)
-          return { geometry: matchedFeature.geometry, matchedFeature };  // Return object để có properties
-        } else {
-          console.warn(`[v0] No geometry found for level3: ${level3Name}`)
-          return null
+      if (result) {
+        const place = {
+          ...result,
+          lat: Number.parseFloat(result.lat),
+          lng: Number.parseFloat(result.lon || result.lng),
         }
-      }
+        setSelectedPlace(place)
+        setSelectedProperty(null)
 
-      return null
+        if (mapRef.current) {
+          mapRef.current.panTo({ lat: place.lat, lng: place.lng })
+          mapRef.current.setZoom(16)
+        }
+
+        const address = result.address || {}
+        const queryParts = query
+          .split(",")
+          .map((part) => part.trim())
+          .reverse()
+        const levels = []
+
+        const level1_name =
+          queryParts.length > 0 ? queryParts.shift() : address.state || address.province || address.county || ""
+
+        const level1s = mapNameToId("level1", level1_name, sortedData)
+        if (level1s.length > 0) levels.push(...level1s)
+
+        const level1_ids = level1s.map((l) => l.id)
+        const level2_name = queryParts.length > 0 ? queryParts.shift() : null
+        const level2 =
+          level2_name && level1_ids.length > 0 ? mapNameToId("level2", level2_name, sortedData, { level1_ids }) : null
+        if (level2) levels.push(level2)
+
+        const level2_ids = level2 ? [level2.id] : []
+        const level3_name = queryParts.length > 0 ? queryParts.shift() : null
+        const level3 =
+          level2_ids.length > 0 && level3_name ? mapNameToId("level3", level3_name, sortedData, { level2_ids }) : null
+        if (level3) levels.push(level3)
+
+        await Promise.all(levels.map((level) => handleSearchSelect(level)))
+        setPlaceDetailBoundaries(levels)
+
+        const provinceId = level1s.length > 0 ? level1s[0].id : null
+        const districtId = level2 ? level2.id : null
+
+        if (provinceId) {
+          await fetchProperties(provinceId, districtId)
+        }
+      } else {
+        setSearchError("Không tìm thấy địa điểm.")
+      }
     } catch (err) {
-      console.error(`[v0] Error loading or parsing Level 3 GeoJSON:`, err.message);
-      console.warn("[v0] No level3 geometry found, falling back to level2 parent.");
-      return null
+      console.error("[v0] Search error:", err)
+      setSearchError("Lỗi khi tìm kiếm.")
+    } finally {
+      setSearchLoading(false)
     }
   }
 
-  const handleSearchSelect = async (result) => {
-    try {
-      if (!result.level1_id) {
-        console.error("[v0] Missing level1_id in result:", result)
-        return
+  const processMapClick = useCallback(
+    async (lat, lng) => {
+      try {
+        // A. Lấy thông tin địa điểm (Nominatim) để hiển thị tên đẹp
+        const placeInfo = await getPlaceByCoordinates(lat, lng)
+        const place = {
+          ...(placeInfo || {}),
+          lat,
+          lng,
+          display_name: placeInfo?.display_name || `Vị trí: ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+          type: placeInfo?.type || "Selected Location",
+        }
+        setSelectedPlace(place)
+        setSelectedProperty(null)
+
+        // B. Tìm ranh giới GIS bằng tọa độ (PIP) và lấy kết quả
+        const foundBoundaries = await handleSelectByCoordinates(lat, lng)
+
+        // C. Nếu tìm được ranh giới, gọi API lấy BĐS
+        if (foundBoundaries && foundBoundaries.length > 0) {
+          const province = foundBoundaries.find((b) => b.level === 1)
+          const district = foundBoundaries.find((b) => b.level === 2)
+
+          if (province) {
+            await fetchProperties(province.level1_id, district?.level2_id)
+          }
+        }
+      } catch (err) {
+        console.error("[v0] Lỗi xử lý click:", err)
       }
+    },
+    [handleSelectByCoordinates, fetchProperties, setSelectedPlace, setSelectedProperty],
+  )
 
-      const level1_id = result.level1_id
-      console.log(
-        "[v0] Loading GIS data for level1_id:",
-        level1_id,
-        "search level:",
-        result.level,
-        "level2_id:",
-        result.level2_id,
-      )
+  const handleMapClickOverride = useCallback(
+    async (e) => {
+      // 1. Xử lý POI (Click vào icon có sẵn của Google)
+      if (e.placeId) {
+        e.stop() // Chặn bảng thông tin mặc định của Google
 
-      const gisResponse = await fetch(`/data/gis/${level1_id}.json`)
-      if (!gisResponse.ok) {
-        console.error("[v0] GIS file not found:", `${level1_id}.json`)
-        return
-      }
-
-      const gisData = await gisResponse.json()
-      console.log("[v0] GIS data loaded successfully. Province:", gisData.name)
-
-      let coords = []
-      let bbox = null
-      let displayName = result.name
-      let level = result.level  // Init level từ result
-
-      if (result.level === "level1") {
-        // Tỉnh: dùng coordinates top-level
-        const rawCoords = gisData.coordinates || []
-        coords = convertCoordinates(rawCoords)
-        bbox = gisData.bbox
-        displayName = gisData.name
-        console.log("[v0] Rendering level1 (province):", displayName, "raw coords length:", rawCoords.length, "converted length:", coords.length)
-      } else if (result.level === "level2") {
-        // Huyện/Quận: tìm trong level2s theo level2_id
-
-        // Sửa đổi: Tìm kiếm theo level2_id (chuẩn) HOẶC internal_id (nội bộ, ví dụ: '760')
-        const searchId = result.level2_id;
-
-        const level2 = gisData.level2s?.find((l2) =>
-          // 1. So sánh với ID mà SearchPanel gửi tới (ví dụ: '760')
-          l2.level2_id === searchId ||
-          // 2. PHẢI đảm bảo Level 2 trong gisData có trường internalId/id
-          l2.id === searchId ||
-          l2.internal_id === searchId
-        );
-
-        if (level2) {
-          const rawCoords = level2.coordinates || []
-          coords = convertCoordinates(rawCoords)
-          bbox = level2.bbox
-          // Luôn sử dụng tên từ file GIS để đảm bảo tính nhất quán
-          displayName = level2.name
-          console.log("[v1] Rendering level2 (district):", displayName, "raw coords length:", rawCoords.length, "converted length:", coords.length)
-        } else {
-          // Lỗi này giờ sẽ chỉ xảy ra nếu ID SearchPanel gửi tới không khớp với ID nào
-          console.warn("[v1] level2_id not found:", searchId, "in province:", level1_id)
+        // Nếu đang đo đạc thì cứ đo tiếp
+        if (measurementMode) {
+          const newPoint = { lat: e.latLng.lat(), lng: e.latLng.lng() }
+          setMeasurementPoints((prev) => [...prev, newPoint])
           return
         }
-      } else if (result.level === "level3") {
-        const rawProvinceName = gisData.name.replace(/^(Tỉnh|Thành phố)\s*/, ''); // Bỏ "Tỉnh" / "Thành phố"
-        // Cần romanized name của tỉnh để build URL
-        const level1NameRomanized = gisData.romanized || normalizeVietnamese(rawProvinceName).replace(/\s+/g, "").toLowerCase();
 
-        const level3Data = await loadLevel3sGeoJSON(level1_id, level1NameRomanized, result.name)
+        // Logic xử lý giống click điểm thường
+        const lat = e.latLng.lat()
+        const lng = e.latLng.lng()
+        setClickMarker({ lat, lng })
 
-        if (level3Data && level3Data.geometry) {
-          // ✅ THÀNH CÔNG: SỬ DỤNG TỌA ĐỘ CHÍNH XÁC CẤP XÃ
-          const rawCoords = level3Data.geometry.coordinates;
-          coords = convertCoordinates(rawCoords);
-          // 🛑 KIỂM TRA ĐỘ DÀI TỌA ĐỘ SAU KHI CHUYỂN ĐỔI
-          if (coords.length === 0) {
-            console.error("[v0] Level 3 Feature found, but coordinates are empty after conversion.");
-            console.error("Tọa độ ranh giới cấp Xã không hợp lệ.");
-            return;
-          }
-          bbox = level3Data.matchedFeature.properties.bbox || gisData.bbox;  // Sử dụng bbox từ matchedFeature nếu có
-          displayName = level3Data.matchedFeature.properties.NAME_3 || result.name;  // Ưu tiên NAME_3, fallback result.name
-          level = 'level3';
-          console.log(`[v0] Rendering level3 (ward) successful: ${displayName}, converted paths: ${coords.length}`);
-        } else {
-          // 🛑 FALLBACK (SỬ DỤNG DỮ LIỆU TỈNH/HUYỆN)
-          const level2 = gisData.level2s?.find(l2 =>
-            // Dùng ID để tìm (phù hợp với cấu trúc '725' của Thuận An)
-            l2.level2_id === result.level2_id ||
-            l2.id === result.level2_id
-          );
-
-          if (level2) {
-            const rawCoords = level2.coordinates || [];
-            coords = convertCoordinates(rawCoords);
-            // 🛑 KIỂM TRA ĐỘ DÀI TỌA ĐỘ FALLBACK
-            if (coords.length === 0) {
-              console.error(`[v0] Fallback Level 2 found (${level2.name}) but coordinates are empty/invalid.`);
-              console.error(`Tọa độ ranh giới cấp Huyện (${level2.name}) không hợp lệ.`);
-              return;
-            }
-
-            bbox = level2.bbox;
-            displayName = result.name; // Tên Xã/Phường
-            level = 'level3_fallback';
-            console.warn(`[v0] Fallback to Level 2 parent: ${level2.name} successful. Converted paths: ${coords.length}`);
-          } else {
-            console.error(`[v0] Could not find Level 2 parent for Level 3 ID: ${result.id} (searching for: ${result.level2_id}).`);
-            console.error("Lỗi: Không tìm thấy ranh giới cấp Huyện cho Xã này.");
-            return;
-          }
-        }
-      }
-
-      if (coords.length === 0) {
-        console.warn("[v0] No coordinates found for:", result.name)
+        // Gọi hàm xử lý chính
+        await processMapClick(lat, lng)
         return
       }
 
-      const BRIGHT_COLORS = ["#39FF14", "#7DF9FF", "#FF10F0", "#FF6700", "#FFFF54", "#FF00FF", "#00FFAA"]
-      const uniqueId = `${result.level}-${result.id}-${Date.now()}`
-      const selectedColor = BRIGHT_COLORS[selectedBoundaries.length % BRIGHT_COLORS.length]
-      const newBoundary = {
-        id: uniqueId,
-        level: result.level,
-        name: displayName,
-        coordinates: coords,
-        color: selectedColor,
-      };
-      setSelectedBoundaries((prev) => [
-        ...prev,
-        newBoundary,
-      ])
-      if (onBoundaryAdd) onBoundaryAdd(newBoundary);
-      setBoundaryOpacities((prev) => ({ ...prev, [uniqueId]: 0.5 }))
-
-      // Fit map bounds
-      if (mapRef.current && bbox && bbox.length === 4) {
-        const bounds = new window.google.maps.LatLngBounds()
-        bounds.extend({ lat: bbox[1], lng: bbox[0] }) // SW
-        bounds.extend({ lat: bbox[3], lng: bbox[2] }) // NE
-        mapRef.current.fitBounds(bounds)
-        console.log("[v0] Map fitted to bounds:", bbox)
+      // 2. Xử lý đo đạc
+      if (measurementMode) {
+        const newPoint = { lat: e.latLng.lat(), lng: e.latLng.lng() }
+        setMeasurementPoints((prev) => [...prev, newPoint])
+        return
       }
 
-      console.log("[v0] Boundary added. Total boundaries:", selectedBoundaries.length + 1)
-    } catch (err) {
-      console.error("[v0] handleSearchSelect error:", err)
-    }
-  }
+      // 3. Xử lý Click chọn điểm (Click Point Mode)
+      if (clickPointMode) {
+        const lat = e.latLng.lat()
+        const lng = e.latLng.lng()
+        setClickMarker({ lat, lng })
 
-  // SearchPanel toggle 
-  const handleToggleSearch = () => {
-    if (showSearch) {
-      // Đóng panel: xóa dữ liệu cũ
-      setShowSearch(false)
-      setSelectedBoundaries([])
-      setBoundaryOpacities({})
-    } else {
-      // Mở panel
-      setShowSearch(true)
-    }
-  }
+        // Gọi hàm xử lý chính
+        await processMapClick(lat, lng)
+        return
+      }
 
-  // Xóa đo đạc (giữ nguyên)
-  const clearMeasurement = () => {
-    setMeasurementPoints([])
-    setMeasurementDistance(0)
-    setMeasurementMode(false)
-  }
+      // 4. Fallback
+      if (onMapClick) onMapClick(e)
+      setSelectedPoint(null)
+    },
+    [measurementMode, clickPointMode, onMapClick, processMapClick],
+  )
 
-  // Toggle measurement mode (giữ nguyên)
-  const toggleMeasurementMode = () => {
-    if (measurementMode) {
-      clearMeasurement()
-    } else {
-      setMeasurementMode(true)
-    }
-  }
-
-  // Toggle fullscreen (giữ nguyên)
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return
     if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen()
+      containerRef.current.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`)
+      })
       setIsFullscreen(true)
     } else {
       document.exitFullscreen()
       setIsFullscreen(false)
     }
-  }
-
-  // Lắng nghe sự kiện fullscreen change (giữ nguyên)
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
-    }
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange)
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange)
-    }
   }, [])
 
   useEffect(() => {
-    if (propertyBoundary && propertyBoundary.length > 0 && mapRef.current) {
-      const bounds = new window.google.maps.LatLngBounds()
-      propertyBoundary.forEach((point) => {
-        bounds.extend(point)
-      })
-      mapRef.current.fitBounds(bounds)
-
-      // Tính tâm của bounds
-      const centerPoint = bounds.getCenter()
-      setPropertyCenter({
-        lat: centerPoint.lat(),
-        lng: centerPoint.lng(),
-      })
-    }
-  }, [propertyBoundary])
-
-  // Handle measurement layers manually (giữ nguyên)
-  useEffect(() => {
-    if (!mapRef.current) return // Chờ map load
-
-    // Cleanup old layers
-    if (polylineRef.current) {
-      polylineRef.current.setMap(null)
-      polylineRef.current = null
-    }
-    markersRef.current.forEach((marker) => marker.setMap(null))
-    markersRef.current = []
-
-    if (measurementMode && measurementPoints.length > 0) {
-      // Tạo Markers
-      measurementPoints.forEach((point, index) => {
-        const marker = new window.google.maps.Marker({
-          position: point,
-          map: mapRef.current,
-          label: {
-            text: `${index + 1}`,
-            color: "white",
-            fontSize: "12px",
-          },
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 6,
-            fillColor: "#4285F4",
-            fillOpacity: 1,
-            strokeColor: "#FFFFFF",
-            strokeWeight: 2,
-          },
-        })
-        markersRef.current.push(marker)
-      })
-
-      // Tạo Polyline nếu >1 points
-      if (measurementPoints.length > 1) {
-        polylineRef.current = new window.google.maps.Polyline({
-          path: measurementPoints,
-          strokeColor: "#4285F4",
-          strokeOpacity: 1,
-          strokeWeight: 3,
-          geodesic: true,
-        })
-        polylineRef.current.setMap(mapRef.current)
+    if (measurementPoints.length > 1) {
+      let totalDistance = 0
+      for (let i = 0; i < measurementPoints.length - 1; i++) {
+        totalDistance += calculateDistance(measurementPoints[i], measurementPoints[i + 1])
       }
+      setMeasurementDistance(totalDistance)
+    } else {
+      setMeasurementDistance(0)
     }
-  }, [measurementMode, measurementPoints, mapRef])
-
-  // Handle route polyline manually (giữ nguyên)
-  useEffect(() => {
-    if (!mapRef.current) return
-
-    if (routePolylineRef.current) {
-      routePolylineRef.current.setMap(null)
-      routePolylineRef.current = null
-    }
-
-    if (routeData && routeData.coordinates) {
-      routePolylineRef.current = new window.google.maps.Polyline({
-        path: routeData.coordinates,
-        geodesic: true,
-        strokeColor: "#4285F4",
-        strokeOpacity: 0.9,
-        strokeWeight: 4,
-        zIndex: 1000,
-      })
-      routePolylineRef.current.setMap(mapRef.current)
-    }
-  }, [routeData, mapRef])
-
-  const loadAllGISData = async () => {
-    try {
-      const allGISData = []
-
-      // Load sorted.json để biết tất cả ID
-      const sortedResponse = await fetch("/data/sorted.json")
-      const sorted = await sortedResponse.json()
-
-      // Duyệt từng tỉnh
-      const level1Ids = new Set()
-      sorted.forEach((item) => {
-        const firstTwoDigits = item[0]?.slice(0, 2) // level2_id -> tỉnh
-        if (firstTwoDigits) level1Ids.add(firstTwoDigits)
-      })
-
-      // Load tất cả GIS files
-      for (const level1Id of level1Ids) {
-        try {
-          const response = await fetch(`/data/gis/${level1Id}.json`)
-          if (response.ok) {
-            const data = await response.json()
-            allGISData.push(data)
-          }
-        } catch (err) {
-          console.warn(`[v0] Could not load GIS ${level1Id}:`, err)
-        }
-      }
-
-      console.log("[v0] Loaded", allGISData.length, "province GIS data")
-      return allGISData
-    } catch (error) {
-      console.error("[v0] Error loading all GIS data:", error)
-      return []
-    }
-  }
-
-  const handleMapClickForPoint = useCallback(
-    async (e) => {
-      if (!clickPointMode) return
-
-      const lat = e.latLng.lat()
-      const lng = e.latLng.lng()
-      const clickedPoint = { lat, lng }
-
-      console.log("[v0] Click point mode - point clicked:", clickedPoint)
-
-      // Tạo marker
-      setClickMarker(clickedPoint)
-
-      // Lấy thông tin địa điểm từ OSM
-      const place = await getPlaceByCoordinates(lat, lng)
-
-      if (place) {
-        setSelectedPlace(place)
-
-        // Tìm boundaries chứa điểm này
-        const allGISData = await loadAllGISData()
-
-        // Build danh sách GIS để check point-in-polygon
-        const gisDataForCheck = []
-
-        // Duyệt tất cả GIS files
-        for (const provinceData of allGISData) {
-          // Level1 (tỉnh)
-          gisDataForCheck.push({
-            level: 1,
-            level1_id: provinceData.level1_id,
-            name: provinceData.name,
-            type: provinceData.type,
-            coordinates: provinceData.coordinates,
-          })
-
-          // Level2 (huyện)
-          if (provinceData.level2s && Array.isArray(provinceData.level2s)) {
-            provinceData.level2s.forEach((level2) => {
-              gisDataForCheck.push({
-                level: 2,
-                level1_id: provinceData.level1_id,
-                level2_id: level2.level2_id,
-                name: level2.name,
-                type: level2.type,
-                coordinates: level2.coordinates,
-              })
-            })
-          }
-        }
-
-        // Find boundaries
-        const boundaries = await findBoundariesByPoint(clickedPoint, gisDataForCheck)
-
-        // Format boundaries cho PlaceDetailCard
-        const formattedBoundaries = boundaries.map((b) => ({
-          id: `${b.level1_id}_${b.level2_id || ""}`,
-          name: b.name,
-          type: b.type,
-          level: b.level,
-          level1Id: b.level1_id,
-          level2Id: b.level2_id,
-        }))
-
-        setPlaceDetailBoundaries(formattedBoundaries)
-
-        console.log("[v0] Found", formattedBoundaries.length, "boundaries for point")
-      }
-
-      // Exit click-point mode
-      setClickPointMode(false)
-    },
-    [clickPointMode],
-  )
-
-  // Override handleMapClick để include click-point mode
-  const handleMapClickOverride = useCallback(
-    (e) => {
-      handleMapClickForPoint(e)
-
-      if (measurementMode) {
-        const newPoint = {
-          lat: e.latLng.lat(),
-          lng: e.latLng.lng(),
-        }
-        const newPoints = [...measurementPoints, newPoint]
-        setMeasurementPoints(newPoints)
-
-        if (newPoints.length > 1) {
-          let totalDistance = 0
-          for (let i = 0; i < newPoints.length - 1; i++) {
-            totalDistance += calculateDistance(newPoints[i], newPoints[i + 1])
-          }
-          setMeasurementDistance(totalDistance)
-        }
-      }
-
-      if (onMapClick) {
-        onMapClick(e)
-      }
-    },
-    [handleMapClickForPoint, measurementMode, measurementPoints, onMapClick],
-  )
+  }, [measurementPoints])
 
   if (loadError) {
     return (
@@ -615,12 +323,18 @@ const GoogleMapComponent = ({
     )
   }
 
+  const boundaryCenter = propertyBoundary ? getPolygonCenter(propertyBoundary) : null
+  // Ưu tiên propertyArea (từ props), sau đó mới dùng boundaryCalculatedArea
+  const displayArea = propertyArea || boundaryCalculatedArea
+
   return (
-    <div ref={containerRef} className={`google-map-container ${isFullscreen ? "fullscreen" : ""}`}>
-      {/* Controls */}
+    <div
+      ref={containerRef}
+      className={`google-map-container ${isFullscreen ? "fullscreen" : ""}`}
+      style={{ height, position: "relative" }}
+    >
       {showControls && (
         <div className="map-controls-redesign">
-          {/* Loại bản đồ (giữ nguyên) */}
           <div className="control-section">
             <div className="control-label">Loại bản đồ</div>
             <div className="icon-button-group">
@@ -641,7 +355,6 @@ const GoogleMapComponent = ({
             </div>
           </div>
 
-          {/* Các lớp bản đồ (giữ nguyên) */}
           <div className="control-section">
             <div className="control-label">Lớp bản đồ</div>
 
@@ -673,7 +386,6 @@ const GoogleMapComponent = ({
               </>
             )}
 
-            {/* Lớp khung viền (giữ nguyên) */}
             {propertyBoundary && (
               <button
                 className={`icon-button ${showBoundaryLayer ? "active" : ""}`}
@@ -686,7 +398,6 @@ const GoogleMapComponent = ({
             )}
           </div>
 
-          {/* Thanh opacity dọc (giữ nguyên) */}
           {propertyBoundary && showBoundaryLayer && (
             <div className="control-section opacity-section">
               <div className="control-label">Độ mờ</div>
@@ -704,7 +415,6 @@ const GoogleMapComponent = ({
             </div>
           )}
 
-          {/* Công cụ */}
           <div className="control-section">
             <div className="control-label">Công cụ</div>
             <button className="icon-button" onClick={toggleFullscreen} title="Toàn màn hình">
@@ -712,7 +422,7 @@ const GoogleMapComponent = ({
             </button>
             <button
               className={`icon-button ${showSearch ? "active" : ""}`}
-              onClick={handleToggleSearch}
+              onClick={() => setShowSearch(!showSearch)}
               title="Tìm kiếm địa chỉ"
             >
               <FaSearch />
@@ -726,7 +436,7 @@ const GoogleMapComponent = ({
             </button>
             <button
               className={`icon-button ${measurementMode ? "active" : ""}`}
-              onClick={toggleMeasurementMode}
+              onClick={() => setMeasurementMode(!measurementMode)}
               title="Đo khoảng cách"
             >
               <FaRuler />
@@ -751,11 +461,10 @@ const GoogleMapComponent = ({
             )}
           </div>
 
-          {/* Thông tin đo (giữ nguyên) */}
           {measurementMode && measurementPoints.length > 0 && (
             <div className="measurement-info-compact">
               <div className="measurement-distance">{measurementDistance.toFixed(2)}m</div>
-              <button onClick={clearMeasurement} className="clear-btn">
+              <button onClick={() => setMeasurementPoints([])} className="clear-btn">
                 Xóa
               </button>
             </div>
@@ -763,7 +472,6 @@ const GoogleMapComponent = ({
         </div>
       )}
 
-      {/* Directions Panel (giữ nguyên) */}
       {showDirections && propertyCenter && (
         <DirectionsPanel
           propertyCenter={propertyCenter}
@@ -776,39 +484,45 @@ const GoogleMapComponent = ({
         />
       )}
 
-      {/* Nearby Places Panel (giữ nguyên) */}
       {showNearbyPlaces && propertyCenter && (
         <NearbyPlacesPanel propertyCenter={propertyCenter} mapRef={mapRef} onClose={() => setShowNearbyPlaces(false)} />
       )}
 
-      {/* Fix SearchPanel - đóng nên không overlap */}
       {showSearch && (
         <SearchPanel
           onClose={() => setShowSearch(false)}
-          onSelect={handleSearchSelect}
-          onDistrictSelect={onDistrictSelect}
+          onSearchCommit={handleSearchCommit}
+          onToggleClickMode={() => setClickPointMode(!clickPointMode)}
+          isClickModeActive={clickPointMode}
+          onBoundaryAdd={onBoundaryAdd}
+          searchLoading={searchLoading}
+          searchError={searchError}
         />
       )}
 
-      {selectedPlace && (
+      {(selectedPlace || selectedProperty) && (
         <div className="place-detail-wrapper">
           <PlaceDetailCard
             place={selectedPlace}
+            propertySummary={selectedProperty}
+            relatedProperties={relatedProperties}
             boundaries={placeDetailBoundaries}
             onClose={() => {
               setSelectedPlace(null)
+              setSelectedProperty(null)
               setClickMarker(null)
               setPlaceDetailBoundaries([])
             }}
             onBoundaryClick={(boundary) => {
-              console.log("[v0] User clicked boundary from detail card:", boundary)
-              // TODO: Có thể thêm logic để vẽ ranh tương ứng
+              if (boundary.MaTTND) {
+                handlePropertySelect(boundary)
+              }
             }}
+            calculatedArea={calculatedArea}
           />
         </div>
       )}
 
-      {/* Google Map */}
       <GoogleMap
         mapContainerStyle={{ width: "100%", height: isFullscreen ? "100vh" : height }}
         center={propertyCenter}
@@ -823,22 +537,62 @@ const GoogleMapComponent = ({
           zoomControl: true,
         }}
       >
-        {/* Render property boundary */}
         {propertyBoundary && showBoundaryLayer && (
-          <Polygon
-            paths={propertyBoundary}
-            options={{
-              strokeColor: "#FF0000",
-              strokeOpacity: 0.8,
-              strokeWeight: 2,
-              fillColor: "#FF0000",
-              fillOpacity: boundaryOpacity,
-            }}
-          />
+          <>
+            <Polygon
+              paths={propertyBoundary}
+              options={{
+                strokeColor: "#FF0000",
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: "#FF0000",
+                fillOpacity: boundaryOpacity,
+              }}
+            />
+            {propertyBoundary.map((point, idx) => (
+              <Marker
+                key={`corner-${idx}`}
+                position={point}
+                label={{
+                  text: `${idx + 1}`,
+                  color: "#FFFFFF",
+                  fontWeight: "bold",
+                  fontSize: "12px",
+                }}
+                icon={{
+                  path: window.google.maps.SymbolPath.CIRCLE,
+                  fillColor: "#FF0000",
+                  fillOpacity: 1,
+                  strokeColor: "#FFFFFF",
+                  strokeWeight: 2,
+                  scale: 12,
+                }}
+              />
+            ))}
+            {boundaryCenter && displayArea && (
+              <OverlayView position={boundaryCenter} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+                <div
+                  style={{
+                    background: "rgba(255, 255, 255, 0.9)",
+                    padding: "8px",
+                    paddingRight:"120px",
+                    borderRadius: "4px",
+                    border: "1px solid #FF0000",
+                    fontWeight: "bold",
+                    fontSize: "24px",
+                    whiteSpace: "nowrap",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  {displayArea.toFixed(2)} m²
+                </div>
+              </OverlayView>
+            )}
+          </>
         )}
 
-        {/* Render admin boundaries từ search */}
-        {selectedBoundaries.length > 0 &&
+        {showBoundaryLayer &&
+          selectedBoundaries.length > 0 &&
           selectedBoundaries.map((boundary) => (
             <Polygon
               key={boundary.id}
@@ -853,7 +607,42 @@ const GoogleMapComponent = ({
             />
           ))}
 
-        {/* Render click marker */}
+        {propertyMarkers.map((property) => {
+          const isSelected = selectedProperty?.MaTTND === property.MaTTND
+          const lat = Number.parseFloat(property.GPS_Lat || 0)
+          const lng = Number.parseFloat(property.GPS_Lng || 0)
+
+          // Bỏ qua nếu không có tọa độ hợp lệ
+          if (!lat || !lng) return null
+
+          const markerIcon = isSelected
+            ? {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                fillColor: "#FF5733",
+                fillOpacity: 1.0,
+                strokeColor: "#FFFFFF",
+                strokeWeight: 4,
+                scale: 14,
+              }
+            : {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                fillColor: "#007BFF",
+                fillOpacity: 0.8,
+                strokeWeight: 0,
+                scale: 9,
+              }
+
+          return (
+            <Marker
+              key={property.MaTTND}
+              position={{ lat, lng }}
+              onClick={() => handlePropertySelect(property)}
+              animation={isSelected ? window.google.maps.Animation.BOUNCE : null}
+              icon={markerIcon}
+            />
+          )
+        })}
+
         {clickMarker && (
           <Marker position={clickMarker} icon={{ path: window.google.maps.SymbolPath.CIRCLE, scale: 10 }}>
             <InfoWindow position={clickMarker}>
@@ -866,23 +655,39 @@ const GoogleMapComponent = ({
           </Marker>
         )}
 
-        {/* Planning Overlay */}
         <PlanningOverlay
-          mapRef={mapRef} // Truyền ref bản đồ
-          planningData={planningData} // Truyền đúng tên prop
-          showPlanningLayer={showPlanningLayer} // Truyền state hiển thị
-          planningOpacity={planningOpacity} // Truyền state độ mờ
+          mapRef={mapRef}
+          planningData={planningData}
+          showPlanningLayer={showPlanningLayer}
+          planningOpacity={planningOpacity}
         />
+
+        {measurementPoints.length > 0 && (
+          <>
+            <Polygon
+              paths={measurementPoints}
+              options={{
+                strokeColor: "#0000FF",
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+                fillOpacity: 0,
+              }}
+            />
+            {measurementPoints.map((pt, idx) => (
+              <Marker key={idx} position={pt} label={`${idx + 1}`} />
+            ))}
+          </>
+        )}
       </GoogleMap>
 
-      {/* Thêm Sliders Opacity cho từng lớp boundary được chọn */}
       {selectedBoundaries.length > 0 && (
         <div className="boundary-opacity-panel">
           <h4>Độ mờ các lớp ranh giới</h4>
 
-          {/* THÊM NÚT XÓA TẤT CẢ */}
           <div className="boundary-panel-header">
-            <button className="clear-all-btn" onClick={handleClearAllBoundaries}>Xóa tất cả</button>
+            <button className="clear-all-btn" onClick={handleClearAllBoundaries}>
+              Xóa tất cả
+            </button>
           </div>
 
           {selectedBoundaries.map((boundary) => (
@@ -900,7 +705,6 @@ const GoogleMapComponent = ({
                   setBoundaryOpacities((prev) => ({ ...prev, [boundary.id]: Number.parseFloat(e.target.value) }))
                 }
               />
-              {/* THÊM NÚT TẮT VÀ XÓA TỪNG RANH GIỚI */}
               <div className="opacity-control-buttons">
                 <button onClick={() => handleRemoveBoundary(boundary.id)}>Xóa</button>
               </div>

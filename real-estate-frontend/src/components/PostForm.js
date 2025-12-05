@@ -380,6 +380,16 @@ const PostForm = () => {
         }
       })
 
+      const isRental = formData.TrangThai === "cho thuê"
+      if (
+        !isRental &&
+        (!formData.ToaDoVN2000 || !formData.ToaDoVN2000.coordinates || formData.ToaDoVN2000.coordinates.length === 0)
+      ) {
+        setError("Vui lòng nhập tọa độ VN2000 (bắt buộc đối với tin bán).")
+        setLoading(false)
+        return
+      }
+
       if (formData.ToaDoVN2000) {
         postData.append("ToaDoVN2000", JSON.stringify(formData.ToaDoVN2000))
       }
@@ -561,7 +571,9 @@ const PostForm = () => {
                 min="0"
                 required
               />
-              <div className="form-hint">Diện tích sẽ tự động tính từ tọa độ VN2000 nếu bạn nhập đầy đủ</div>
+              {formData.TrangThai !== "cho thuê" && (
+                <div className="form-hint">Diện tích sẽ tự động tính từ tọa độ VN2000 nếu bạn nhập đầy đủ</div>
+              )}
             </div>
           </div>
         </div>
@@ -662,34 +674,50 @@ const PostForm = () => {
           />
         </div>
 
-        <div className="form-section">
-          <h2>Tọa độ VN2000 (Khung viền thửa đất)</h2>
-          <div className="section-description">
-            <FaInfoCircle /> Nhập tọa độ các điểm góc từ giấy tờ pháp lý (sổ đỏ, trích đo địa chính, phiếu xác nhận đo
-            đạc hiện trạng thửa đất, v.v.)
-          </div>
-
-          <CoordinateInput
-            value={formData.ToaDoVN2000?.coordinates || []}
-            onChange={handleCoordinateChange}
-            provinceName={selectedProvinceName}
-          />
-
-          {/* Xem trước bản đồ nếu đã có tọa độ */}
-          {formData.ToaDoVN2000?.wgs84Coordinates && formData.ToaDoVN2000.wgs84Coordinates.length >= 3 && (
-            <div className="map-preview-section">
-              <h4>Xem trước khung viền thửa đất:</h4>
-              <GoogleMapComponent
-                center={formData.ToaDoVN2000.wgs84Coordinates[0]}
-                zoom={18}
-                propertyBoundary={formData.ToaDoVN2000.wgs84Coordinates}
-                propertyArea={formData.ToaDoVN2000.area}
-                height="400px"
-                showControls={true}
-              />
+        {formData.TrangThai !== "cho thuê" && (
+          <div className="form-section">
+            <h2>
+              Tọa độ VN2000 (Khung viền thửa đất) <span className="required">*</span>
+            </h2>
+            <div className="section-description">
+              <FaInfoCircle /> Nhập tọa độ các điểm góc từ giấy tờ pháp lý (sổ đỏ, trích đo địa chính, phiếu xác nhận đo
+              đạc hiện trạng thửa đất, v.v.)
             </div>
-          )}
-        </div>
+
+            <CoordinateInput
+              value={formData.ToaDoVN2000?.coordinates || []}
+              onChange={handleCoordinateChange}
+              provinceName={selectedProvinceName}
+            />
+
+            {/* Xem trước bản đồ nếu đã có tọa độ */}
+            {formData.ToaDoVN2000?.wgs84Coordinates && formData.ToaDoVN2000.wgs84Coordinates.length >= 3 && (
+              <div className="map-preview-section">
+                <h4>Xem trước khung viền thửa đất:</h4>
+                <GoogleMapComponent
+                  center={formData.ToaDoVN2000.wgs84Coordinates[0]}
+                  zoom={18}
+                  propertyBoundary={formData.ToaDoVN2000.wgs84Coordinates}
+                  propertyArea={formData.ToaDoVN2000.area}
+                  height="400px"
+                  showControls={true}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {formData.TrangThai === "cho thuê" && (
+          <div
+            className="form-section"
+            style={{ backgroundColor: "#f0f9ff", border: "1px solid #0ea5e9", borderRadius: "8px" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#0369a1" }}>
+              <FaInfoCircle />
+              <span>Tin cho thuê không yêu cầu tọa độ VN2000. Bạn chỉ cần nhập thông tin GPS (nếu có).</span>
+            </div>
+          </div>
+        )}
 
         <div className="form-section">
           <h2>Hình ảnh giấy tờ pháp lý</h2>
