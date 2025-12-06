@@ -77,10 +77,10 @@ const SellerCard = ({
 
             {seller?.SDT && (
               <button
-                className="relative flex items-center justify-center w-full gap-2 py-3 mb-3 overflow-hidden font-bold text-white transition-all duration-300 rounded-lg shadow-md group bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:shadow-lg hover:scale-105"
+                className="flex items-center justify-center w-full gap-2 py-3 mb-3 text-sm font-semibold text-white transition-colors rounded-lg shadow-sm bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800"
                 onClick={onTogglePhone}
               >
-                <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-r from-white/20 to-transparent group-hover:opacity-100"></div>
+                
                 <FaPhone className="relative" />
                 <span className="relative">
                   {showFullPhone ? seller.SDT : seller.SDT.slice(0, -4) + "****"}
@@ -93,19 +93,17 @@ const SellerCard = ({
 
             <div className="grid grid-cols-2 gap-2 mb-3">
               <button
-                className="relative flex items-center justify-center gap-2 py-2.5 overflow-hidden text-sm font-semibold text-white transition-all duration-300 shadow-md group rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg hover:scale-105"
+                className="flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white transition-colors shadow-sm rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
                 onClick={onOpenChat}
               >
-                <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-r from-white/10 to-transparent group-hover:opacity-100"></div>
-                <FaCommentDots className="relative" />
-                <span className="relative">Chat</span>
+                <FaCommentDots />
+                <span>Chat</span>
               </button>
 
               <button
-                className="relative flex items-center justify-center gap-2 py-2.5 overflow-hidden text-sm font-semibold text-white transition-all duration-300 shadow-md group rounded-lg bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 hover:shadow-lg hover:scale-105"
+                className="flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 active:bg-blue-200 transition-colors shadow-sm rounded-lg"
                 onClick={() => onContactClick("zalo")}
               >
-                <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-r from-white/10 to-transparent group-hover:opacity-100"></div>
                 <img
                   src="/zalo.png"
                   alt="Zalo"

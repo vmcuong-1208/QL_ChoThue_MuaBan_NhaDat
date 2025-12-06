@@ -256,10 +256,10 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/auth"
-                className="relative px-8 py-3 overflow-hidden text-lg font-bold text-white transition-all duration-300 transform shadow-lg bg-gradient-to-r from-indigo-500 via-blue-500 to-blue-600 rounded-2xl hover:shadow-2xl hover:scale-105 hover:-translate-y-1 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300 group"
+                className="relative px-5 py-2.5 text-sm font-semibold text-white transition-colors bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <span className="relative z-10">Đăng nhập / Đăng ký</span>
-                <span className="absolute inset-0 opacity-0 bg-gradient-to-r from-transparent via-white to-transparent group-hover:opacity-30 group-hover:animate-shine"></span>
+                
               </Link>
             )}
           </div>
@@ -443,7 +443,7 @@ const Navbar = () => {
           ) : (
             <Link
               to="/auth"
-              className="flex items-center justify-center gap-2 mx-5 my-4 text-base font-bold text-white transition-all duration-300 transform shadow-lg bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl py-3.5 hover:scale-105 active:scale-95"
+              className="flex items-center justify-center gap-2 mx-5 my-4 text-sm font-semibold text-white transition-colors bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg py-3 shadow-sm"
             >
               <div className="flex items-center justify-center flex-shrink-0 w-6 h-6">
                 <span className="text-xl">👤</span>

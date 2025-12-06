@@ -777,7 +777,7 @@ const LoginRegister = () => {
                   className={`w-full mt-2 py-3.5 rounded-xl font-bold text-base text-white transition-all duration-300 shadow-lg relative overflow-hidden ${
                     isLoading
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:scale-105 active:scale-95"
+                      : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm text-white font-semibold"
                   }`}
                 >
                   {isLoading ? (

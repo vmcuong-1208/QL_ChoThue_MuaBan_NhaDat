@@ -8,6 +8,7 @@ import locationService from "../../services/locationService";
 import CoordinateInput from "../map-gis/CoordinateInput";
 import GoogleMapComponent from "../map-gis/GoogleMapComponent";
 import GPSLocationPicker from "../map-gis/GPSLocationPicker";
+import ImagePreviewModal from "./ImagePreviewModal";
 import { API_URL } from "../../services/api";
 
 const PostForm = () => {
@@ -50,6 +51,7 @@ const PostForm = () => {
   const [imagePreview, setImagePreview] = useState([]);
   const [documentImageFiles, setDocumentImageFiles] = useState([]);
   const [documentImagePreview, setDocumentImagePreview] = useState([]);
+  const [previewModalImage, setPreviewModalImage] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
 
@@ -440,7 +442,7 @@ const PostForm = () => {
               <div className="lg:col-span-7 space-y-4">
                 {/* === PHÂN LOẠI NHU CẦU: BÁN HOẶC CHO THUÊ (PHONG CÁCH CHỢ TỐT) === */}
               <div
-                className="p-5 transition-all duration-300 bg-white shadow-lg rounded-xl hover:shadow-xl animate-fadeInUp"
+                className="p-5 transition-all duration-200 bg-white border shadow-sm border-gray-200/80 rounded-xl hover:shadow-md animate-fadeInUp"
                 style={{ animationDelay: "0ms" }}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -452,14 +454,14 @@ const PostForm = () => {
                       Chọn đúng hình thức để tiếp cận khách hàng tiềm năng
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 p-1.5 bg-gray-100 rounded-xl w-full sm:w-auto">
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100 rounded-lg w-full sm:w-auto border border-gray-200">
                     <button
                       type="button"
                       onClick={() => handleTransactionTypeChange("đang bán")}
-                      className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-2 px-5 py-2 rounded-md text-sm font-semibold transition-colors cursor-pointer ${
                         formData.TrangThai === "đang bán" || formData.TrangThai === "đã bán"
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/70"
                       }`}
                     >
                       <span>🏷️</span> Cần bán
@@ -467,10 +469,10 @@ const PostForm = () => {
                     <button
                       type="button"
                       onClick={() => handleTransactionTypeChange("cho thuê")}
-                      className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-2 px-5 py-2 rounded-md text-sm font-semibold transition-colors cursor-pointer ${
                         formData.TrangThai === "cho thuê" || formData.TrangThai === "đã cho thuê"
-                          ? "bg-green-600 text-white shadow-md"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
+                          ? "bg-emerald-600 text-white shadow-sm"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/70"
                       }`}
                     >
                       <span>🔑</span> Cho thuê
@@ -504,7 +506,7 @@ const PostForm = () => {
                           : "VD: Bán nhà mặt tiền đường Lê Lợi, Quận 1"
                       }
                       required
-                      className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                      className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
                     />
                   </div>
 
@@ -519,7 +521,7 @@ const PostForm = () => {
                       placeholder="Mô tả chi tiết về bất động sản..."
                       rows="4"
                       required
-                      className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                      className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
                     ></textarea>
                   </div>
 
@@ -533,7 +535,7 @@ const PostForm = () => {
                         value={formData.MaLoaiND}
                         onChange={handleChange}
                         required
-                        className="w-full px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                        className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
                       >
                         <option value="">Chọn loại BĐS</option>
                         {propertyTypes.map((type) => (
@@ -566,7 +568,7 @@ const PostForm = () => {
                           name="TrangThai"
                           value={formData.TrangThai}
                           onChange={handleChange}
-                          className="w-full px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                          className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
                         >
                           {formData.TrangThai === "cho thuê" || formData.TrangThai === "đã cho thuê" ? (
                             <>
@@ -639,7 +641,7 @@ const PostForm = () => {
                       }
                       min="0"
                       required
-                      className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                      className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
                     />
                   </div>
                   <div>
@@ -654,7 +656,7 @@ const PostForm = () => {
                       placeholder="VD: 100"
                       min="0"
                       required
-                      className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                      className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
                     />
                     <p className="mt-1 text-sm font-medium text-gray-500">
                       Tự động tính từ tọa độ VN2000 nếu nhập đầy đủ
@@ -665,7 +667,7 @@ const PostForm = () => {
                 {/* Phần thông tin bổ sung ĐẶC THÙ CHO THUÊ (Kiểu Chợ Tốt) */}
                 {formData.TrangThai === "cho thuê" && (
                   <div className="pt-6 mt-6 border-t border-gray-200">
-                    <h3 className="flex items-center gap-2 mb-4 text-lg font-bold text-green-700">
+                    <h3 className="flex items-center gap-2 mb-4 text-base font-bold text-green-800">
                       <span>🔑</span> Chi tiết cho thuê (Chợ Tốt Style)
                     </h3>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -680,7 +682,7 @@ const PostForm = () => {
                           onChange={handleChange}
                           placeholder="VD: 15000000 (Cọc 1 tháng)"
                           min="0"
-                          className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
+                          className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
                         />
                       </div>
                       <div>
@@ -691,7 +693,7 @@ const PostForm = () => {
                           name="ThoiHanThue"
                           value={formData.ThoiHanThue}
                           onChange={handleChange}
-                          className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
+                          className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
                         >
                           <option value="Dưới 6 tháng">Dưới 6 tháng</option>
                           <option value="6 tháng">6 tháng</option>
@@ -709,7 +711,7 @@ const PostForm = () => {
                           name="NoiThat"
                           value={formData.NoiThat}
                           onChange={handleChange}
-                          className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
+                          className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
                         >
                           <option value="Đầy đủ">Nội thất cao cấp / Đầy đủ</option>
                           <option value="Cơ bản">Nội thất cơ bản (Bếp, điều hòa, nóng lạnh)</option>
@@ -727,7 +729,7 @@ const PostForm = () => {
                           value={formData.PhiDichVu}
                           onChange={handleChange}
                           placeholder="VD: Điện 3.5k/số, Nước 100k/người, Xe 120k"
-                          className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
+                          className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
                         />
                       </div>
                     </div>
@@ -804,7 +806,7 @@ const PostForm = () => {
                   max 5MB/ảnh)
                 </p>
 
-                <label className="flex items-center justify-center gap-2 px-6 py-4 text-blue-600 transition-all border-2 border-blue-300 border-dashed rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-500 hover:scale-105">
+                <label className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-blue-600 transition-colors border-2 border-blue-200 border-dashed rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-400">
                   <FaUpload /> Chọn ảnh giấy tờ
                   <input
                     type="file"
@@ -816,24 +818,36 @@ const PostForm = () => {
                   />
                 </label>
 
-                <div className="grid grid-cols-2 gap-4 mt-4 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 mt-3 md:grid-cols-3 lg:grid-cols-4">
                   {documentImagePreview.length > 0 ? (
                     documentImagePreview.map((src, index) => (
                       <div
                         key={index}
-                        className="relative transition-transform duration-300 group hover:scale-105"
+                        onClick={() => setPreviewModalImage({ src, title: `Ảnh giấy tờ pháp lý #${index + 1}` })}
+                        className="relative overflow-hidden transition-all bg-gray-100 border border-gray-200 rounded-lg group hover:border-blue-400 hover:shadow-md cursor-zoom-in"
+                        title="Click để xem phóng to"
                       >
                         <img
                           src={src}
                           alt={`Giấy tờ ${index + 1}`}
-                          className="object-cover w-full h-32 rounded-lg"
+                          className="object-cover w-full h-28 transition-transform duration-200 group-hover:scale-105"
                         />
+                        {/* Overlay kính lúp khi hover */}
+                        <div className="absolute inset-0 flex items-center justify-center transition-opacity bg-black/20 opacity-0 group-hover:opacity-100 pointer-events-none">
+                          <span className="p-1.5 text-xs text-white bg-gray-900/80 rounded-full shadow">
+                            🔍
+                          </span>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => handleRemoveDocumentImage(index)}
-                          className="absolute p-2 text-white transition-all bg-red-500 rounded-full opacity-0 top-2 right-2 hover:bg-red-600 group-hover:opacity-100 hover:scale-110"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveDocumentImage(index);
+                          }}
+                          className="absolute p-1.5 text-white transition-all bg-red-600 rounded-full opacity-0 top-1.5 right-1.5 hover:bg-red-700 group-hover:opacity-100 active:scale-95 shadow-sm"
+                          title="Xóa ảnh này"
                         >
-                          <FaTrash size={12} />
+                          <FaTrash size={11} />
                         </button>
                       </div>
                     ))
@@ -858,7 +872,7 @@ const PostForm = () => {
                   Tải ảnh chụp thực tế (Tối đa 10 ảnh, JPG/PNG, max 5MB/ảnh)
                 </p>
 
-                <label className="flex items-center justify-center gap-2 px-6 py-4 font-bold text-blue-600 transition-all border-2 border-blue-300 border-dashed rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-500 hover:scale-105">
+                <label className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-blue-600 transition-colors border-2 border-blue-200 border-dashed rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-400">
                   <FaUpload /> Chọn ảnh BĐS
                   <input
                     type="file"
@@ -870,24 +884,36 @@ const PostForm = () => {
                   />
                 </label>
 
-                <div className="grid grid-cols-2 gap-4 mt-4 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 mt-3 md:grid-cols-3 lg:grid-cols-4">
                   {imagePreview.length > 0 ? (
                     imagePreview.map((src, index) => (
                       <div
                         key={index}
-                        className="relative transition-transform duration-300 group hover:scale-105"
+                        onClick={() => setPreviewModalImage({ src, title: `Ảnh thực tế BĐS #${index + 1}` })}
+                        className="relative overflow-hidden transition-all bg-gray-100 border border-gray-200 rounded-lg group hover:border-blue-400 hover:shadow-md cursor-zoom-in"
+                        title="Click để xem phóng to"
                       >
                         <img
                           src={src}
                           alt={`BĐS ${index + 1}`}
-                          className="object-cover w-full h-32 rounded-lg"
+                          className="object-cover w-full h-28 transition-transform duration-200 group-hover:scale-105"
                         />
+                        {/* Overlay kính lúp khi hover */}
+                        <div className="absolute inset-0 flex items-center justify-center transition-opacity bg-black/20 opacity-0 group-hover:opacity-100 pointer-events-none">
+                          <span className="p-1.5 text-xs text-white bg-gray-900/80 rounded-full shadow">
+                            🔍
+                          </span>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => handleRemoveImage(index)}
-                          className="absolute p-2 text-white transition-all bg-red-500 rounded-full opacity-0 top-2 right-2 hover:bg-red-600 group-hover:opacity-100 hover:scale-110"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveImage(index);
+                          }}
+                          className="absolute p-1.5 text-white transition-all bg-red-600 rounded-full opacity-0 top-1.5 right-1.5 hover:bg-red-700 group-hover:opacity-100 active:scale-95 shadow-sm"
+                          title="Xóa ảnh này"
                         >
-                          <FaTrash size={12} />
+                          <FaTrash size={11} />
                         </button>
                       </div>
                     ))
@@ -907,7 +933,7 @@ const PostForm = () => {
                   </p>
 
                   {!videoPreview ? (
-                    <label className="flex items-center justify-center gap-2 px-6 py-4 font-bold text-purple-600 transition-all border-2 border-purple-300 border-dashed rounded-lg cursor-pointer hover:bg-purple-50 hover:border-purple-500 hover:scale-105">
+                    <label className="flex items-center justify-center gap-2 px-4 py-3 text-xs font-semibold text-gray-600 transition-colors border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 hover:border-gray-400">
                       <FaUpload /> Chọn video
                       <input
                         type="file"
@@ -924,7 +950,7 @@ const PostForm = () => {
                       <button
                         type="button"
                         onClick={handleRemoveVideo}
-                        className="flex items-center gap-2 px-4 py-2 mt-3 font-bold text-white transition-all bg-red-500 rounded-lg hover:bg-red-600 hover:scale-105 active:scale-95"
+                        className="flex items-center gap-1.5 px-3 py-1.5 mt-2.5 text-xs font-semibold text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700 active:bg-red-800"
                       >
                         <FaTrash /> Xóa video
                       </button>
@@ -942,14 +968,14 @@ const PostForm = () => {
                   type="button"
                   onClick={() => navigate("/quan-ly-bai-dang")}
                   disabled={loading}
-                  className="flex-1 px-6 py-3 font-bold text-gray-700 transition-all bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:scale-105 active:scale-95 disabled:opacity-50"
+                  className="flex-1 px-6 py-3 text-sm font-semibold text-gray-700 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 px-6 py-3 font-bold text-white transition-all rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50"
+                  className="flex-1 px-6 py-3 text-sm font-semibold text-white transition-colors rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm disabled:opacity-50"
                 >
                   {loading
                     ? "Đang xử lý..."
@@ -982,7 +1008,7 @@ const PostForm = () => {
                       onChange={handleChange}
                       required
                       disabled={loadingLocations}
-                      className="w-full px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
+                      className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
                     >
                       <option value="">Chọn Tỉnh/TP</option>
                       {provinces.map((province) => (
@@ -1016,7 +1042,7 @@ const PostForm = () => {
                       onChange={handleChange}
                       required
                       disabled={!formData.MaTinh || loadingLocations}
-                      className="w-full px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
+                      className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
                     >
                       <option value="">Chọn Quận/Huyện</option>
                       {districts.map((district) => (
@@ -1050,7 +1076,7 @@ const PostForm = () => {
                       onChange={handleChange}
                       required
                       disabled={!formData.MaHuyen || loadingLocations}
-                      className="w-full px-3.5 py-2.5 pr-10 text-sm font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
+                      className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
                     >
                       <option value="">Chọn Phường/Xã</option>
                       {wards.map((ward) => (
@@ -1086,11 +1112,11 @@ const PostForm = () => {
                     onChange={handleChange}
                     placeholder="Số nhà, tên đường..."
                     required
-                    className="w-full px-3.5 py-2.5 text-sm font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                    className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
                   />
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-4 pt-4 border-t border-gray-100">
                   <GPSLocationPicker
                     onLocationChange={handleGPSLocationChange}
                     initialLat={formData.GPS_Lat}
@@ -1102,21 +1128,9 @@ const PostForm = () => {
                 {/* === SECTION 4: TỌA ĐỘ VN2000 (Mới từ Upstream, style Stashed) === */}
               {formData.TrangThai !== "cho thuê" ? (
                 <div
-                  className="p-5 transition-all duration-200 bg-white border border-gray-200/80 rounded-xl shadow-sm hover:shadow-md animate-fadeInUp"
+                  className="bg-white border border-gray-200/80 rounded-xl shadow-sm hover:shadow-md animate-fadeInUp overflow-hidden"
                   style={{ animationDelay: "300ms" }}
                 >
-                  <h2 className="flex items-center gap-2 mb-3 text-base font-bold text-gray-800">
-                    <span className="text-lg">🗺️</span> Tọa độ
-                    VN2000
-                  </h2>
-                  <div className="flex items-start gap-2 p-4 mb-4 border-l-4 border-blue-500 rounded-r-lg bg-blue-50">
-                    <FaInfoCircle className="flex-shrink-0 mt-1 text-blue-600" />
-                    <p className="text-sm font-medium text-gray-700">
-                      Nhập tọa độ các điểm góc từ giấy tờ pháp lý (sổ đỏ, trích
-                      đo địa chính)
-                    </p>
-                  </div>
-
                   <CoordinateInput
                     value={formData.ToaDoVN2000?.coordinates || []}
                     onChange={handleCoordinateChange}
@@ -1125,8 +1139,8 @@ const PostForm = () => {
 
                   {formData.ToaDoVN2000?.wgs84Coordinates &&
                     formData.ToaDoVN2000.wgs84Coordinates.length >= 3 && (
-                      <div className="mt-6 animate-scaleIn">
-                        <h4 className="mb-3 text-lg font-bold text-gray-800">
+                      <div className="p-5 pt-0 animate-scaleIn">
+                        <h4 className="mb-3 text-base font-bold text-gray-800">
                           Xem trước khung viền:
                         </h4>
                         <GoogleMapComponent
@@ -1136,7 +1150,7 @@ const PostForm = () => {
                             formData.ToaDoVN2000.wgs84Coordinates
                           }
                           propertyArea={formData.ToaDoVN2000.area}
-                          height="400px"
+                          height="350px"
                           showControls={true}
                         />
                       </div>
@@ -1156,6 +1170,15 @@ const PostForm = () => {
           </form>
         </div>
       </div>
+
+      {/* Modal xem trước và zoom ảnh (Giấy tờ pháp lý & Ảnh BĐS) */}
+      {previewModalImage && (
+        <ImagePreviewModal
+          src={previewModalImage.src}
+          title={previewModalImage.title}
+          onClose={() => setPreviewModalImage(null)}
+        />
+      )}
     </div>
   );
 };

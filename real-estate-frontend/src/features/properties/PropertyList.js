@@ -381,7 +381,7 @@ const PropertyList = () => {
                 text-sm font-bold transition-all duration-200
                 ${
                   filterType === "Tất cả"
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                    ? "bg-blue-600 text-white shadow-sm font-semibold"
                     : "bg-white text-gray-700 border-gray-300 hover:border-blue-500 hover:text-blue-600 hover:shadow"
                 }
               `}
@@ -515,7 +515,7 @@ const PropertyList = () => {
 
                   {/* Nút xem chi tiết luôn sát đáy card */}
                   <button
-                    className="mt-auto w-full px-4 py-2.5 text-sm font-bold text-white rounded-lg shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:scale-105 active:scale-95 transition-all"
+                    className="mt-auto w-full px-4 py-2.5 text-sm font-semibold text-white rounded-lg shadow-sm bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors"
                     onClick={() => handleViewDetails(property.MaTTND)}
                   >
                     Xem chi tiết
@@ -544,7 +544,7 @@ const PropertyList = () => {
                       onClick={() => setCurrentPage(page)}
                       className={`w-9 h-9 text-sm font-bold rounded-lg transition-all ${
                         currentPage === page
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md scale-110"
+                          ? "bg-blue-600 text-white shadow-sm font-semibold"
                           : "bg-white text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-blue-500"
                       }`}
                     >

@@ -30,6 +30,7 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 .idea/
+.history/
 
 # Temp files
 *.bak
