@@ -1,0 +1,3427 @@
+{
+  "version": "2.0",
+  "timestamp": "2025-11-12T17:04:04.821Z",
+  "totalOverlays": 342,
+  "overlays": [
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L2_1_1.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_2_2.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.36510197387125,
+        "east": 106.7204008976654,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_4.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_8.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_9.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_8.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_9.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_5.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_10.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_11.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_10.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_11.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_4.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_8.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_9.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_8.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_9.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_5.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_10.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_11.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_10.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_11.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_2_3.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.36510197387125,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_6.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_12.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_12.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_6.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_12.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_12.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_3_2.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.31844349566788,
+        "east": 106.7204008976654,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_4.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_8.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_9.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_8.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_9.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_5.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_10.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_11.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_10.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_11.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_4.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_8.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_9.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_8.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_9.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_5.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_10.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_11.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_10.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_11.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_3_3.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_6.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_12.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_12.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_6.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_12.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_12.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L1_0_0.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L2_0_0.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.41222059485768,
+        "east": 106.6729572393675,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_0_0.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.45933921584412,
+        "east": 106.6255135810695,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_0_0.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.48289852633734,
+        "east": 106.6017917519206,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_0.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_1.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_0.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_1.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_0_1.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.48289852633734,
+        "east": 106.6255135810695,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_2.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_3.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_2.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_3.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_1_0.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.45933921584412,
+        "east": 106.6017917519206,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_0.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_1.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_0.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_1.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_1_1.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.45933921584412,
+        "east": 106.6255135810695,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_2.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_3.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_2.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_3.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_0_1.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.45933921584412,
+        "east": 106.6729572393675,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_0_2.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.48289852633734,
+        "east": 106.6492354102185,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_4.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_5.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_4.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_5.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_0_3.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.48289852633734,
+        "east": 106.6729572393675,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_6.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_7.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_6.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_7.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_1_2.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.45933921584412,
+        "east": 106.6492354102185,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_4.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_5.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_4.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_5.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_1_3.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.45933921584412,
+        "east": 106.6729572393675,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_6.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_7.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_6.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_7.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_1_0.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.41222059485768,
+        "east": 106.6255135810695,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_2_0.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.4357799053509,
+        "east": 106.6017917519206,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_0.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_1.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_0.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_1.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_2_1.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.4357799053509,
+        "east": 106.6255135810695,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_2.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_3.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_2.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_3.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_3_0.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.41222059485768,
+        "east": 106.6017917519206,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_0.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_1.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_0.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_1.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_3_1.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.41222059485768,
+        "east": 106.6255135810695,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_2.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_3.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_2.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_3.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_1_1.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.41222059485768,
+        "east": 106.6729572393675,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_2_2.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.4357799053509,
+        "east": 106.6492354102185,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_4.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_5.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_4.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_5.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_2_3.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.4357799053509,
+        "east": 106.6729572393675,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_6.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_7.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_6.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_7.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_3_2.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.41222059485768,
+        "east": 106.6492354102185,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_4.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_5.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_4.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_5.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_3_3.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.41222059485768,
+        "east": 106.6729572393675,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_6.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_7.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_6.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_7.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L2_0_1.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.41222059485768,
+        "east": 106.7252657259089,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_0_2.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.45933921584412,
+        "east": 106.7204008976654,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_0_4.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.48289852633734,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_8.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_9.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_8.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_9.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_0_5.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.48289852633734,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_10.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_11.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_10.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_11.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_1_4.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.45933921584412,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_8.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_9.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_8.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_9.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_1_5.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.45933921584412,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_10.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_11.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_10.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_11.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_0_3.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.45933921584412,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_0_6.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.48289852633734,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_0_12.png",
+      "bounds": {
+        "north": 10.50645783683055,
+        "south": 10.49467818158394,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_1_12.png",
+      "bounds": {
+        "north": 10.49467818158394,
+        "south": 10.48289852633734,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_1_6.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.45933921584412,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_2_12.png",
+      "bounds": {
+        "north": 10.48289852633734,
+        "south": 10.47111887109073,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_3_12.png",
+      "bounds": {
+        "north": 10.47111887109073,
+        "south": 10.45933921584412,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_1_2.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.41222059485768,
+        "east": 106.7204008976654,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_2_4.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.4357799053509,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_8.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_9.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_8.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_9.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_2_5.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.4357799053509,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_10.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_11.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_10.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_11.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_3_4.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.41222059485768,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_8.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_9.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_8.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_9.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_3_5.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.41222059485768,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_10.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_11.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_10.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_11.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_1_3.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.41222059485768,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_2_6.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.4357799053509,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_4_12.png",
+      "bounds": {
+        "north": 10.45933921584412,
+        "south": 10.44755956059751,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_5_12.png",
+      "bounds": {
+        "north": 10.44755956059751,
+        "south": 10.4357799053509,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_3_6.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.41222059485768,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_6_12.png",
+      "bounds": {
+        "north": 10.4357799053509,
+        "south": 10.42400025010429,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_7_12.png",
+      "bounds": {
+        "north": 10.42400025010429,
+        "south": 10.41222059485768,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L2_1_0.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.31844349566788,
+        "east": 106.6729572393675,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_2_0.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.36510197387125,
+        "east": 106.6255135810695,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_0.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.6017917519206,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_0.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_1.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_0.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_1.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_1.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.6255135810695,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_2.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_3.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_2.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_3.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_0.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.6017917519206,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_0.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_1.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_0.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_1.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_1.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.6255135810695,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_2.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_3.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_2.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_3.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_2_1.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.36510197387125,
+        "east": 106.6729572393675,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_2.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.6492354102185,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_4.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_5.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_4.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_5.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_3.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.6729572393675,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_6.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_7.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_6.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_7.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_2.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.6492354102185,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_4.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_5.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_4.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_5.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_3.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.6729572393675,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_6.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_7.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_6.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_7.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_3_0.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.31844349566788,
+        "east": 106.6255135810695,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_0.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.6017917519206,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_0.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_1.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_0.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_1.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_1.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.6255135810695,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_2.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_3.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_2.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_3.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_0.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.6017917519206,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_0.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_1.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_0.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.5899308373461,
+        "west": 106.5780699227716
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_1.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.6017917519206,
+        "west": 106.5899308373461
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_1.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.6255135810695,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_2.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_3.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_2.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.6136526664951,
+        "west": 106.6017917519206
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_3.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.6255135810695,
+        "west": 106.6136526664951
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_3_1.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.31844349566788,
+        "east": 106.6729572393675,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_2.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.6492354102185,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_4.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_5.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_4.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_5.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_3.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.6729572393675,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_6.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_7.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_6.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_7.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_2.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.6492354102185,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_4.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_5.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_4.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.637374495644,
+        "west": 106.6255135810695
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_5.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.6492354102185,
+        "west": 106.637374495644
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_3.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.6729572393675,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_6.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_7.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_6.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.661096324793,
+        "west": 106.6492354102185
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_7.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.6729572393675,
+        "west": 106.661096324793
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L2_1_1.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_2_2.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.36510197387125,
+        "east": 106.7204008976654,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_4.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_8.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_9.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_8.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_9.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_5.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_10.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_11.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_10.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_11.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_4.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_8.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_9.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_8.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_9.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_5.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_10.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_11.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_10.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_11.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_2_3.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.36510197387125,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_4_6.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.38866128436446,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_8_12.png",
+      "bounds": {
+        "north": 10.41222059485768,
+        "south": 10.40044093961107,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_9_12.png",
+      "bounds": {
+        "north": 10.40044093961107,
+        "south": 10.38866128436446,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_5_6.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.36510197387125,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_10_12.png",
+      "bounds": {
+        "north": 10.38866128436446,
+        "south": 10.37688162911785,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_11_12.png",
+      "bounds": {
+        "north": 10.37688162911785,
+        "south": 10.36510197387125,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_3_2.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.31844349566788,
+        "east": 106.7204008976654,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_4.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_8.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_9.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_8.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_9.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_5.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_10.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_11.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_10.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_11.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_4.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.6966790685164,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_8.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_9.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_8.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.684818153942,
+        "west": 106.6729572393675
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_9.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.6966790685164,
+        "west": 106.684818153942
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_5.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.7204008976654,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_10.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_11.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_10.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.7085399830909,
+        "west": 106.6966790685164
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_11.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.7204008976654,
+        "west": 106.7085399830909
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L3_3_3.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_6_6.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.34154266337803,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_12_12.png",
+      "bounds": {
+        "north": 10.36510197387125,
+        "south": 10.35332231862464,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_13_12.png",
+      "bounds": {
+        "north": 10.35332231862464,
+        "south": 10.34154266337803,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L4_7_6.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_14_12.png",
+      "bounds": {
+        "north": 10.34154266337803,
+        "south": 10.32976300813142,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/TX_Go_Cong_2024/files/kml_image_24_L5_15_12.png",
+      "bounds": {
+        "north": 10.32976300813142,
+        "south": 10.31844349566788,
+        "east": 106.7252657259089,
+        "west": 106.7204008976654
+      }
+    }
+  ]
+}

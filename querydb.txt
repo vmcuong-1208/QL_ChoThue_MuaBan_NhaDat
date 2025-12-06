@@ -48,7 +48,7 @@ CREATE TABLE THONGTINNHADAT (
     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
     GoogleMapIframe TEXT,
-    TrangThaiXacThuc ENUM('chưa xác thực', 'chờ xác thực', 'đã xác thực', 'từ chối') DEFAULT 'chưa xác thực';
+    TrangThaiXacThuc ENUM('chưa xác thực', 'chờ xác thực', 'đã xác thực', 'từ chối') DEFAULT 'chưa xác thực',
     FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE,
 	FOREIGN KEY (MaLoaiND) REFERENCES LOAINHADAT(MaLoaiND) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

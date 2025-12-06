@@ -1,0 +1,587 @@
+{
+  "version": "2.0",
+  "timestamp": "2025-11-12T17:07:55.934Z",
+  "totalOverlays": 58,
+  "overlays": [
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L2_1_1.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.1610301264623,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_2_2.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.19261212821034,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_4_4.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.26291641036251,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_5_4.png",
+      "bounds": {
+        "north": 10.26291641036251,
+        "south": 10.19261212821034,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_3_2.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_6_4.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L1_0_0.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.1610301264623,
+        "east": 106.1126987669245,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L2_0_0.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.33322069251468,
+        "east": 106.0426743298826,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_0_0.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.47382925681902,
+        "east": 105.9006841842769,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_0_0.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.54413353897119,
+        "east": 105.8296891114741,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_0_1.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.54413353897119,
+        "east": 105.9006841842769,
+        "west": 105.8296891114741
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_1_0.png",
+      "bounds": {
+        "north": 10.54413353897119,
+        "south": 10.47382925681902,
+        "east": 105.8296891114741,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_1_1.png",
+      "bounds": {
+        "north": 10.54413353897119,
+        "south": 10.47382925681902,
+        "east": 105.9006841842769,
+        "west": 105.8296891114741
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_0_1.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.47382925681902,
+        "east": 106.0426743298826,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_0_2.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.54413353897119,
+        "east": 105.9716792570798,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_0_3.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.54413353897119,
+        "east": 106.0426743298826,
+        "west": 105.9716792570798
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_1_2.png",
+      "bounds": {
+        "north": 10.54413353897119,
+        "south": 10.47382925681902,
+        "east": 105.9716792570798,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_1_3.png",
+      "bounds": {
+        "north": 10.54413353897119,
+        "south": 10.47382925681902,
+        "east": 106.0426743298826,
+        "west": 105.9716792570798
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_1_0.png",
+      "bounds": {
+        "north": 10.47382925681902,
+        "south": 10.33322069251468,
+        "east": 105.9006841842769,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_2_0.png",
+      "bounds": {
+        "north": 10.47382925681902,
+        "south": 10.40352497466685,
+        "east": 105.8296891114741,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_2_1.png",
+      "bounds": {
+        "north": 10.47382925681902,
+        "south": 10.40352497466685,
+        "east": 105.9006841842769,
+        "west": 105.8296891114741
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_3_0.png",
+      "bounds": {
+        "north": 10.40352497466685,
+        "south": 10.33322069251468,
+        "east": 105.8296891114741,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_3_1.png",
+      "bounds": {
+        "north": 10.40352497466685,
+        "south": 10.33322069251468,
+        "east": 105.9006841842769,
+        "west": 105.8296891114741
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_1_1.png",
+      "bounds": {
+        "north": 10.47382925681902,
+        "south": 10.33322069251468,
+        "east": 106.0426743298826,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_2_2.png",
+      "bounds": {
+        "north": 10.47382925681902,
+        "south": 10.40352497466685,
+        "east": 105.9716792570798,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_2_3.png",
+      "bounds": {
+        "north": 10.47382925681902,
+        "south": 10.40352497466685,
+        "east": 106.0426743298826,
+        "west": 105.9716792570798
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_3_2.png",
+      "bounds": {
+        "north": 10.40352497466685,
+        "south": 10.33322069251468,
+        "east": 105.9716792570798,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_3_3.png",
+      "bounds": {
+        "north": 10.40352497466685,
+        "south": 10.33322069251468,
+        "east": 106.0426743298826,
+        "west": 105.9716792570798
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L2_0_1.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.33322069251468,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_0_2.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.47382925681902,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_0_4.png",
+      "bounds": {
+        "north": 10.61443782112335,
+        "south": 10.54413353897119,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_1_4.png",
+      "bounds": {
+        "north": 10.54413353897119,
+        "south": 10.47382925681902,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_1_2.png",
+      "bounds": {
+        "north": 10.47382925681902,
+        "south": 10.33322069251468,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_2_4.png",
+      "bounds": {
+        "north": 10.47382925681902,
+        "south": 10.40352497466685,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_3_4.png",
+      "bounds": {
+        "north": 10.40352497466685,
+        "south": 10.33322069251468,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L2_1_0.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.1610301264623,
+        "east": 106.0426743298826,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_2_0.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.19261212821034,
+        "east": 105.9006841842769,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_4_0.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.26291641036251,
+        "east": 105.8296891114741,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_4_1.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.26291641036251,
+        "east": 105.9006841842769,
+        "west": 105.8296891114741
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_5_0.png",
+      "bounds": {
+        "north": 10.26291641036251,
+        "south": 10.19261212821034,
+        "east": 105.8296891114741,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_5_1.png",
+      "bounds": {
+        "north": 10.26291641036251,
+        "south": 10.19261212821034,
+        "east": 105.9006841842769,
+        "west": 105.8296891114741
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_2_1.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.19261212821034,
+        "east": 106.0426743298826,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_4_2.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.26291641036251,
+        "east": 105.9716792570798,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_4_3.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.26291641036251,
+        "east": 106.0426743298826,
+        "west": 105.9716792570798
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_5_2.png",
+      "bounds": {
+        "north": 10.26291641036251,
+        "south": 10.19261212821034,
+        "east": 105.9716792570798,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_5_3.png",
+      "bounds": {
+        "north": 10.26291641036251,
+        "south": 10.19261212821034,
+        "east": 106.0426743298826,
+        "west": 105.9716792570798
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_3_0.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 105.9006841842769,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_6_0.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 105.8296891114741,
+        "west": 105.7586940386712
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_6_1.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 105.9006841842769,
+        "west": 105.8296891114741
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_3_1.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 106.0426743298826,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_6_2.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 105.9716792570798,
+        "west": 105.9006841842769
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_6_3.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 106.0426743298826,
+        "west": 105.9716792570798
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L2_1_1.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.1610301264623,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_2_2.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.19261212821034,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_4_4.png",
+      "bounds": {
+        "north": 10.33322069251468,
+        "south": 10.26291641036251,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_5_4.png",
+      "bounds": {
+        "north": 10.26291641036251,
+        "south": 10.19261212821034,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L3_3_2.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    },
+    {
+      "name": "Unknown",
+      "url": "/quyhoach/Cai_Be_2030/files/kml_image_30_L4_6_4.png",
+      "bounds": {
+        "north": 10.19261212821034,
+        "south": 10.1610301264623,
+        "east": 106.1126987669245,
+        "west": 106.0426743298826
+      }
+    }
+  ]
+}
