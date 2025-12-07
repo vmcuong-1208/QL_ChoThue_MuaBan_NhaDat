@@ -38,13 +38,13 @@ const MapPage = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-100">
-            <div className="flex-1 w-full relative">
+        <div className="flex flex-col h-screen pt-[72px] bg-gray-100 overflow-hidden">
+            <div className="flex-1 w-full h-full relative">
                 <GoogleMapComponent
                     center={mapCenter}
                     zoom={zoom}
                     planningData={planningData}
-                    height="calc(100vh - 150px)"
+                    height="100%"
                     showControls={true}
                     // 🚀 CẬP NHẬT: Truyền hàm với 2 tham số
                     onDistrictSelect={(province, district) => handleDistrictSelectForPlanning(province, district)}

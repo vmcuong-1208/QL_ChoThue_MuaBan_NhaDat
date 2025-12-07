@@ -51,7 +51,11 @@ const DirectionsPanel = ({
   useEffect(() => {
     return () => {
       if (mapClickListenerRef.current && mapRef?.current) {
-        window.google.maps.event.removeListener(mapClickListenerRef.current);
+        if (typeof mapRef.current.off === "function") {
+          mapRef.current.off("click", mapClickListenerRef.current);
+        } else if (window.google?.maps?.event?.removeListener) {
+          window.google.maps.event.removeListener(mapClickListenerRef.current);
+        }
         mapClickListenerRef.current = null;
       }
     };
@@ -202,22 +206,23 @@ const DirectionsPanel = ({
   };
 
   const handleMapSelection = (mode) => {
-    if (mapClickListenerRef.current) {
-      window.google.maps.event.removeListener(mapClickListenerRef.current);
+    if (mapClickListenerRef.current && mapRef?.current) {
+      if (typeof mapRef.current.off === "function") {
+        mapRef.current.off("click", mapClickListenerRef.current);
+      } else if (window.google?.maps?.event?.removeListener) {
+        window.google.maps.event.removeListener(mapClickListenerRef.current);
+      }
       mapClickListenerRef.current = null;
     }
 
     setMapClickMode(mode);
 
     if (mapRef?.current) {
-      mapClickListenerRef.current = mapRef.current.addListener("click", (e) => {
-        const clickedLocation = {
-          lat: e.latLng.lat(),
-          lng: e.latLng.lng(),
-        };
-        const coordText = `${clickedLocation.lat.toFixed(
-          6
-        )}, ${clickedLocation.lng.toFixed(6)}`;
+      const clickHandler = (e) => {
+        const lat = e.latlng ? e.latlng.lat : (typeof e.latLng?.lat === "function" ? e.latLng.lat() : e.latLng?.lat);
+        const lng = e.latlng ? e.latlng.lng : (typeof e.latLng?.lng === "function" ? e.latLng.lng() : e.latLng?.lng);
+        const clickedLocation = { lat, lng };
+        const coordText = `${clickedLocation.lat.toFixed(6)}, ${clickedLocation.lng.toFixed(6)}`;
         if (mode === "origin") {
           setOrigin(clickedLocation);
           setOriginText(coordText);
@@ -226,12 +231,23 @@ const DirectionsPanel = ({
           setDestinationText(coordText);
         }
 
-        if (mapClickListenerRef.current) {
-          window.google.maps.event.removeListener(mapClickListenerRef.current);
+        if (mapClickListenerRef.current && mapRef.current) {
+          if (typeof mapRef.current.off === "function") {
+            mapRef.current.off("click", mapClickListenerRef.current);
+          } else if (window.google?.maps?.event?.removeListener) {
+            window.google.maps.event.removeListener(mapClickListenerRef.current);
+          }
           mapClickListenerRef.current = null;
         }
         setMapClickMode(null);
-      });
+      };
+
+      mapClickListenerRef.current = clickHandler;
+      if (typeof mapRef.current.on === "function") {
+        mapRef.current.on("click", clickHandler);
+      } else if (typeof mapRef.current.addListener === "function") {
+        mapRef.current.addListener("click", clickHandler);
+      }
     }
   };
 
@@ -287,11 +303,14 @@ const DirectionsPanel = ({
       setRoute(routeData);
 
       if (routeData?.coordinates && mapRef?.current) {
-        const bounds = new window.google.maps.LatLngBounds();
-        routeData.coordinates.forEach((coord) => {
-          bounds.extend({ lat: coord[1], lng: coord[0] });
-        });
-        mapRef.current.fitBounds(bounds, { padding: 50 });
+        const latLngs = routeData.coordinates.map((coord) => [coord[1], coord[0]]);
+        if (typeof mapRef.current.fitBounds === "function") {
+          try {
+            mapRef.current.fitBounds(latLngs, { padding: [50, 50] });
+          } catch (e) {
+            console.warn("fitBounds error:", e);
+          }
+        }
 
         if (onRouteChange) {
           onRouteChange({
@@ -299,7 +318,6 @@ const DirectionsPanel = ({
               lat: coord[1],
               lng: coord[0],
             })),
-            bounds,
           });
         }
       }

@@ -4,6 +4,7 @@
 
 export { default as MapPage } from "./MapPage";
 export { default as GoogleMapComponent } from "./GoogleMapComponent";
+export { default as LeafletMapComponent } from "./LeafletMapComponent";
 export { default as GoogleMapGuide } from "./GoogleMapGuide";
 export { default as GPSLocationPicker } from "./GPSLocationPicker";
 export { default as CoordinateInput } from "./CoordinateInput";

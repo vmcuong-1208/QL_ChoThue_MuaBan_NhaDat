@@ -23,7 +23,7 @@ import {
   searchNearbyPlacesNominatim,
   getSupportedPOITypes,
 } from "../../utils/overpassService";
-import { Marker } from "@react-google-maps/api";
+import L from "leaflet";
 
 const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
   const [fixedPlaces, setFixedPlaces] = useState({
@@ -37,6 +37,30 @@ const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
   const [radius, setRadius] = useState(2000);
   const [searchType, setSearchType] = useState("school");
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const markersRef = useRef([]);
+
+  useEffect(() => {
+    if (!mapRef?.current) return;
+    const map = mapRef.current;
+
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+
+    const allPlaces = [...Object.values(fixedPlaces).flat(), ...customPlaces];
+    allPlaces.forEach((place) => {
+      if (!place.lat || !place.lng) return;
+      const marker = L.marker([place.lat, place.lng]);
+      marker.bindPopup(`<b>${place.name || "Địa điểm"}</b>`);
+      marker.on("click", () => handlePlaceClick(place));
+      marker.addTo(map);
+      markersRef.current.push(marker);
+    });
+
+    return () => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+    };
+  }, [fixedPlaces, customPlaces, mapRef]);
 
   const radiusOptions = [
     { value: 500, label: "500m" },
@@ -460,15 +484,6 @@ const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
         </div>
       </div>
 
-      {/* Map Markers */}
-      {[...Object.values(fixedPlaces).flat(), ...customPlaces].map((place) => (
-        <Marker
-          key={place.id}
-          position={{ lat: place.lat, lng: place.lng }}
-          title={place.name}
-          onClick={() => handlePlaceClick(place)}
-        />
-      ))}
     </div>
   );
 };

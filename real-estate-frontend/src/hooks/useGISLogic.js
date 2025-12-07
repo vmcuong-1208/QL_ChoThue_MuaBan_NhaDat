@@ -336,10 +336,16 @@ const useGISLogic = (mapRef, setPlaceDetailBoundaries) => {
         setBoundaryOpacities((prev) => ({ ...prev, [uniqueId]: 0.5 }));
 
         if (mapRef.current && bbox && bbox.length === 4) {
-          const bounds = new window.google.maps.LatLngBounds();
-          bounds.extend({ lat: bbox[1], lng: bbox[0] });
-          bounds.extend({ lat: bbox[3], lng: bbox[2] });
-          mapRef.current.fitBounds(bounds);
+          try {
+            if (typeof mapRef.current.fitBounds === "function") {
+              mapRef.current.fitBounds([
+                [bbox[1], bbox[0]],
+                [bbox[3], bbox[2]],
+              ]);
+            }
+          } catch (e) {
+            console.warn("fitBounds error:", e);
+          }
         }
 
         return {

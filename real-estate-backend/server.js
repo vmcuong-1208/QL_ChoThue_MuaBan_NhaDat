@@ -86,6 +86,9 @@ app.use("/api/verification", verificationRoutes);
 const momoPaymentRoutes = require("./routes/momo-payment");
 app.use("/api/momo-payment", momoPaymentRoutes);
 
+const chatbotRoutes = require("./routes/chatbot");
+app.use("/api/chatbot", chatbotRoutes);
+
 // Xử lý lỗi 404
 app.use((req, res) => {
   console.log(`404 Not Found: ${req.method} ${req.originalUrl}`);

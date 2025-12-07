@@ -3,13 +3,78 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { FaUpload, FaTrash, FaInfoCircle } from "react-icons/fa";
+import { FaUpload, FaTrash, FaInfoCircle, FaExclamationCircle, FaTimes } from "react-icons/fa";
 import locationService from "../../services/locationService";
 import CoordinateInput from "../map-gis/CoordinateInput";
-import GoogleMapComponent from "../map-gis/GoogleMapComponent";
+import LeafletMapComponent from "../map-gis/LeafletMapComponent";
 import GPSLocationPicker from "../map-gis/GPSLocationPicker";
 import ImagePreviewModal from "./ImagePreviewModal";
 import { API_URL } from "../../services/api";
+
+// --- HELPER FORMAT TIỀN TỆ & GỢI Ý BANKING STYLE ---
+const formatChipText = (amount) => {
+  if (amount >= 1e9) {
+    const val = amount / 1e9;
+    return (Number.isInteger(val) ? val : parseFloat(val.toFixed(2))) + " tỷ";
+  }
+  if (amount >= 1e6) {
+    const val = amount / 1e6;
+    return (Number.isInteger(val) ? val : parseFloat(val.toFixed(2))) + " triệu";
+  }
+  if (amount >= 1e3) {
+    const val = amount / 1e3;
+    return (Number.isInteger(val) ? val : parseFloat(val.toFixed(2))) + " nghìn";
+  }
+  return amount + " đ";
+};
+
+const getPriceSuggestions = (inputVal) => {
+  if (!inputVal) return [];
+  const val = parseFloat(inputVal);
+  if (isNaN(val) || val <= 0 || val >= 100000) return [];
+
+  let rawValues = [];
+  if (val < 10) {
+    rawValues = [val * 1e6, val * 10e6, val * 100e6, val * 1e9];
+  } else if (val < 100) {
+    rawValues = [val * 1e6, val * 10e6, val * 100e6, val * 1e9];
+  } else if (val < 1000) {
+    rawValues = [val * 1e6, val * 10e6, val * 100e6];
+  } else if (val < 10000) {
+    rawValues = [val * 1e6, val * 10e6];
+  }
+
+  const seen = new Set();
+  return rawValues
+    .map((v) => ({
+      text: formatChipText(Math.round(v)),
+      value: Math.round(v),
+    }))
+    .filter((s) => {
+      if (seen.has(s.value)) return false;
+      seen.add(s.value);
+      return true;
+    });
+};
+
+const formatVNDWords = (num) => {
+  if (!num || isNaN(num) || num <= 0) return "";
+  num = Math.round(Number(num));
+  if (num < 1000) return num.toLocaleString("vi-VN") + " đ";
+
+  const ty = Math.floor(num / 1e9);
+  const trieu = Math.floor((num % 1e9) / 1e6);
+  const nghin = Math.floor((num % 1e6) / 1e3);
+  const dong = num % 1e3;
+
+  let parts = [];
+  if (ty > 0) parts.push(ty + " tỷ");
+  if (trieu > 0) parts.push(trieu + " triệu");
+  if (nghin > 0) parts.push(nghin + " nghìn");
+  if (dong > 0 && parts.length === 0) parts.push(dong + " đồng");
+
+  return parts.join(" ") + " VNĐ";
+};
 
 const PostForm = () => {
   const navigate = useNavigate();
@@ -58,6 +123,15 @@ const PostForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [invalidFields, setInvalidFields] = useState({});
+
+  // Tự động đóng thông báo lỗi sau 6 giây
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const [propertyTypes, setPropertyTypes] = useState([]);
   const [provinces, setProvinces] = useState([]);
@@ -218,6 +292,15 @@ const PostForm = () => {
     } else if (name === "MaHuyen") {
       setFormData((prev) => ({ ...prev, MaXa: "", [name]: value }));
     }
+
+    // Xóa viền đỏ của trường nếu người dùng bắt đầu nhập / chọn
+    if (invalidFields[name]) {
+      setInvalidFields((prev) => {
+        const updated = { ...prev };
+        delete updated[name];
+        return updated;
+      });
+    }
   };
 
   const handleCoordinateChange = (coordinateData) => {
@@ -228,6 +311,20 @@ const PostForm = () => {
         ? coordinateData.area.toFixed(2)
         : formData.DienTich,
     });
+    if (invalidFields.ToaDoVN2000) {
+      setInvalidFields((prev) => {
+        const updated = { ...prev };
+        delete updated.ToaDoVN2000;
+        return updated;
+      });
+    }
+    if (invalidFields.DienTich) {
+      setInvalidFields((prev) => {
+        const updated = { ...prev };
+        delete updated.DienTich;
+        return updated;
+      });
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -235,6 +332,13 @@ const PostForm = () => {
     setImageFiles([...imageFiles, ...files]);
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setImagePreview([...imagePreview, ...newPreviews]);
+    if (invalidFields.HinhAnh) {
+      setInvalidFields((prev) => {
+        const updated = { ...prev };
+        delete updated.HinhAnh;
+        return updated;
+      });
+    }
   };
 
   const handleDocumentImageUpload = (e) => {
@@ -310,6 +414,142 @@ const PostForm = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // --- VALIDATION CÁC TRƯỜNG BẮT BUỘC & VIỀN ĐỎ ---
+    const newInvalidFields = {};
+    let firstErrorField = null;
+    let firstErrorMessage = "";
+
+    // 1. Tiêu đề
+    if (!formData.TieuDe || !formData.TieuDe.trim()) {
+      newInvalidFields.TieuDe = true;
+      if (!firstErrorField) {
+        firstErrorField = "TieuDe";
+        firstErrorMessage = "Vui lòng nhập tiêu đề bài đăng.";
+      }
+    }
+
+    // 2. Mô tả
+    if (!formData.MoTa || !formData.MoTa.trim()) {
+      newInvalidFields.MoTa = true;
+      if (!firstErrorField) {
+        firstErrorField = "MoTa";
+        firstErrorMessage = "Vui lòng nhập mô tả chi tiết bất động sản.";
+      }
+    }
+
+    // 3. Loại BĐS
+    if (!formData.MaLoaiND) {
+      newInvalidFields.MaLoaiND = true;
+      if (!firstErrorField) {
+        firstErrorField = "MaLoaiND";
+        firstErrorMessage = "Vui lòng chọn loại bất động sản.";
+      }
+    }
+
+    // 4. Giá
+    if (!formData.Gia || parseFloat(formData.Gia) <= 0) {
+      newInvalidFields.Gia = true;
+      if (!firstErrorField) {
+        firstErrorField = "Gia";
+        firstErrorMessage =
+          formData.TrangThai === "cho thuê"
+            ? "Vui lòng nhập giá thuê hợp lệ."
+            : "Vui lòng nhập giá bán hợp lệ.";
+      }
+    }
+
+    // 5. Diện tích
+    if (!formData.DienTich || parseFloat(formData.DienTich) <= 0) {
+      newInvalidFields.DienTich = true;
+      if (!firstErrorField) {
+        firstErrorField = "DienTich";
+        firstErrorMessage = "Vui lòng nhập diện tích hợp lệ.";
+      }
+    }
+
+    // 6. Tỉnh/Thành phố
+    if (!formData.MaTinh) {
+      newInvalidFields.MaTinh = true;
+      if (!firstErrorField) {
+        firstErrorField = "MaTinh";
+        firstErrorMessage = "Vui lòng chọn Tỉnh/Thành phố.";
+      }
+    }
+
+    // 7. Quận/Huyện
+    if (!formData.MaHuyen) {
+      newInvalidFields.MaHuyen = true;
+      if (!firstErrorField) {
+        firstErrorField = "MaHuyen";
+        firstErrorMessage = "Vui lòng chọn Quận/Huyện.";
+      }
+    }
+
+    // 8. Phường/Xã
+    if (!formData.MaXa) {
+      newInvalidFields.MaXa = true;
+      if (!firstErrorField) {
+        firstErrorField = "MaXa";
+        firstErrorMessage = "Vui lòng chọn Phường/Xã.";
+      }
+    }
+
+    // 9. Địa chỉ chi tiết
+    if (!formData.DiaChi || !formData.DiaChi.trim()) {
+      newInvalidFields.DiaChi = true;
+      if (!firstErrorField) {
+        firstErrorField = "DiaChi";
+        firstErrorMessage = "Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường...).";
+      }
+    }
+
+    // 10. Tọa độ VN2000 (bắt buộc nếu là tin bán)
+    const isRental = formData.TrangThai === "cho thuê";
+    if (
+      !isRental &&
+      (!formData.ToaDoVN2000 ||
+        !formData.ToaDoVN2000.coordinates ||
+        formData.ToaDoVN2000.coordinates.length < 3)
+    ) {
+      newInvalidFields.ToaDoVN2000 = true;
+      if (!firstErrorField) {
+        firstErrorField = "ToaDoVN2000";
+        firstErrorMessage =
+          "Vui lòng nhập tối thiểu 3 điểm tọa độ VN2000 và bấm Tính toán & Chuyển đổi.";
+      }
+    }
+
+    // 11. Hình ảnh (bắt buộc tối thiểu 1 ảnh BĐS nếu là bài đăng mới)
+    if (
+      !isEditing &&
+      imageFiles.length === 0 &&
+      (!formData.HinhAnh || formData.HinhAnh.length === 0)
+    ) {
+      newInvalidFields.HinhAnh = true;
+      if (!firstErrorField) {
+        firstErrorField = "HinhAnh";
+        firstErrorMessage = "Vui lòng tải lên ít nhất 1 hình ảnh bất động sản.";
+      }
+    }
+
+    if (firstErrorField) {
+      setInvalidFields(newInvalidFields);
+      setError(firstErrorMessage);
+      setLoading(false);
+
+      // Tự động cuộn mượt về phần đang thiếu thông tin và focus
+      setTimeout(() => {
+        const el = document.getElementById(`field-${firstErrorField}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (typeof el.focus === "function") {
+            el.focus({ preventScroll: true });
+          }
+        }
+      }, 50);
+      return;
+    }
 
     try {
       const currentUser = JSON.parse(localStorage.getItem("user"));
@@ -417,26 +657,57 @@ const PostForm = () => {
     }));
   };
 
+  const priceSuggestions = getPriceSuggestions(formData.Gia);
+  const numericPrice = parseFloat(formData.Gia) || 0;
+  const depositSuggestions = getPriceSuggestions(formData.TienDatCoc);
+  const numericDeposit = parseFloat(formData.TienDatCoc) || 0;
+
   // --- RENDER (SỬ DỤNG GIAO DIỆN CỦA BẠN - STASHED CHANGES) ---
   return (
     <div className="min-h-screen py-6 pt-24 bg-slate-50">
       <div className="container max-w-screen-xl px-4 mx-auto">
-        {/* Alerts */}
+        {/* Toast thông báo lỗi bay từ trái qua, cố định trên màn hình (không cần lướt lên đầu) */}
         {error && (
-          <div className="p-4 mb-6 text-red-700 bg-red-100 border-l-4 border-red-500 rounded-lg animate-slideInLeft">
-            {error}
+          <div className="fixed top-24 left-4 sm:left-6 z-[70] max-w-md p-4 bg-white border-l-4 border-red-500 rounded-r-xl shadow-2xl animate-slideInLeft flex items-start gap-3 border border-gray-100">
+            <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-full bg-red-100 text-red-600">
+              <FaExclamationCircle className="text-lg" />
+            </div>
+            <div className="flex-1 pr-1">
+              <h4 className="text-xs font-bold text-red-800 uppercase tracking-wide">
+                Thiếu thông tin hoặc có lỗi
+              </h4>
+              <p className="mt-0.5 text-xs font-medium text-gray-700 leading-relaxed">
+                {error}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="text-gray-400 hover:text-gray-700 p-1 rounded-md transition-colors cursor-pointer"
+              title="Đóng thông báo"
+            >
+              <FaTimes size={13} />
+            </button>
           </div>
         )}
         {success && (
-          <div className="p-4 mb-6 text-green-700 bg-green-100 border-l-4 border-green-500 rounded-lg animate-slideInLeft">
-            {isEditing
-              ? "Cập nhật bài đăng thành công!"
-              : "Đăng tin thành công!"}
+          <div className="fixed top-24 left-4 sm:left-6 z-[70] max-w-md p-4 bg-white border-l-4 border-emerald-500 rounded-r-xl shadow-2xl animate-slideInLeft flex items-start gap-3 border border-gray-100">
+            <div className="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 font-bold">
+              ✓
+            </div>
+            <div className="flex-1 pr-1">
+              <h4 className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+                Thành công
+              </h4>
+              <p className="mt-0.5 text-xs font-medium text-gray-700 leading-relaxed">
+                {isEditing ? "Cập nhật bài đăng thành công!" : "Đăng tin thành công!"}
+              </p>
+            </div>
           </div>
         )}
 
         <div className="max-w-7xl mx-auto">
-          <form onSubmit={handleSubmit}>
+          <form noValidate onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* CỘT TRÁI (7/12): Thông tin chi tiết, Nội dung & Media */}
               <div className="lg:col-span-7 space-y-4">
@@ -496,6 +767,7 @@ const PostForm = () => {
                       Tiêu đề <span className="text-red-500">*</span>
                     </label>
                     <input
+                      id="field-TieuDe"
                       type="text"
                       name="TieuDe"
                       value={formData.TieuDe}
@@ -506,7 +778,11 @@ const PostForm = () => {
                           : "VD: Bán nhà mặt tiền đường Lê Lợi, Quận 1"
                       }
                       required
-                      className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                      className={`w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border rounded-lg focus:ring-2 focus:outline-none ${
+                        invalidFields.TieuDe
+                          ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                      }`}
                     />
                   </div>
 
@@ -515,13 +791,18 @@ const PostForm = () => {
                       Mô tả <span className="text-red-500">*</span>
                     </label>
                     <textarea
+                      id="field-MoTa"
                       name="MoTa"
                       value={formData.MoTa}
                       onChange={handleChange}
                       placeholder="Mô tả chi tiết về bất động sản..."
                       rows="4"
                       required
-                      className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                      className={`w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border rounded-lg focus:ring-2 focus:outline-none ${
+                        invalidFields.MoTa
+                          ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                      }`}
                     ></textarea>
                   </div>
 
@@ -531,11 +812,16 @@ const PostForm = () => {
                         Loại BĐS <span className="text-red-500">*</span>
                       </label>
                       <select
+                        id="field-MaLoaiND"
                         name="MaLoaiND"
                         value={formData.MaLoaiND}
                         onChange={handleChange}
                         required
-                        className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                        className={`w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border rounded-lg appearance-none focus:ring-2 focus:outline-none ${
+                          invalidFields.MaLoaiND
+                            ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                            : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                        }`}
                       >
                         <option value="">Chọn loại BĐS</option>
                         {propertyTypes.map((type) => (
@@ -623,13 +909,14 @@ const PostForm = () => {
                   <span className="text-lg">💰</span> Thông tin
                   chi tiết
                 </h2>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start">
                   <div>
                     <label className="block mb-1.5 text-xs font-semibold text-gray-700">
                       {formData.TrangThai === "cho thuê" ? "Giá thuê (VNĐ/tháng)" : "Giá bán (VNĐ)"}{" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <input
+                      id="field-Gia"
                       type="number"
                       name="Gia"
                       value={formData.Gia}
@@ -641,14 +928,74 @@ const PostForm = () => {
                       }
                       min="0"
                       required
-                      className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                      className={`w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border rounded-lg focus:ring-2 focus:outline-none ${
+                        invalidFields.Gia
+                          ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                      }`}
                     />
+
+                    {/* Gợi ý nhanh banking style hoặc Bằng chữ khi đã nhập số lớn */}
+                    {priceSuggestions.length > 0 ? (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5 animate-fadeIn">
+                        <span className="text-[11px] font-medium text-gray-400">
+                          Gợi ý:
+                        </span>
+                        {priceSuggestions.map((s, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                Gia: s.value.toString(),
+                              }));
+                              if (invalidFields.Gia) {
+                                setInvalidFields((prev) => {
+                                  const updated = { ...prev };
+                                  delete updated.Gia;
+                                  return updated;
+                                });
+                              }
+                            }}
+                            className="px-2 py-0.5 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 border border-blue-200/80 rounded transition-colors cursor-pointer"
+                          >
+                            {s.text}
+                          </button>
+                        ))}
+                      </div>
+                    ) : numericPrice >= 100000 ? (
+                      <div className="flex items-center justify-between gap-1.5 mt-1.5 px-2.5 py-1 text-[11px] font-medium text-emerald-800 bg-emerald-50/80 border border-emerald-200/70 rounded animate-fadeIn">
+                        <div className="flex items-center gap-1 truncate">
+                          <span className="font-bold text-emerald-600">✓</span>
+                          <span>
+                            Bằng chữ: <strong>{formatVNDWords(formData.Gia)}</strong>
+                          </span>
+                          <span className="font-normal text-gray-400">
+                            ({Number(formData.Gia).toLocaleString("vi-VN")} đ)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, Gia: "" }))}
+                          className="text-xs text-gray-400 transition-colors cursor-pointer hover:text-red-500 ml-1"
+                          title="Xóa để nhập lại"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-xs text-gray-500">
+                        Nhập số để nhận gợi ý nhanh (VD: 6 ra 6 triệu, 60 triệu, 6 tỷ...)
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block mb-1.5 text-xs font-semibold text-gray-700">
                       Diện tích (m²) <span className="text-red-500">*</span>
                     </label>
                     <input
+                      id="field-DienTich"
                       type="number"
                       name="DienTich"
                       value={formData.DienTich}
@@ -656,9 +1003,13 @@ const PostForm = () => {
                       placeholder="VD: 100"
                       min="0"
                       required
-                      className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                      className={`w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border rounded-lg focus:ring-2 focus:outline-none ${
+                        invalidFields.DienTich
+                          ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                      }`}
                     />
-                    <p className="mt-1 text-sm font-medium text-gray-500">
+                    <p className="mt-1 text-xs text-gray-500">
                       Tự động tính từ tọa độ VN2000 nếu nhập đầy đủ
                     </p>
                   </div>
@@ -670,7 +1021,7 @@ const PostForm = () => {
                     <h3 className="flex items-center gap-2 mb-4 text-base font-bold text-green-800">
                       <span>🔑</span> Chi tiết cho thuê (Chợ Tốt Style)
                     </h3>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 items-start">
                       <div>
                         <label className="block mb-1.5 text-xs font-semibold text-gray-700">
                           Tiền đặt cọc (VNĐ)
@@ -684,6 +1035,48 @@ const PostForm = () => {
                           min="0"
                           className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-100 focus:outline-none hover:border-gray-400"
                         />
+                        {/* Gợi ý cọc */}
+                        {depositSuggestions.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5 animate-fadeIn">
+                            <span className="text-[11px] font-medium text-gray-400">
+                              Gợi ý:
+                            </span>
+                            {depositSuggestions.map((s, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() =>
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    TienDatCoc: s.value.toString(),
+                                  }))
+                                }
+                                className="px-2 py-0.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 border border-emerald-200/80 rounded transition-colors cursor-pointer"
+                              >
+                                {s.text}
+                              </button>
+                            ))}
+                          </div>
+                        ) : numericDeposit >= 100000 ? (
+                          <div className="flex items-center justify-between gap-1.5 mt-1.5 px-2.5 py-1 text-[11px] font-medium text-emerald-800 bg-emerald-50/80 border border-emerald-200/70 rounded animate-fadeIn">
+                            <div className="flex items-center gap-1 truncate">
+                              <span className="font-bold text-emerald-600">✓</span>
+                              <span>
+                                Bằng chữ: <strong>{formatVNDWords(formData.TienDatCoc)}</strong>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData((prev) => ({ ...prev, TienDatCoc: "" }))
+                              }
+                              className="text-xs text-gray-400 transition-colors cursor-pointer hover:text-red-500 ml-1"
+                              title="Xóa để nhập lại"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                       <div>
                         <label className="block mb-1.5 text-xs font-semibold text-gray-700">
@@ -861,12 +1254,17 @@ const PostForm = () => {
 
               {/* Ảnh BĐS & Video */}
               <div
-                className="p-5 transition-all duration-200 bg-white border border-gray-200/80 rounded-xl shadow-sm hover:shadow-md animate-fadeInUp"
+                id="field-HinhAnh"
+                tabIndex="-1"
+                className={`p-5 transition-all duration-200 bg-white border rounded-xl shadow-sm hover:shadow-md animate-fadeInUp ${
+                  invalidFields.HinhAnh
+                    ? "border-2 border-red-500 ring-4 ring-red-100"
+                    : "border-gray-200/80"
+                }`}
                 style={{ animationDelay: "500ms" }}
               >
                 <h2 className="flex items-center gap-2 mb-3 text-base font-bold text-gray-800">
-                  <span className="text-lg">📷</span> Hình ảnh &
-                  Video BĐS
+                  <span className="text-lg">📷</span> Hình ảnh & Video BĐS
                 </h2>
                 <p className="mb-4 text-sm font-bold text-gray-600">
                   Tải ảnh chụp thực tế (Tối đa 10 ảnh, JPG/PNG, max 5MB/ảnh)
@@ -1003,12 +1401,17 @@ const PostForm = () => {
                       Tỉnh/TP <span className="text-red-500">*</span>
                     </label>
                     <select
+                      id="field-MaTinh"
                       name="MaTinh"
                       value={formData.MaTinh}
                       onChange={handleChange}
                       required
                       disabled={loadingLocations}
-                      className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
+                      className={`w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border rounded-lg appearance-none focus:ring-2 focus:outline-none disabled:bg-gray-100 ${
+                        invalidFields.MaTinh
+                          ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                      }`}
                     >
                       <option value="">Chọn Tỉnh/TP</option>
                       {provinces.map((province) => (
@@ -1037,12 +1440,17 @@ const PostForm = () => {
                       Quận/Huyện <span className="text-red-500">*</span>
                     </label>
                     <select
+                      id="field-MaHuyen"
                       name="MaHuyen"
                       value={formData.MaHuyen}
                       onChange={handleChange}
                       required
                       disabled={!formData.MaTinh || loadingLocations}
-                      className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
+                      className={`w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border rounded-lg appearance-none focus:ring-2 focus:outline-none disabled:bg-gray-100 ${
+                        invalidFields.MaHuyen
+                          ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                      }`}
                     >
                       <option value="">Chọn Quận/Huyện</option>
                       {districts.map((district) => (
@@ -1071,12 +1479,17 @@ const PostForm = () => {
                       Phường/Xã <span className="text-red-500">*</span>
                     </label>
                     <select
+                      id="field-MaXa"
                       name="MaXa"
                       value={formData.MaXa}
                       onChange={handleChange}
                       required
                       disabled={!formData.MaHuyen || loadingLocations}
-                      className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-gray-100 hover:border-gray-400"
+                      className={`w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border rounded-lg appearance-none focus:ring-2 focus:outline-none disabled:bg-gray-100 ${
+                        invalidFields.MaXa
+                          ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                      }`}
                     >
                       <option value="">Chọn Phường/Xã</option>
                       {wards.map((ward) => (
@@ -1106,13 +1519,18 @@ const PostForm = () => {
                     Địa chỉ chi tiết <span className="text-red-500">*</span>
                   </label>
                   <input
+                    id="field-DiaChi"
                     type="text"
                     name="DiaChi"
                     value={formData.DiaChi}
                     onChange={handleChange}
                     placeholder="Số nhà, tên đường..."
                     required
-                    className="w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                    className={`w-full px-3 py-2 text-xs font-medium text-gray-800 transition-all border rounded-lg focus:ring-2 focus:outline-none ${
+                      invalidFields.DiaChi
+                        ? "border-red-500 ring-2 ring-red-100 bg-red-50/20"
+                        : "border-gray-300 focus:border-blue-500 focus:ring-blue-100 hover:border-gray-400"
+                    }`}
                   />
                 </div>
 
@@ -1128,7 +1546,13 @@ const PostForm = () => {
                 {/* === SECTION 4: TỌA ĐỘ VN2000 (Mới từ Upstream, style Stashed) === */}
               {formData.TrangThai !== "cho thuê" ? (
                 <div
-                  className="bg-white border border-gray-200/80 rounded-xl shadow-sm hover:shadow-md animate-fadeInUp overflow-hidden"
+                  id="field-ToaDoVN2000"
+                  tabIndex="-1"
+                  className={`bg-white border rounded-xl shadow-sm hover:shadow-md animate-fadeInUp overflow-hidden transition-all ${
+                    invalidFields.ToaDoVN2000
+                      ? "border-2 border-red-500 ring-4 ring-red-100"
+                      : "border-gray-200/80"
+                  }`}
                   style={{ animationDelay: "300ms" }}
                 >
                   <CoordinateInput
@@ -1143,7 +1567,7 @@ const PostForm = () => {
                         <h4 className="mb-3 text-base font-bold text-gray-800">
                           Xem trước khung viền:
                         </h4>
-                        <GoogleMapComponent
+                        <LeafletMapComponent
                           center={formData.ToaDoVN2000.wgs84Coordinates[0]}
                           zoom={18}
                           propertyBoundary={

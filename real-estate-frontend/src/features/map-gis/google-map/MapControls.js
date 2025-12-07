@@ -48,7 +48,7 @@ const MapControls = ({
     <div
       className="absolute z-10 space-y-3 left-4 animate-slideInLeft max-h-[80vh] overflow-y-auto [&::-webkit-scrollbar]:hidden"
       style={{
-        top: isFullscreen ? "0px" : "10px",
+        top: "16px",
       }}
     >
       {/* 1. MAP TYPE */}

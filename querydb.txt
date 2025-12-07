@@ -48,7 +48,20 @@ CREATE TABLE THONGTINNHADAT (
     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
     GoogleMapIframe TEXT,
+    -- // Chú thích: Bổ sung tọa độ VN2000, GPS và Video thửa đất
+    ToaDoVN2000 JSON NULL,
+    GPS_Lat DECIMAL(10, 8) NULL,
+    GPS_Lng DECIMAL(11, 8) NULL,
+    VideoThuaDat VARCHAR(255) NULL,
     TrangThaiXacThuc ENUM('chưa xác thực', 'chờ xác thực', 'đã xác thực', 'từ chối') DEFAULT 'chưa xác thực',
+    -- // Chú thích: Các trường thông tin cho thuê & tiện ích
+    TienDatCoc DECIMAL(15,2) DEFAULT 0,
+    ThoiHanThue VARCHAR(50) NULL,
+    TienDien VARCHAR(50) NULL,
+    TienNuoc VARCHAR(50) NULL,
+    PhiDichVu VARCHAR(100) NULL,
+    NoiThat VARCHAR(100) NULL,
+    TienIch TEXT NULL,
     FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE,
 	FOREIGN KEY (MaLoaiND) REFERENCES LOAINHADAT(MaLoaiND) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -107,6 +120,15 @@ CREATE TABLE HINHANHBDS (
     MaTTND INT NOT NULL,
     DuongDanAnh VARCHAR(255) NOT NULL,
     MoTaAnh VARCHAR(255),
+    FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- // Chú thích: Bảng Hình Ảnh Giấy Tờ Pháp Lý (Sổ đỏ, sổ hồng...)
+CREATE TABLE IF NOT EXISTS HINHANHGIAYTO (
+    MaHAGT INT AUTO_INCREMENT PRIMARY KEY,
+    MaTTND INT NOT NULL,
+    DuongDanAnh VARCHAR(255) NOT NULL,
+    MoTaAnh VARCHAR(255) NULL,
     FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -191,3 +213,23 @@ CREATE INDEX idx_verification_status ON THONGTINNHADAT(TrangThaiXacThuc);
 CREATE INDEX idx_verification_property ON THONGTINXACTHUC(MaTTND);
 CREATE INDEX idx_verification_date ON THONGTINXACTHUC(NgayGui);
 ADD INDEX idx_google_id (GoogleId);
+
+-- =========================================================================
+-- // Chú thích: CÁC CÂU LỆNH CẬP NHẬT (MIGRATION) NẾU DATABASE ĐÃ TỒN TẠI TỪ TRƯỚC
+-- // Chạy các lệnh dưới đây nếu bạn đã có database sẵn và muốn bổ sung tính năng VN2000, GPS, Giấy tờ:
+-- =========================================================================
+-- // 1. Bổ sung các cột tọa độ VN2000, GPS Lat/Lng, Video thửa đất vào bảng THONGTINNHADAT:
+-- ALTER TABLE THONGTINNHADAT 
+-- ADD COLUMN ToaDoVN2000 JSON NULL AFTER GoogleMapIframe,
+-- ADD COLUMN GPS_Lat DECIMAL(10, 8) NULL AFTER ToaDoVN2000,
+-- ADD COLUMN GPS_Lng DECIMAL(11, 8) NULL AFTER GPS_Lat,
+-- ADD COLUMN VideoThuaDat VARCHAR(255) NULL AFTER GPS_Lng;
+
+-- // 2. Tạo bảng lưu trữ hình ảnh giấy tờ pháp lý (Sổ đỏ / Sổ hồng):
+-- CREATE TABLE IF NOT EXISTS HINHANHGIAYTO (
+--     MaHAGT INT AUTO_INCREMENT PRIMARY KEY,
+--     MaTTND INT NOT NULL,
+--     DuongDanAnh VARCHAR(255) NOT NULL,
+--     MoTaAnh VARCHAR(255) NULL,
+--     FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
