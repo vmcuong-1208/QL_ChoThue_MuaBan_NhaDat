@@ -72,6 +72,18 @@ const getAllProperties = async (filters) => {
     filterConditions.push("MaHuyen = ?");
     values.push(maHuyen);
   }
+  if (filters.MaNgDung) {
+    filterConditions.push("tt.MaNgDung = ?");
+    values.push(filters.MaNgDung);
+  }
+
+  // Lọc theo trạng thái duyệt: Mặc định người dùng ngoài chỉ xem tin APPROVED
+  if (filters.trangThaiDuyet) {
+    filterConditions.push("tt.TrangThaiDuyet = ?");
+    values.push(filters.trangThaiDuyet);
+  } else if (!filters.includeAllModeration) {
+    filterConditions.push("(tt.TrangThaiDuyet = 'APPROVED' OR tt.TrangThaiDuyet IS NULL)");
+  }
 
   const filterQuery =
     filterConditions.length > 0
@@ -85,7 +97,7 @@ const getAllProperties = async (filters) => {
             LIMIT 1) AS HinhAnh
     FROM THONGTINNHADAT tt
     ${filterQuery}
-    ORDER BY NgayTao DESC
+    ORDER BY tt.Featured DESC, tt.NgayTao DESC
     LIMIT ? OFFSET ?`;
 
   const queryValues = [...values, parsedLimit, offset];
@@ -99,10 +111,12 @@ const getAllProperties = async (filters) => {
         property.MaTTND,
       ]);
     property.HinhAnh = images.map((img) => img.DuongDanAnh);
+    property.Featured = Boolean(property.Featured);
+    property.isFeatured = Boolean(property.Featured);
   }
 
   // Tổng số bản ghi
-  const countSql = `SELECT COUNT(*) AS total FROM THONGTINNHADAT ${filterQuery}`;
+  const countSql = `SELECT COUNT(*) AS total FROM THONGTINNHADAT tt ${filterQuery}`;
   const [countRows] = await db.promise().query(countSql, values);
   const total = countRows[0] ? countRows[0].total : 0;
 
@@ -194,11 +208,14 @@ const searchProperties = async (searchParams) => {
     conditions.push("(LOWER(tt.TrangThai) = 'đang bán' OR LOWER(tt.TrangThai) = 'cho thuê')");
   }
 
+  // Chỉ hiển thị tin đã được Admin phê duyệt
+  conditions.push("(tt.TrangThaiDuyet = 'APPROVED' OR tt.TrangThaiDuyet IS NULL)");
+
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   // Sắp xếp
-  let orderClause = "ORDER BY tt.NgayTao DESC";
+  let orderClause = "ORDER BY tt.Featured DESC, tt.NgayTao DESC";
   switch (sort) {
     case "price-asc":
       orderClause = "ORDER BY tt.Gia ASC";
@@ -243,6 +260,8 @@ const searchProperties = async (searchParams) => {
         property.MaTTND,
       ]);
     property.HinhAnh = images.map((img) => img.DuongDanAnh);
+    property.Featured = Boolean(property.Featured);
+    property.isFeatured = Boolean(property.Featured);
   }
 
   // Đếm tổng số kết quả
@@ -398,17 +417,18 @@ const createProperty = async ({
     PhiDichVu,
     NoiThat,
     TienIch,
+    MaDuAn,
   } = propertyData;
 
   const [result] = await db.promise().query(
     `INSERT INTO THONGTINNHADAT (
       MaNgDung, TieuDe, MoTa, MaLoaiND, Gia, DienTich, DiaChi, 
-      MaTinh, MaHuyen, MaXa, TrangThai, 
+      MaTinh, MaHuyen, MaXa, TrangThai, TrangThaiDuyet, MaDuAn,
       ToaDoVN2000, GPS_Lat, GPS_Lng, VideoThuaDat,
       TienDatCoc, ThoiHanThue, TienDien, TienNuoc, PhiDichVu, NoiThat, TienIch,
       SoLuotXem, NgayTao
     ) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())`,
     [
       userId,
       TieuDe,
@@ -421,6 +441,7 @@ const createProperty = async ({
       MaHuyen,
       MaXa,
       TrangThai,
+      MaDuAn || null,
       ToaDoVN2000 || null,
       GPS_Lat || null,
       GPS_Lng || null,
@@ -503,6 +524,7 @@ const updateProperty = async ({
     PhiDichVu,
     NoiThat,
     TienIch,
+    MaDuAn,
   } = propertyData;
 
   let videoThuaDat = property.VideoThuaDat;
@@ -519,7 +541,8 @@ const updateProperty = async ({
       TieuDe = ?, MoTa = ?, MaLoaiND = ?, Gia = ?, DienTich = ?, 
       DiaChi = ?, MaTinh = ?, MaHuyen = ?, MaXa = ?, TrangThai = ?,
       ToaDoVN2000 = ?, GPS_Lat = ?, GPS_Lng = ?, VideoThuaDat = ?,
-      TienDatCoc = ?, ThoiHanThue = ?, TienDien = ?, TienNuoc = ?, PhiDichVu = ?, NoiThat = ?, TienIch = ?
+      TienDatCoc = ?, ThoiHanThue = ?, TienDien = ?, TienNuoc = ?, PhiDichVu = ?, NoiThat = ?, TienIch = ?,
+      MaDuAn = ?
     WHERE MaTTND = ?`,
     [
       TieuDe,
@@ -543,6 +566,7 @@ const updateProperty = async ({
       PhiDichVu !== undefined ? PhiDichVu : property.PhiDichVu,
       NoiThat !== undefined ? NoiThat : property.NoiThat,
       TienIch !== undefined ? TienIch : property.TienIch,
+      MaDuAn !== undefined ? (MaDuAn || null) : property.MaDuAn,
       propertyId,
     ]
   );

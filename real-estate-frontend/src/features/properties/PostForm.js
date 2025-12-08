@@ -107,7 +107,11 @@ const PostForm = () => {
     PhiDichVu: "",
     NoiThat: "Đầy đủ",
     TienIch: "",
+    MaDuAn: "",
   });
+
+  // State danh sách dự án BĐS
+  const [projects, setProjects] = useState([]);
 
   // State tiện ích dạng checkbox cho tin thuê
   const [selectedAmenities, setSelectedAmenities] = useState([]);
@@ -175,6 +179,19 @@ const PostForm = () => {
       }
     };
     fetchProvinces();
+  }, []);
+
+  // Lấy danh sách dự án BĐS dùng chung
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/categories/projects`);
+        setProjects(res.data || []);
+      } catch (err) {
+        console.warn("Lỗi khi tải danh sách dự án:", err);
+      }
+    };
+    fetchProjects();
   }, []);
 
   useEffect(() => {
@@ -1512,6 +1529,27 @@ const PostForm = () => {
                       </svg>
                     </div>
                   </div>
+                </div>
+
+                {/* Chọn dự án bất động sản (Dữ liệu danh mục chuẩn hóa) */}
+                <div className="mt-4">
+                  <label className="block mb-1.5 text-xs font-semibold text-gray-700">
+                    Thuộc Dự án bất động sản (tùy chọn)
+                  </label>
+                  <select
+                    id="field-MaDuAn"
+                    name="MaDuAn"
+                    value={formData.MaDuAn || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 pr-8 text-xs font-medium text-gray-800 transition-all bg-white border border-gray-300 rounded-lg appearance-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none hover:border-gray-400"
+                  >
+                    <option value="">-- Không thuộc dự án / Nhà đất riêng lẻ --</option>
+                    {projects.map((proj) => (
+                      <option key={proj.MaDuAn} value={proj.MaDuAn}>
+                        🏢 {proj.TenDuAn} {proj.ChuDauTu ? `(${proj.ChuDauTu})` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="mt-4">

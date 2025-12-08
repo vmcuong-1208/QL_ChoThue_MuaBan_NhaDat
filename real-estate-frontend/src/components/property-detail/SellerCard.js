@@ -40,20 +40,46 @@ const SellerCard = ({
                   e.target.src = "/placeholder.svg?height=80&width=80";
                 }}
               />
-              {seller?.TrangThaiXacThuc === "đã xác thực" && (
-                <div className="absolute bottom-0 right-0 flex items-center justify-center w-5 h-5 bg-green-500 border-2 border-white rounded-full shadow-lg">
+              {seller?.TrangThaiXacMinhMoiGioi === "VERIFIED" && (
+                <div
+                  className="absolute bottom-0 right-0 flex items-center justify-center w-5 h-5 bg-emerald-500 border-2 border-white rounded-full shadow-lg"
+                  title="Môi giới đã xác minh"
+                >
                   <FaCheckCircle className="text-xs text-white" />
                 </div>
               )}
             </div>
 
             <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-gray-900 truncate transition-colors hover:text-blue-600">
-                {seller?.HoTen || "Người bán"}
-              </h2>
-              <span className="inline-block px-2 py-0.5 mt-1 text-xs font-semibold text-blue-700 rounded-full bg-blue-50">
-                {seller?.LoaiTaiKhoan || "Người dùng"}
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-base font-bold text-gray-900 truncate transition-colors hover:text-blue-600">
+                  {seller?.HoTen || "Người bán"}
+                </h2>
+                {seller?.TrangThaiXacMinhMoiGioi === "VERIFIED" && (
+                  <span className="text-emerald-500 font-bold text-sm" title="Môi giới đã xác minh">
+                    ✅
+                  </span>
+                )}
+              </div>
+
+              {/* Trạng thái xác minh môi giới */}
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                {seller?.TrangThaiXacMinhMoiGioi === "VERIFIED" ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full shadow-2xs">
+                    <FaCheckCircle className="text-[11px] text-emerald-600" />
+                    <span>Môi giới đã xác minh</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium text-slate-500 bg-slate-50 border border-slate-200 rounded-full">
+                    <span className="w-2 h-2 rounded-full bg-slate-300"></span>
+                    <span>Chưa xác minh</span>
+                  </span>
+                )}
+
+                <span className="inline-block px-2 py-0.5 text-xs font-medium text-blue-700 rounded-full bg-blue-50 border border-blue-100">
+                  {seller?.LoaiTaiKhoan || "Người dùng"}
+                </span>
+              </div>
             </div>
           </div>
 

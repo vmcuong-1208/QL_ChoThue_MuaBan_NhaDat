@@ -2,7 +2,7 @@ const db = require("../config/db");
 
 const getUserById = async (id, isAuthorized) => {
   let query = `
-    SELECT MaNgDung, HoTen, Email, LoaiTaiKhoan, AnhDaiDien 
+    SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, TrangThaiXacMinhMoiGioi, MoTaBanThan, NgayTao 
     FROM NGUOIDUNG
     WHERE MaNgDung = ?
   `;
@@ -10,8 +10,8 @@ const getUserById = async (id, isAuthorized) => {
   if (isAuthorized) {
     query = `
       SELECT MaNgDung, TenDangNhap, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, 
-       CASE WHEN TrangThai = 1 THEN 'Hoạt động' ELSE 'Không hoạt động' END as TrangThai,
-       AnhDaiDien, MoTaBanThan
+       TrangThai, TrangThaiXacMinhMoiGioi,
+       AnhDaiDien, MoTaBanThan, NgayTao
       FROM NGUOIDUNG
       WHERE MaNgDung = ?
     `;

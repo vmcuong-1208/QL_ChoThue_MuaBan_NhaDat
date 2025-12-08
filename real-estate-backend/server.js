@@ -59,6 +59,9 @@ app.use("/api/properties", propertyRoutes);
 const propertyTypesRoute = require("./routes/property-types");
 app.use("/api/property-types", propertyTypesRoute);
 
+const categoriesRoute = require("./routes/categories");
+app.use("/api/categories", categoriesRoute);
+
 const locationsRoute = require("./routes/locations");
 app.use("/api/locations", locationsRoute);
 
@@ -82,6 +85,12 @@ app.use("/api/admin", adminRoutes);
 
 const verificationRoutes = require("./routes/verification");
 app.use("/api/verification", verificationRoutes);
+
+const brokerVerificationRoutes = require("./routes/brokerVerification");
+app.use("/api/broker-verification", brokerVerificationRoutes);
+
+const contentRoutes = require("./routes/content");
+app.use("/api/content", contentRoutes);
 
 const momoPaymentRoutes = require("./routes/momo-payment");
 app.use("/api/momo-payment", momoPaymentRoutes);

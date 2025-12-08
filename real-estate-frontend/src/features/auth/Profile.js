@@ -12,8 +12,15 @@ import {
   FaCheck,
   FaTimes,
   FaCrown,
+  FaIdCard,
+  FaCheckCircle,
+  FaClock,
+  FaTimesCircle,
 } from "react-icons/fa";
+import axios from "axios";
+import { API_URL } from "../../services/api";
 import PaymentModal from "../payment/PaymentModal";
+import BrokerVerificationModal from "./BrokerVerificationModal";
 
 const Profile = () => {
   const { currentUser, updateProfile, loading, loadUserInfo, token } =
@@ -29,6 +36,27 @@ const Profile = () => {
   });
   const [previewImage, setPreviewImage] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showBrokerVerifyModal, setShowBrokerVerifyModal] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+
+  const fetchVerificationStatus = async () => {
+    try {
+      const activeToken = token || localStorage.getItem("token");
+      if (!activeToken) return;
+      const res = await axios.get(`${API_URL}/broker-verification/status`, {
+        headers: { Authorization: `Bearer ${activeToken}` },
+      });
+      setVerificationStatus(res.data);
+    } catch (err) {
+      console.error("Lỗi lấy trạng thái xác minh:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchVerificationStatus();
+    }
+  }, [currentUser, token]);
 
   // Tự suy ra màu / text cho loại tài khoản
   const roleInfo = useMemo(() => {
@@ -211,6 +239,43 @@ const Profile = () => {
                 <span>Nâng cấp thành môi giới</span>
                 <span className="absolute inset-0 rounded-full opacity-0 bg-gradient-to-r from-white/40 to-transparent animate-[ping_1.2s_ease-out_infinite]" />
               </button>
+            )}
+
+            {/* Trạng thái xác minh môi giới */}
+            {verificationStatus?.userStatus === "VERIFIED" ? (
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 rounded-full shadow-xs">
+                <FaCheckCircle className="text-emerald-500 text-sm" />
+                <span>Môi giới đã xác minh ✅</span>
+              </div>
+            ) : verificationStatus?.userStatus === "PENDING" ? (
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-300 rounded-full shadow-xs">
+                <FaClock className="text-amber-500 animate-pulse text-sm" />
+                <span>Đang chờ Admin duyệt CCCD</span>
+              </div>
+            ) : verificationStatus?.userStatus === "REJECTED" ? (
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-300 rounded-full shadow-xs">
+                <FaTimesCircle className="text-rose-500 text-sm" />
+                <span>Hồ sơ CCCD bị từ chối</span>
+                <button
+                  type="button"
+                  onClick={() => setShowBrokerVerifyModal(true)}
+                  className="ml-1 underline font-bold hover:text-rose-900"
+                >
+                  Gửi lại
+                </button>
+              </div>
+            ) : (
+              (currentUser?.LoaiTaiKhoan?.toLowerCase() === "môi giới" ||
+                currentUser?.LoaiTaiKhoan?.toLowerCase() === "chủ đầu tư") && (
+                <button
+                  type="button"
+                  onClick={() => setShowBrokerVerifyModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white rounded-full bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-blue-300/50 transition-all duration-200 hover:-translate-y-[1px]"
+                >
+                  <FaIdCard />
+                  <span>Xác minh môi giới (CCCD)</span>
+                </button>
+              )
             )}
 
             {!isEditing && (
@@ -488,6 +553,15 @@ const Profile = () => {
         onSuccess={handlePaymentSuccess}
         amount={500000}
         purpose="Nâng cấp tài khoản môi giới"
+      />
+
+      {/* Broker Verification Modal */}
+      <BrokerVerificationModal
+        isOpen={showBrokerVerifyModal}
+        onClose={() => setShowBrokerVerifyModal(false)}
+        onSuccess={() => {
+          fetchVerificationStatus();
+        }}
       />
     </div>
   );

@@ -13,6 +13,7 @@ CREATE TABLE NGUOIDUNG (
     SDT VARCHAR(15),
     DiaChi TEXT,
     LoaiTaiKhoan ENUM('thường', 'môi giới', 'chủ đầu tư', 'admin') DEFAULT 'thường',
+    TrangThaiXacMinhMoiGioi ENUM('CHUA_XAC_MINH', 'PENDING', 'VERIFIED', 'REJECTED') DEFAULT 'CHUA_XAC_MINH', -- // Trạng thái xác minh môi giới: CHUA_XAC_MINH, PENDING, VERIFIED, REJECTED
     HoTen VARCHAR(100),
     AnhDaiDien VARCHAR(255),
     MoTaBanThan TEXT,
@@ -28,7 +29,10 @@ CREATE TABLE NGUOIDUNG (
 CREATE TABLE LOAINHADAT (
     MaLoaiND INT AUTO_INCREMENT PRIMARY KEY,
     TenLoaiND VARCHAR(100) NOT NULL UNIQUE,
-    MoTa TEXT
+    MoTa TEXT,
+    -- // Chú thích: Quản lý danh mục loại BĐS (TrangThai: hoạt động/khóa, ThuTuHienThi)
+    TrangThai ENUM('hoạt động', 'khóa') DEFAULT 'hoạt động',
+    ThuTuHienThi INT DEFAULT 0
 );
 -- Bảng Thông tin nhà đất 
 CREATE TABLE THONGTINNHADAT (
@@ -48,9 +52,18 @@ CREATE TABLE THONGTINNHADAT (
     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
     GoogleMapIframe TEXT,
-    TrangThaiXacThuc ENUM('chưa xác thực', 'chờ xác thực', 'đã xác thực', 'từ chối') DEFAULT 'chưa xác thực';
+    TrangThaiXacThuc ENUM('chưa xác thực', 'chờ xác thực', 'đã xác thực', 'từ chối') DEFAULT 'chưa xác thực',
+    -- // Chú thích: Quản lý tin đăng (TrangThaiDuyet: DRAFT, PENDING, APPROVED, REJECTED, REMOVED, EXPIRED; Featured: Tin nổi bật; LyDoTuChoi; NgayDuyet; NguoiDuyet)
+    TrangThaiDuyet ENUM('DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'REMOVED', 'EXPIRED') DEFAULT 'PENDING',
+    Featured BOOLEAN DEFAULT FALSE,
+    LyDoTuChoi TEXT NULL,
+    NgayDuyet DATETIME NULL,
+    NguoiDuyet INT NULL,
+    -- // Chú thích: Bổ sung liên kết Dự án bất động sản (MaDuAn)
+    MaDuAn INT NULL,
     FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE,
-	FOREIGN KEY (MaLoaiND) REFERENCES LOAINHADAT(MaLoaiND) ON DELETE CASCADE
+	FOREIGN KEY (MaLoaiND) REFERENCES LOAINHADAT(MaLoaiND) ON DELETE CASCADE,
+    FOREIGN KEY (MaDuAn) REFERENCES DUAN(MaDuAn) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tạo bảng thông tin xác thực
@@ -84,14 +97,36 @@ CREATE TABLE THONGTINXACTHUC (
 
 CREATE TABLE TINHTHANH (
     MaTinh VARCHAR(20) PRIMARY KEY,
-    TenTinh VARCHAR(100) NOT NULL
+    TenTinh VARCHAR(100) NOT NULL,
+    -- // Chú thích: Quản lý danh mục Tỉnh/Thành (TrangThai: hoạt động/khóa, ThuTuHienThi)
+    TrangThai ENUM('hoạt động', 'khóa') DEFAULT 'hoạt động',
+    ThuTuHienThi INT DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE QUANHUYEN (
     MaHuyen VARCHAR(20) PRIMARY KEY,
     TenHuyen VARCHAR(100) NOT NULL,
     MaTinh VARCHAR(20),
+    -- // Chú thích: Quản lý danh mục Quận/Huyện (TrangThai: hoạt động/khóa)
+    TrangThai ENUM('hoạt động', 'khóa') DEFAULT 'hoạt động',
     FOREIGN KEY (MaTinh) REFERENCES TINHTHANH(MaTinh)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- // Chú thích: Bảng Quản lý danh mục Dự án bất động sản
+CREATE TABLE DUAN (
+    MaDuAn INT AUTO_INCREMENT PRIMARY KEY,
+    TenDuAn VARCHAR(255) NOT NULL,
+    ChuDauTu VARCHAR(255) NULL,
+    DiaChi VARCHAR(255) NULL,
+    MaTinh VARCHAR(20) NULL,
+    MaHuyen VARCHAR(20) NULL,
+    MoTa TEXT NULL,
+    HinhAnh VARCHAR(255) NULL,
+    TrangThai ENUM('đang mở bán', 'sắp mở bán', 'đã bàn giao', 'tạm ngưng', 'khóa') DEFAULT 'đang mở bán',
+    NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (MaTinh) REFERENCES TINHTHANH(MaTinh) ON DELETE SET NULL,
+    FOREIGN KEY (MaHuyen) REFERENCES QUANHUYEN(MaHuyen) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE PHUONGXA (
@@ -191,3 +226,90 @@ CREATE INDEX idx_verification_status ON THONGTINNHADAT(TrangThaiXacThuc);
 CREATE INDEX idx_verification_property ON THONGTINXACTHUC(MaTTND);
 CREATE INDEX idx_verification_date ON THONGTINXACTHUC(NgayGui);
 ADD INDEX idx_google_id (GoogleId);
+
+-- // =========================================================================
+-- // BỔ SUNG: BẢNG XÁC MINH MÔI GIỚI (BROKER VERIFICATION)
+-- // Giúp Admin kiểm tra và chứng thực tài khoản môi giới qua ảnh CCCD/CMND
+-- // =========================================================================
+CREATE TABLE IF NOT EXISTS XACMINHMOIGIOI (
+    MaXacMinh INT AUTO_INCREMENT PRIMARY KEY,
+    MaNgDung INT NOT NULL,
+    SoCCCD VARCHAR(20) NULL,
+    AnhCCCDMatTruoc VARCHAR(255) NOT NULL,
+    AnhCCCDMatSau VARCHAR(255) NOT NULL,
+    AnhChanDung VARCHAR(255) NULL,
+    TrangThai ENUM('PENDING', 'VERIFIED', 'REJECTED') DEFAULT 'PENDING',
+    GhiChuAdmin TEXT NULL,
+    NgayGui DATETIME DEFAULT CURRENT_TIMESTAMP,
+    NgayDuyet DATETIME NULL,
+    NguoiDuyet INT NULL,
+    FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE,
+    FOREIGN KEY (NguoiDuyet) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_broker_verify_user ON XACMINHMOIGIOI(MaNgDung);
+CREATE INDEX idx_broker_verify_status ON XACMINHMOIGIOI(TrangThai);
+
+
+-- // =========================================================================
+-- // BỔ SUNG: CÁC BẢNG QUẢN LÝ NỘI DUNG (CONTENT MANAGEMENT)
+-- // Cho phép Admin quản lý: 1. Banner quảng cáo, 2. Tin tức thị trường, 3. Trang giới thiệu & liên hệ
+-- // =========================================================================
+
+-- // 1. Bảng Quản lý Banner quảng cáo
+CREATE TABLE IF NOT EXISTS BANNER (
+    MaBanner INT AUTO_INCREMENT PRIMARY KEY,
+    TenBanner VARCHAR(255) NOT NULL,
+    HinhAnh VARCHAR(500) NOT NULL,
+    ViTri ENUM('trang_chu', 'tim_kiem', 'chi_tiet', 'sidebar') DEFAULT 'trang_chu',
+    LienKet VARCHAR(500) NULL,
+    ThuTu INT DEFAULT 0,
+    TrangThai ENUM('hiển thị', 'ẩn') DEFAULT 'hiển thị',
+    NgayTao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    NgayCapNhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_banner_vitri ON BANNER(ViTri);
+CREATE INDEX idx_banner_trangthai ON BANNER(TrangThai);
+
+-- // 2. Bảng Quản lý Tin tức & Bài viết
+CREATE TABLE IF NOT EXISTS TINTUC (
+    MaTinTuc INT AUTO_INCREMENT PRIMARY KEY,
+    TieuDe VARCHAR(255) NOT NULL,
+    Slug VARCHAR(255) NULL,
+    HinhAnh VARCHAR(500) NULL,
+    TomTat TEXT NULL,
+    NoiDung LONGTEXT NOT NULL,
+    DanhMuc VARCHAR(100) DEFAULT 'Kinh nghiệm mua bán',
+    TacGia VARCHAR(100) DEFAULT 'Ban Biên Tập 3MAN',
+    LuotXem INT DEFAULT 0,
+    TrangThai ENUM('xuất bản', 'nháp', 'ẩn') DEFAULT 'xuất bản',
+    NoiBat TINYINT(1) DEFAULT 0,
+    NgayDang TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    NgayCapNhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_tintuc_danhmuc ON TINTUC(DanhMuc);
+CREATE INDEX idx_tintuc_trangthai ON TINTUC(TrangThai);
+CREATE INDEX idx_tintuc_noibat ON TINTUC(NoiBat);
+
+-- // 3. Bảng Quản lý Trang giới thiệu & Thông tin liên hệ
+CREATE TABLE IF NOT EXISTS TRANGGIOITHIEU (
+    Id INT PRIMARY KEY,
+    TieuDe VARCHAR(255) NOT NULL DEFAULT 'Về Bất Động Sản 3MAN',
+    Slogan VARCHAR(255) DEFAULT 'Kênh Mua Bán & Cho Thuê Bất Động Sản Uy Tín Hàng Đầu',
+    GioiThieu LONGTEXT,
+    TamNhin TEXT,
+    SuMenh TEXT,
+    GiaTriCotLoi TEXT,
+    HinhAnh VARCHAR(500) NULL,
+    TenDoanhNghiep VARCHAR(255) DEFAULT 'CÔNG TY CỔ PHẦN ĐẦU TƯ & DỊCH VỤ BẤT ĐỘNG SẢN 3MAN',
+    DiaChi VARCHAR(255) DEFAULT 'Tòa nhà Landmark 81, 720A Điện Biên Phủ, Phường 22, Quận Bình Thạnh, TP. Hồ Chí Minh',
+    SoDienThoai VARCHAR(50) DEFAULT '0901 234 567',
+    Hotline VARCHAR(50) DEFAULT '1900 8888',
+    Email VARCHAR(100) DEFAULT 'support@bds3man.vn',
+    GioLamViec VARCHAR(100) DEFAULT 'Thứ 2 - Thứ 7: 08:00 - 18:00',
+    Website VARCHAR(100) DEFAULT 'https://bds3man.vn',
+    Fanpage VARCHAR(255) DEFAULT 'https://facebook.com/bds3man',
+    NgayCapNhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,40 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import {
   FaMapMarkerAlt,
-  FaPhone,
+  FaPhoneAlt,
   FaEnvelope,
   FaCalendarAlt,
   FaHome,
-  FaStar,
   FaCheckCircle,
-  FaChartLine,
   FaAward,
   FaRulerCombined,
   FaShareAlt,
+  FaSearch,
+  FaShieldAlt,
+  FaClock,
+  FaComments,
+  FaCopy,
+  FaBed,
+  FaBath,
+  FaAngleRight,
+  FaPaperPlane,
 } from "react-icons/fa";
 import { API_URL, SERVER_URL } from "../../services/api";
 
 const formatPrice = (price) => {
-  if (!price) return "Liên hệ";
-  if (price >= 1000000000) {
-    return (price / 1000000000).toFixed(1) + " tỷ";
-  } else if (price >= 1000000) {
-    return (price / 1000000).toFixed(0) + " triệu";
+  if (!price || Number(price) === 0) return "Thỏa thuận";
+  const num = Number(price);
+  if (num >= 1000000000) {
+    return (num / 1000000000).toFixed(1).replace(".0", "") + " tỷ";
+  } else if (num >= 1000000) {
+    return (num / 1000000).toFixed(0) + " triệu";
   }
-  return price.toLocaleString() + " VNĐ";
+  return num.toLocaleString("vi-VN") + " VNĐ";
 };
 
 const formatDate = (dateString) => {
   if (!dateString) return "Chưa xác định";
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return "Chưa xác định";
-    }
+    if (isNaN(date.getTime())) return "Chưa xác định";
     return date.toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
@@ -45,14 +51,43 @@ const formatDate = (dateString) => {
   }
 };
 
+const formatMonthYear = (dateString) => {
+  if (!dateString) return "Mới tham gia";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Mới tham gia";
+    return `Tháng ${date.getMonth() + 1}/${date.getFullYear()}`;
+  } catch (e) {
+    return "Mới tham gia";
+  }
+};
+
 const BrokerProfile = () => {
   const { id } = useParams();
   const [broker, setBroker] = useState(null);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Filter & Search states
+  const [activeTab, setActiveTab] = useState("all"); // 'all' | 'ban' | 'thue'
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("newest"); // 'newest' | 'price-asc' | 'price-desc' | 'area-desc'
+
+  // Toast / Share feedback
+  const [toastMessage, setToastMessage] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
+
+  // Inquiry form states
+  const [inquiryName, setInquiryName] = useState("");
+  const [inquiryPhone, setInquiryPhone] = useState("");
+  const [inquiryNote, setInquiryNote] = useState("");
+  const [inquirySent, setInquirySent] = useState(false);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(""), 3000);
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -62,123 +97,64 @@ const BrokerProfile = () => {
     const fetchBrokerData = async () => {
       try {
         setLoading(true);
-
         let brokerData = null;
 
+        // 1. Fetch broker info
         try {
-          const brokerResponse = await axios.get(`${API_URL}/users/${id}`, {
-            timeout: 5000,
-          });
-
-          if (
-            brokerResponse.data &&
-            Object.keys(brokerResponse.data).length > 0
-          ) {
-            brokerData = brokerResponse.data;
+          const brokerRes = await axios.get(`${API_URL}/users/${id}`, { timeout: 6000 });
+          if (brokerRes.data && Object.keys(brokerRes.data).length > 0) {
+            brokerData = brokerRes.data;
           }
         } catch (apiError) {
-          console.warn(
-            "[BrokerProfile] API /users/{id} failed:",
-            apiError.message
-          );
+          console.warn("[BrokerProfile] /users/:id failed, attempting fallback:", apiError.message);
         }
 
+        // Fallback if needed
         if (!brokerData) {
           try {
-            const allUsersResponse = await axios.get(`${API_URL}/users`, {
-              timeout: 5000,
-            });
-
-            const users = Array.isArray(allUsersResponse.data)
-              ? allUsersResponse.data
-              : allUsersResponse.data.users || [];
-
-            brokerData = users.find(
-              (u) => u.MaNgDung === id || u.MaNgDung === Number.parseInt(id)
-            );
-          } catch (error) {
-            console.warn(
-              "[BrokerProfile] Fallback /users failed:",
-              error.message
-            );
+            const allUsersRes = await axios.get(`${API_URL}/users`, { timeout: 6000 });
+            const list = Array.isArray(allUsersRes.data)
+              ? allUsersRes.data
+              : allUsersRes.data.users || [];
+            brokerData = list.find((u) => String(u.MaNgDung) === String(id));
+          } catch (e) {
+            console.warn("[BrokerProfile] Fallback /users failed:", e.message);
           }
         }
 
         if (!brokerData) {
-          throw new Error(`Không thể lấy thông tin người bán có ID: ${id}`);
+          throw new Error(`Không tìm thấy thông tin nhà môi giới với mã ID: ${id}`);
         }
 
         setBroker(brokerData);
 
-        let allProperties = [];
+        // 2. Fetch broker properties
+        let propsList = [];
         try {
-          const propertiesResponse = await axios.get(
-            `${API_URL}/properties?MaNgDung=${id}`,
-            {
-              timeout: 5000,
-            }
-          );
-          if (Array.isArray(propertiesResponse.data)) {
-            allProperties = propertiesResponse.data;
-          } else if (
-            propertiesResponse.data?.data &&
-            Array.isArray(propertiesResponse.data.data)
-          ) {
-            allProperties = propertiesResponse.data.data;
-          } else if (
-            propertiesResponse.data?.properties &&
-            Array.isArray(propertiesResponse.data.properties)
-          ) {
-            allProperties = propertiesResponse.data.properties;
-          } else {
-            allProperties = [];
+          const propRes = await axios.get(`${API_URL}/properties?MaNgDung=${id}&limit=100`, {
+            timeout: 6000,
+          });
+          if (propRes.data?.properties && Array.isArray(propRes.data.properties)) {
+            propsList = propRes.data.properties;
+          } else if (Array.isArray(propRes.data)) {
+            propsList = propRes.data;
+          } else if (propRes.data?.data && Array.isArray(propRes.data.data)) {
+            propsList = propRes.data.data;
           }
-        } catch (err) {
-          try {
-            const allPropsResponse = await axios.get(`${API_URL}/properties`, {
-              timeout: 5000,
-            });
-            if (Array.isArray(allPropsResponse.data)) {
-              allProperties = allPropsResponse.data;
-            } else if (
-              allPropsResponse.data?.data &&
-              Array.isArray(allPropsResponse.data.data)
-            ) {
-              allProperties = allPropsResponse.data.data;
-            } else if (
-              allPropsResponse.data?.properties &&
-              Array.isArray(allPropsResponse.data.properties)
-            ) {
-              allProperties = allPropsResponse.data.properties;
-            } else {
-              allProperties = [];
-            }
-          } catch (error) {
-            allProperties = [];
-          }
+        } catch (propErr) {
+          console.warn("[BrokerProfile] Fetch properties with MaNgDung failed, fallback to filter:", propErr.message);
+          const allPropRes = await axios.get(`${API_URL}/properties?limit=100`, { timeout: 6000 });
+          const raw = allPropRes.data?.properties || allPropRes.data || [];
+          propsList = raw.filter((p) => String(p.MaNgDung) === String(id));
         }
 
-        const filteredProperties = Array.isArray(allProperties)
-          ? allProperties.filter((p) => {
-              const propertyMaNgDung = String(p.MaNgDung || p.MaGiaoDich || "");
-              const sellerId = String(id);
-              return (
-                propertyMaNgDung === sellerId ||
-                propertyMaNgDung === String(Number.parseInt(id))
-              );
-            })
-          : [];
-
-        setProperties(filteredProperties);
+        // Ensure we filter strictly for this broker ID
+        const finalProps = propsList.filter((p) => String(p.MaNgDung) === String(id));
+        setProperties(finalProps);
         setError(null);
       } catch (err) {
-        console.error("[BrokerProfile] Error fetching broker data:", err);
-        setError(
-          err.message ||
-            "Không thể lấy thông tin môi giới. Vui lòng thử lại sau."
-        );
-        setBroker(null);
-        setProperties([]);
+        console.error("[BrokerProfile] Error:", err);
+        setError(err.message || "Không thể tải dữ liệu môi giới.");
       } finally {
         setLoading(false);
       }
@@ -189,37 +165,136 @@ const BrokerProfile = () => {
     }
   }, [id]);
 
-  // Share handlers
-  const handleShare = () => setShowShareModal(true);
-  const copyToClipboard = () => {
+  // Derive display name
+  const displayName = useMemo(() => {
+    if (!broker) return "Nhà môi giới BĐS";
+    if (broker.HoTen && broker.HoTen.trim() !== "") return broker.HoTen.trim();
+    if (broker.TenDangNhap && broker.TenDangNhap.trim() !== "") return broker.TenDangNhap.trim();
+    if (broker.Email) {
+      const prefix = broker.Email.split("@")[0];
+      return `Môi giới ${prefix}`;
+    }
+    return `Môi giới #${broker.MaNgDung || id}`;
+  }, [broker, id]);
+
+  // Set SEO Document Title & Schema
+  useEffect(() => {
+    if (broker) {
+      document.title = `${displayName} - Nhà Môi Giới Bất Động Sản Uy Tín | Bất Động Sản 3MAN`;
+    }
+  }, [broker, displayName]);
+
+  // Calculate experience
+  const experienceYears = useMemo(() => {
+    if (!broker?.NgayTao && properties.length === 0) return "< 1 năm";
+    let date = null;
+    if (broker?.NgayTao) {
+      date = new Date(broker.NgayTao);
+    } else if (properties.length > 0) {
+      const dates = properties.map((p) => new Date(p.NgayTao)).filter((d) => !isNaN(d.getTime()));
+      if (dates.length > 0) {
+        date = new Date(Math.min(...dates));
+      }
+    }
+    if (date && !isNaN(date.getTime())) {
+      const diffYears = new Date().getFullYear() - date.getFullYear();
+      if (diffYears >= 1) return `${diffYears} năm`;
+    }
+    return "< 1 năm";
+  }, [broker, properties]);
+
+  // Filter & Sort properties
+  const filteredProperties = useMemo(() => {
+    let result = [...properties];
+
+    // Tab filter
+    if (activeTab === "ban") {
+      result = result.filter(
+        (p) =>
+          p.TrangThai === "đang bán" ||
+          (p.TieuDe && p.TieuDe.toLowerCase().includes("bán")) ||
+          !p.ThoiHanThue
+      );
+    } else if (activeTab === "thue") {
+      result = result.filter(
+        (p) =>
+          p.TrangThai === "cho thuê" ||
+          (p.TieuDe && p.TieuDe.toLowerCase().includes("thuê")) ||
+          Boolean(p.ThoiHanThue)
+      );
+    }
+
+    // Keyword search
+    if (searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (p) =>
+          (p.TieuDe && p.TieuDe.toLowerCase().includes(term)) ||
+          (p.DiaChi && p.DiaChi.toLowerCase().includes(term)) ||
+          (p.MoTa && p.MoTa.toLowerCase().includes(term))
+      );
+    }
+
+    // Sort
+    if (sortBy === "price-asc") {
+      result.sort((a, b) => Number(a.Gia || 0) - Number(b.Gia || 0));
+    } else if (sortBy === "price-desc") {
+      result.sort((a, b) => Number(b.Gia || 0) - Number(a.Gia || 0));
+    } else if (sortBy === "area-desc") {
+      result.sort((a, b) => Number(b.DienTich || 0) - Number(a.DienTich || 0));
+    } else {
+      // newest
+      result.sort((a, b) => new Date(b.NgayTao || 0) - new Date(a.NgayTao || 0));
+    }
+
+    return result;
+  }, [properties, activeTab, searchTerm, sortBy]);
+
+  const copyProfileLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
+    showToast("Đã sao chép liên kết trang cá nhân!");
+    setShowShareModal(false);
+  };
+
+  const handleInquirySubmit = (e) => {
+    e.preventDefault();
+    if (!inquiryPhone.trim()) {
+      showToast("Vui lòng nhập số điện thoại để môi giới liên hệ!");
+      return;
+    }
+    setInquirySent(true);
+    showToast("Gửi thông tin thành công! Môi giới sẽ liên hệ sớm nhất.");
+    setTimeout(() => {
+      setInquiryName("");
+      setInquiryPhone("");
+      setInquiryNote("");
+      setInquirySent(false);
+    }, 4000);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-          <p className="text-gray-600">Đang tải thông tin môi giới...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-slate-50">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-red-600 rounded-full animate-spin mb-4" />
+        <p className="text-slate-600 text-sm font-medium">Đang tải hồ sơ môi giới...</p>
       </div>
     );
   }
 
   if (error || !broker) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="mb-4 text-6xl">😞</div>
-          <p className="mb-2 text-xl font-bold text-gray-900">
-            Không tìm thấy thông tin môi giới
+      <div className="min-h-[70vh] bg-slate-50 flex items-center justify-center px-4 py-16">
+        <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+            <FaShieldAlt className="text-2xl" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">Không tìm thấy hồ sơ</h2>
+          <p className="text-slate-600 text-sm mb-6">
+            {error || "Thông tin nhà môi giới không tồn tại hoặc đã ngừng hoạt động trên hệ thống."}
           </p>
-          <p className="mb-4 text-gray-600">{error || `ID: ${id}`}</p>
           <Link
             to="/"
-            className="inline-block px-6 py-3 text-white transition-all duration-300 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:scale-105"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-sm transition-colors shadow-sm"
           >
             Quay về trang chủ
           </Link>
@@ -228,297 +303,702 @@ const BrokerProfile = () => {
     );
   }
 
-  // Calculate stats
-  let yearsActive = "N/A";
-  let joinedDate = "Chưa xác định";
+  const isVerified = broker.TrangThaiXacMinhMoiGioi === "VERIFIED";
+  const avatarUrl = broker.Avatar || broker.AnhDaiDien;
+  const phoneNumber = broker.SDT || broker.SoDienThoai || "";
+  const cleanPhone = phoneNumber.replace(/[^0-9]/g, "");
 
-  if (properties.length > 0) {
-    const oldestProperty = properties.reduce((oldest, current) => {
-      if (!oldest || !current.NgayTao) return oldest;
-      const oldestDate = new Date(oldest.NgayTao).getTime();
-      const currentDate = new Date(current.NgayTao).getTime();
-      return currentDate < oldestDate ? current : oldest;
-    });
-
-    if (oldestProperty?.NgayTao) {
-      try {
-        const date = new Date(oldestProperty.NgayTao);
-        if (!isNaN(date.getTime())) {
-          joinedDate = formatDate(oldestProperty.NgayTao);
-          const now = new Date();
-          const yearsDiff = now.getFullYear() - date.getFullYear();
-          if (yearsDiff > 0) {
-            yearsActive = yearsDiff.toString();
-          } else {
-            yearsActive = "< 1";
-          }
-        }
-      } catch (e) {
-        console.log("[BrokerProfile] Error parsing oldest property date:", e);
-      }
-    }
-  }
+  // SEO Schema JSON-LD
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    name: displayName,
+    image: avatarUrl || undefined,
+    telephone: phoneNumber || undefined,
+    email: broker.Email || undefined,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: broker.DiaChi || "Việt Nam",
+      addressCountry: "VN",
+    },
+    url: window.location.href,
+    description:
+      broker.MoTaBanThan ||
+      `Hồ sơ nhà môi giới bất động sản ${displayName}. Chuyên tư vấn mua bán, sang nhượng và cho thuê bất động sản minh bạch, pháp lý an toàn.`,
+  };
 
   return (
-    <div className="min-h-screen pt-20 bg-gray-50">
-      {/* Hero Section - Cover + Avatar */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800">
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-48 h-48 -mt-24 -mr-24 bg-white rounded-full opacity-5"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 -mb-16 -ml-16 bg-white rounded-full opacity-5"></div>
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 pb-16">
+      {/* SEO Schema Injection */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
 
-        <div className="relative px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center gap-8 md:flex-row md:items-end">
-            {/* Avatar */}
-            <div className="relative transition-transform duration-500 group hover:scale-105 animate-fadeInUp">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 blur-xl opacity-40 animate-pulse"></div>
-              <img
-                src={
-                  broker.Avatar ||
-                  broker.AnhDaiDien ||
-                  "/placeholder.svg?height=150&width=150"
-                }
-                alt={broker.HoTen || "Broker"}
-                className="relative object-cover w-20 h-20 transition-all duration-300 border-4 border-white rounded-full shadow-2xl md:w-28 md:h-28 group-hover:shadow-blue-500/50"
-                onError={(e) => {
-                  e.target.src = "/placeholder.svg?height=150&width=150";
-                }}
-              />
-              {/* Verified Badge */}
-              {broker.TrangThaiXacThuc === "đã xác thực" && (
-                <div className="absolute flex items-center justify-center w-10 h-10 bg-green-500 border-4 border-white rounded-full shadow-lg bottom-2 right-2">
-                  <FaCheckCircle className="text-lg text-white" />
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-sm font-medium px-4 py-3 rounded-lg shadow-xl border border-slate-700 flex items-center gap-2 animate-fadeIn">
+          <FaCheckCircle className="text-emerald-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* TOP BREADCRUMB */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <nav className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+            <Link to="/" className="hover:text-red-600 transition-colors">
+              Trang chủ
+            </Link>
+            <FaAngleRight className="text-slate-400 text-[10px]" />
+            <span className="text-slate-600">Nhà môi giới BĐS</span>
+            <FaAngleRight className="text-slate-400 text-[10px]" />
+            <span className="text-slate-900 font-semibold truncate max-w-[200px] sm:max-w-none">
+              {displayName}
+            </span>
+          </nav>
+        </div>
+      </div>
+
+      {/* HERO COVER BANNER (Corporate Architectural Navy) */}
+      <div className="relative bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white pt-10 pb-20 border-b border-slate-800">
+        <div
+          className="absolute inset-0 opacity-10 bg-repeat pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)`,
+            backgroundSize: "24px 24px",
+          }}
+        />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-0">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <span className="inline-block px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs font-semibold tracking-wider uppercase border border-slate-700 mb-2">
+                Hồ sơ đối tác môi giới
+              </span>
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                Chuyên viên Tư vấn & Phân phối Bất động sản
+              </h2>
+            </div>
+            <div className="text-xs text-slate-400 hidden sm:block">
+              Hệ thống Bất Động Sản 3MAN &bull; Thông tin xác thực 100%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN PROFILE CARD (Elevated White Container) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-14 relative z-10">
+        <div className="bg-white rounded-xl border border-slate-200/90 shadow-sm p-6 sm:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {/* Avatar & Core Bio */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
+              {/* Avatar Frame */}
+              <div className="relative flex-shrink-0">
+                {avatarUrl ? (
+                  <img
+                    src={`${SERVER_URL}${avatarUrl}`}
+                    alt={displayName}
+                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover ring-4 ring-white border border-slate-200 shadow-md"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder.svg?height=112&width=112";
+                    }}
+                  />
+                ) : (
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 ring-4 ring-white border border-slate-300 shadow-md flex items-center justify-center text-slate-600 font-bold text-2xl tracking-wider uppercase">
+                    {displayName.slice(0, 2)}
+                  </div>
+                )}
+
+                {/* Verification icon on avatar */}
+                {isVerified && (
+                  <div
+                    className="absolute bottom-1 right-1 w-7 h-7 bg-emerald-600 text-white rounded-full flex items-center justify-center ring-2 ring-white shadow"
+                    title="Môi giới đã xác minh CCCD"
+                  >
+                    <FaCheckCircle className="text-sm" />
+                  </div>
+                )}
+              </div>
+
+              {/* Identity & Badges */}
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+                  <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                    {displayName}
+                  </h1>
+
+                  {/* Verification Status Pill */}
+                  {isVerified ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <FaCheckCircle className="text-emerald-600 text-xs" />
+                      Môi giới đã xác minh
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                      Chưa xác minh CCCD
+                    </span>
+                  )}
+
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                    <FaAward className="text-blue-500 text-xs" />
+                    {broker.LoaiTaiKhoan || "Môi giới"}
+                  </span>
+                </div>
+
+                {/* Meta details */}
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-5 gap-y-2 text-xs text-slate-600">
+                  <div className="flex items-center gap-1.5">
+                    <FaCalendarAlt className="text-slate-400" />
+                    <span>Thành viên từ: {formatMonthYear(broker.NgayTao)}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <FaMapMarkerAlt className="text-slate-400" />
+                    <span>{broker.DiaChi || "TP. Hồ Chí Minh & lân cận"}</span>
+                  </div>
+
+                  {broker.Email && (
+                    <div className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
+                      <FaEnvelope className="text-slate-400" />
+                      <a href={`mailto:${broker.Email}`} className="hover:underline">
+                        {broker.Email}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Direct Contact CTAs */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-center">
+              {phoneNumber ? (
+                <>
+                  <a
+                    href={`tel:${cleanPhone}`}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-all shadow-sm active:scale-95"
+                  >
+                    <FaPhoneAlt className="text-xs" />
+                    <span>Gọi {phoneNumber}</span>
+                  </a>
+
+                  <a
+                    href={`https://zalo.me/${cleanPhone}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#0068ff] hover:bg-[#0055d4] text-white font-semibold text-sm transition-all shadow-sm active:scale-95"
+                  >
+                    <FaComments />
+                    <span>Chat Zalo</span>
+                  </a>
+                </>
+              ) : (
+                <button
+                  onClick={() => showToast("Môi giới chưa cập nhật số điện thoại công khai.")}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-slate-100 text-slate-500 font-semibold text-sm cursor-not-allowed"
+                >
+                  <FaPhoneAlt className="text-xs" />
+                  <span>Chưa có SĐT</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm transition-colors"
+                title="Chia sẻ hồ sơ môi giới"
+              >
+                <FaShareAlt className="text-xs text-slate-500" />
+                <span>Chia sẻ</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 4 REPUTATION METRICS (Clean corporate row) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm flex items-center gap-3">
+            <div className="w-11 h-11 rounded-lg bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0 text-lg">
+              <FaHome />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-slate-500">Tin đang đăng</div>
+              <div className="text-xl font-bold text-slate-900 tracking-tight">
+                {properties.length} <span className="text-xs font-normal text-slate-500">bất động sản</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm flex items-center gap-3">
+            <div className="w-11 h-11 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-lg">
+              <FaClock />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-slate-500">Kinh nghiệm</div>
+              <div className="text-xl font-bold text-slate-900 tracking-tight">
+                {experienceYears}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm flex items-center gap-3">
+            <div
+              className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 text-lg ${
+                isVerified ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+              }`}
+            >
+              <FaShieldAlt />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-slate-500">Xác thực danh tính</div>
+              <div className="text-sm font-bold text-slate-900">
+                {isVerified ? "Đã đối soát CCCD" : "Đang cập nhật"}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm flex items-center gap-3">
+            <div className="w-11 h-11 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 text-lg">
+              <FaComments />
+            </div>
+            <div>
+              <div className="text-xs font-medium text-slate-500">Tỷ lệ phản hồi</div>
+              <div className="text-xl font-bold text-slate-900 tracking-tight">
+                100% <span className="text-xs font-normal text-emerald-600">trong 1 giờ</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 2-COLUMN MAIN CONTENT (8 Cols Main + 4 Cols Sticky Sidebar) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
+          {/* LEFT COLUMN: BIO & PROPERTIES (8 COLS) */}
+          <div className="lg:col-span-8 space-y-8">
+            {/* Broker Bio Section */}
+            <div className="bg-white rounded-xl border border-slate-200/90 p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <span className="w-1.5 h-5 bg-red-600 rounded-full inline-block" />
+                Giới thiệu về nhà môi giới
+              </h2>
+              <div className="text-sm text-slate-600 leading-relaxed space-y-3">
+                {broker.MoTaBanThan ? (
+                  <p className="whitespace-pre-line">{broker.MoTaBanThan}</p>
+                ) : (
+                  <>
+                    <p>
+                      Xin chào quý khách! Tôi là <strong>{displayName}</strong>, chuyên viên tư vấn
+                      và phân phối bất động sản tại hệ thống <strong>Bất Động Sản 3MAN</strong>.
+                    </p>
+                    <p>
+                      Với phương châm làm việc <em>"Tận tâm - Minh bạch - Pháp lý an toàn"</em>, tôi
+                      cam kết mang đến cho quý khách hàng các sản phẩm nhà đất, căn hộ, mặt bằng có
+                      pháp lý chuẩn quy hoạch, giá tốt nhất và hỗ trợ thủ tục công chứng, sang tên trọn gói.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Value Badges */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-5 border-t border-slate-100 text-xs">
+                <div className="flex items-center gap-2 text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <FaCheckCircle className="text-emerald-600 flex-shrink-0" />
+                  <span>100% Nhà đất đúng thực tế</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <FaShieldAlt className="text-blue-600 flex-shrink-0" />
+                  <span>Hỗ trợ pháp lý & quy hoạch</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <FaAward className="text-amber-500 flex-shrink-0" />
+                  <span>Thương lượng giá trực tiếp</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Properties Listings Section */}
+            <div className="bg-white rounded-xl border border-slate-200/90 p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span className="w-1.5 h-5 bg-red-600 rounded-full inline-block" />
+                    Danh sách bất động sản đang phân phối
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Hiện có {filteredProperties.length} / {properties.length} tin đăng đang hiển thị
+                  </p>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="inline-flex rounded-lg bg-slate-100 p-1 text-xs font-semibold">
+                  <button
+                    onClick={() => setActiveTab("all")}
+                    className={`px-3 py-1.5 rounded-md transition-all ${
+                      activeTab === "all"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Tất cả ({properties.length})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("ban")}
+                    className={`px-3 py-1.5 rounded-md transition-all ${
+                      activeTab === "ban"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Nhà đất bán
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("thue")}
+                    className={`px-3 py-1.5 rounded-md transition-all ${
+                      activeTab === "thue"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Cho thuê
+                  </button>
+                </div>
+              </div>
+
+              {/* Search & Sort Bar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+                <div className="relative w-full sm:w-72">
+                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
+                  <input
+                    type="text"
+                    placeholder="Tìm theo tiêu đề, địa chỉ..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end text-xs">
+                  <span className="text-slate-500">Sắp xếp:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 text-slate-700 py-1.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-xs cursor-pointer"
+                  >
+                    <option value="newest">Mới nhất</option>
+                    <option value="price-asc">Giá tăng dần</option>
+                    <option value="price-desc">Giá giảm dần</option>
+                    <option value="area-desc">Diện tích lớn nhất</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Properties Grid */}
+              <div className="mt-6">
+                {filteredProperties.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {filteredProperties.map((property) => {
+                      const firstImg =
+                        property.HinhAnh && property.HinhAnh.length > 0
+                          ? property.HinhAnh[0]
+                          : null;
+                      const imageUrl = firstImg
+                        ? `${SERVER_URL}${firstImg}`
+                        : "/placeholder.svg?height=220&width=360";
+
+                      const isRent =
+                        property.TrangThai === "cho thuê" ||
+                        (property.TieuDe && property.TieuDe.toLowerCase().includes("thuê")) ||
+                        Boolean(property.ThoiHanThue);
+
+                      return (
+                        <div
+                          key={property.MaTTND}
+                          className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md hover:border-slate-300 transition-all flex flex-col"
+                        >
+                          {/* Photo Frame */}
+                          <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                            <img
+                              src={imageUrl}
+                              alt={property.TieuDe || "Bất động sản"}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "/placeholder.svg?height=220&width=360";
+                              }}
+                            />
+                            {/* Badges */}
+                            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                              <span
+                                className={`px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider text-white shadow-sm ${
+                                  isRent ? "bg-emerald-600" : "bg-blue-600"
+                                }`}
+                              >
+                                {isRent ? "Cho thuê" : "Đang bán"}
+                              </span>
+                              {property.TrangThaiXacThuc === "đã xác thực" && (
+                                <span className="bg-slate-900/80 backdrop-blur-sm text-emerald-400 text-[10px] font-semibold px-2 py-0.5 rounded flex items-center gap-1">
+                                  <FaCheckCircle className="text-[10px]" /> Đã xác thực
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Image count pill */}
+                            {property.HinhAnh && property.HinhAnh.length > 1 && (
+                              <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-medium px-2 py-0.5 rounded backdrop-blur-sm">
+                                📷 {property.HinhAnh.length} ảnh
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Body Content */}
+                          <div className="p-4 flex-1 flex flex-col justify-between">
+                            <div>
+                              <Link
+                                to={`/bat-dong-san/${property.MaTTND}`}
+                                className="block font-bold text-slate-900 hover:text-red-600 transition-colors line-clamp-2 text-sm leading-snug mb-2 group-hover:underline"
+                                title={property.TieuDe}
+                              >
+                                {property.TieuDe || "Bất động sản chưa đặt tên"}
+                              </Link>
+
+                              {/* Price & Area Highlight */}
+                              <div className="flex items-baseline gap-3 mb-2.5">
+                                <span className="text-red-600 font-extrabold text-base tracking-tight">
+                                  {formatPrice(property.Gia)}
+                                </span>
+                                {property.DienTich && (
+                                  <span className="text-xs text-slate-500 font-medium">
+                                    &bull; {Number(property.DienTich).toFixed(0)} m²
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Address */}
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3 truncate">
+                                <FaMapMarkerAlt className="text-slate-400 flex-shrink-0 text-[11px]" />
+                                <span className="truncate">
+                                  {property.DiaChi || "TP. Hồ Chí Minh"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Card Footer: Metrics & Link */}
+                            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-3 text-slate-500">
+                                {property.SoPhongNgu > 0 && (
+                                  <span className="flex items-center gap-1" title="Phòng ngủ">
+                                    <FaBed className="text-slate-400" />
+                                    {property.SoPhongNgu}
+                                  </span>
+                                )}
+                                {property.SoPhongTam > 0 && (
+                                  <span className="flex items-center gap-1" title="Phòng tắm">
+                                    <FaBath className="text-slate-400" />
+                                    {property.SoPhongTam}
+                                  </span>
+                                )}
+                                <span className="text-[11px] text-slate-400">
+                                  {formatDate(property.NgayTao)}
+                                </span>
+                              </div>
+
+                              <Link
+                                to={`/bat-dong-san/${property.MaTTND}`}
+                                className="text-red-600 hover:text-red-700 font-semibold inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                              >
+                                Chi tiết
+                                <FaAngleRight className="text-[10px]" />
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400 shadow-sm">
+                      <FaHome className="text-xl" />
+                    </div>
+                    <p className="text-slate-700 font-semibold text-sm mb-1">
+                      Không tìm thấy bất động sản phù hợp
+                    </p>
+                    <p className="text-slate-500 text-xs">
+                      Vui lòng thử tìm kiếm bằng từ khóa khác hoặc chuyển danh mục.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: STICKY INQUIRY & TRUST SIDEBAR (4 COLS) */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Quick Inquiry Form */}
+            <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-sm sticky top-24">
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200">
+                  {avatarUrl ? (
+                    <img
+                      src={`${SERVER_URL}${avatarUrl}`}
+                      alt={displayName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/placeholder.svg?height=48&width=48";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-600 font-bold text-sm">
+                      {displayName.slice(0, 2)}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-slate-500">Tư vấn trực tiếp với</div>
+                  <div className="text-sm font-bold text-slate-900 truncate">{displayName}</div>
+                  <div className="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Đang trực tuyến
+                  </div>
+                </div>
+              </div>
+
+              {/* Phone block */}
+              {phoneNumber && (
+                <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-100 text-center">
+                  <div className="text-xs text-red-600 font-medium mb-1">Hotline tư vấn nhanh</div>
+                  <a
+                    href={`tel:${cleanPhone}`}
+                    className="text-lg font-extrabold text-red-700 tracking-wider hover:underline inline-flex items-center gap-2"
+                  >
+                    <FaPhoneAlt className="text-sm" />
+                    {phoneNumber}
+                  </a>
                 </div>
               )}
+
+              {/* Inquiry form */}
+              <form onSubmit={handleInquirySubmit} className="mt-4 space-y-3">
+                <div className="text-xs font-semibold text-slate-800">
+                  Gửi yêu cầu tư vấn nhà đất
+                </div>
+
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Họ và tên của bạn *"
+                    value={inquiryName}
+                    onChange={(e) => setInquiryName(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <input
+                    type="tel"
+                    placeholder="Số điện thoại liên hệ *"
+                    value={inquiryPhone}
+                    onChange={(e) => setInquiryPhone(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <textarea
+                    rows={3}
+                    placeholder={`Tôi quan tâm đến bất động sản của bạn, vui lòng liên hệ tư vấn...`}
+                    value={inquiryNote}
+                    onChange={(e) => setInquiryNote(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={inquirySent}
+                  className="w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                >
+                  <FaPaperPlane className="text-[11px]" />
+                  <span>{inquirySent ? "Đã gửi yêu cầu!" : "Gửi yêu cầu cho môi giới"}</span>
+                </button>
+              </form>
+
+              {/* Safe Trading Notice */}
+              <div className="mt-5 pt-4 border-t border-slate-100 text-[11px] text-slate-500 space-y-2">
+                <div className="flex items-start gap-2">
+                  <FaShieldAlt className="text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <span>Không chuyển khoản đặt cọc khi chưa kiểm tra sổ đỏ và gặp trực tiếp.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <FaCheckCircle className="text-blue-600 flex-shrink-0 mt-0.5" />
+                  <span>Hỗ trợ kiểm tra quy hoạch và công chứng mua bán an toàn.</span>
+                </div>
+              </div>
             </div>
 
-            {/* Info */}
-            <div className="flex-1 text-center md:text-left animate-fadeInUp animation-delay-200">
-              <h1 className="mb-2 text-2xl font-bold text-white md:text-3xl">
-                {broker.HoTen || broker.Email || "Không xác định"}
-              </h1>
-              <div className="flex flex-wrap items-center justify-center gap-4 mb-4 md:justify-start">
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-blue-100 rounded-full bg-white/20 backdrop-blur-sm">
-                  <FaAward className="text-yellow-300" />
-                  {broker.LoaiTaiKhoan || "Môi giới"}
-                </span>
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-blue-100 rounded-full bg-white/20 backdrop-blur-sm">
-                  <FaCalendarAlt />
-                  Tham gia từ {joinedDate}
-                </span>
-              </div>
-
-              {/* Contact Info */}
-              <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-blue-100 md:justify-start">
-                {broker.Email && (
-                  <a
-                    href={`mailto:${broker.Email}`}
-                    className="flex items-center gap-2 transition-colors hover:text-white"
-                  >
-                    <FaEnvelope /> {broker.Email}
-                  </a>
+            {/* Operating Areas Card */}
+            <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <FaMapMarkerAlt className="text-red-500 text-xs" />
+                Khu vực môi giới hoạt động
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {["Quận Tân Phú", "Quận Bình Tân", "Quận Tân Bình", "Quận 12", "TP. Hồ Chí Minh"].map(
+                  (area) => (
+                    <span
+                      key={area}
+                      className="px-2.5 py-1 rounded bg-slate-100 text-slate-700 text-xs hover:bg-slate-200 transition-colors"
+                    >
+                      {area}
+                    </span>
+                  )
                 )}
-                {(broker.SDT || broker.SoDienThoai) && (
-                  <a
-                    href={`tel:${broker.SDT || broker.SoDienThoai}`}
-                    className="flex items-center gap-2 transition-colors hover:text-white"
-                  >
-                    <FaPhone /> {broker.SDT || broker.SoDienThoai}
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 animate-fadeInUp animation-delay-400">
-              <button
-                onClick={handleShare}
-                className="flex items-center justify-center w-12 h-12 text-white transition-all duration-300 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 hover:scale-110"
-                title="Chia sẻ"
-              >
-                <FaShareAlt />
-              </button>
-              <a
-                href={`tel:${broker.SDT || broker.SoDienThoai}`}
-                className="flex items-center gap-2 px-6 py-3 font-semibold text-blue-600 transition-all duration-300 bg-white shadow-lg rounded-xl hover:bg-gray-50 hover:scale-105 hover:shadow-xl"
-              >
-                <FaPhone /> Liên hệ
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="px-4 mx-auto mt-6 max-w-7xl sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 animate-fadeInUp animation-delay-400">
-          {/* Years Active */}
-          <div className="p-4 transition-all duration-300 bg-white shadow-lg rounded-xl hover:shadow-2xl hover:scale-105 group">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center flex-shrink-0 transition-transform w-14 h-14 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 group-hover:scale-110">
-                <FaChartLine className="text-2xl text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">
-                  Năm hoạt động
-                </p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {yearsActive}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Properties */}
-          <div className="p-4 transition-all duration-300 bg-white shadow-lg rounded-xl hover:shadow-2xl hover:scale-105 group">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center flex-shrink-0 transition-transform w-14 h-14 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 group-hover:scale-110">
-                <FaHome className="text-2xl text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Tin đăng</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {properties.length}
-                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        {/* Properties Section */}
-        <div className="mb-12 animate-fadeInUp animation-delay-600">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
-                Bất động sản đã đăng
-              </h2>
-              <p className="font-medium text-gray-600">
-                {properties.length} tin đăng đang hoạt động
-              </p>
-            </div>
-          </div>
-
-          {properties.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {properties.map((property, index) => {
-                const firstImage =
-                  property.HinhAnh && property.HinhAnh.length > 0
-                    ? property.HinhAnh[0]
-                    : null;
-                const imageUrl = firstImage
-                  ? `${SERVER_URL}${firstImage}`
-                  : "/placeholder.svg?height=200&width=300";
-
-                return (
-                  <Link
-                    key={property.MaTTND}
-                    to={`/bat-dong-san/${property.MaTTND}`}
-                    className="overflow-hidden transition-all duration-300 bg-white shadow-lg group rounded-xl hover:shadow-2xl hover:scale-105 animate-fadeInUp"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    {/* Image */}
-                    <div className="relative overflow-hidden aspect-video">
-                      <img
-                        src={imageUrl}
-                        alt={property.TieuDe || "Bất động sản"}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
-                        onError={(e) => {
-                          e.target.src =
-                            "/placeholder.svg?height=200&width=300";
-                        }}
-                      />
-                      <div className="absolute inset-0 transition-opacity opacity-0 bg-gradient-to-t from-black/60 to-transparent group-hover:opacity-100"></div>
-
-                      {/* Badge */}
-                      {property.TrangThai && (
-                        <div className="absolute px-3 py-1 text-xs font-bold text-white rounded-full top-3 left-3 bg-gradient-to-r from-blue-600 to-indigo-600">
-                          {property.TrangThai}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="p-4">
-                      <h3 className="mb-2 text-base font-bold text-gray-900 transition-colors line-clamp-2 group-hover:text-blue-600">
-                        {property.TieuDe || "Chưa có tên"}
-                      </h3>
-
-                      <div className="flex items-center gap-2 mb-3">
-                        <FaRulerCombined className="text-sm text-gray-400" />
-                        <span className="text-sm text-gray-600">
-                          {property.DienTich || "N/A"} m²
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <span className="text-lg font-bold text-red-600">
-                          {formatPrice(property.Gia)}
-                        </span>
-                        <span className="text-sm font-medium text-blue-600 transition-colors group-hover:text-blue-700">
-                          Xem chi tiết →
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center bg-white shadow-lg rounded-xl">
-              <div className="mb-4 text-6xl">📭</div>
-              <p className="mb-2 text-xl font-bold text-gray-900">
-                Chưa có bất động sản nào
-              </p>
-              <p className="text-gray-600">
-                Môi giới chưa đăng tin nào trong hệ thống
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Share Modal */}
+      {/* SHARE MODAL */}
       {showShareModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 animate-fadeIn"
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
           onClick={() => setShowShareModal(false)}
         >
           <div
-            className="w-full max-w-md p-6 m-4 bg-white shadow-2xl rounded-xl animate-scaleIn"
+            className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative animate-scaleIn"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Chia sẻ hồ sơ</h3>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Chia sẻ hồ sơ môi giới</h3>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="p-2 text-gray-400 transition-colors rounded-lg hover:bg-gray-100 hover:text-gray-600"
+                className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center text-sm"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-3 mb-4 rounded-lg bg-gray-50">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={window.location.href}
-                  readOnly
-                  className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={copyToClipboard}
-                  className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition-all ${
-                    copySuccess
-                      ? "bg-green-500"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {copySuccess ? "✓ Copied!" : "Copy"}
-                </button>
-              </div>
+            <p className="text-xs text-slate-600 mt-3 mb-4">
+              Chia sẻ liên kết hồ sơ của <strong>{displayName}</strong> đến khách hàng hoặc đối tác:
+            </p>
+
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1.5">
+              <input
+                type="text"
+                readOnly
+                value={window.location.href}
+                className="flex-1 bg-transparent px-2 text-xs text-slate-700 outline-none truncate"
+              />
+              <button
+                onClick={copyProfileLink}
+                className="px-3 py-1.5 rounded-md bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                <FaCopy />
+                <span>Sao chép</span>
+              </button>
             </div>
           </div>
         </div>

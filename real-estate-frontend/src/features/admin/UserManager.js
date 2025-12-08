@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaSearch,
   FaEdit,
@@ -9,9 +9,6 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaUsers,
-  FaFilter,
-  FaSpinner,
-  FaExclamationTriangle,
   FaCheckCircle,
   FaUserCircle,
   FaShieldAlt,
@@ -21,28 +18,49 @@ import {
 import axios from "axios";
 import { API_URL } from "../../services/api";
 
-// Account types
+// Cấu hình nhãn và style vai trò (Enterprise Corporate Badges)
 const ACCOUNT_TYPES = [
-  { value: "admin", label: "Admin", color: "red", icon: FaShieldAlt },
-  { value: "thường", label: "Thường", color: "gray", icon: FaUserCircle },
-  { value: "chủ đầu tư", label: "Chủ đầu tư", color: "purple", icon: FaUsers },
-  { value: "môi giới", label: "Môi giới", color: "blue", icon: FaUsers },
+  {
+    value: "admin",
+    label: "Admin",
+    badgeStyle: "bg-purple-50 text-purple-700 border-purple-200",
+    icon: FaShieldAlt,
+  },
+  {
+    value: "thường",
+    label: "Thường",
+    badgeStyle: "bg-slate-100 text-slate-700 border-slate-200",
+    icon: FaUserCircle,
+  },
+  {
+    value: "chủ đầu tư",
+    label: "Chủ đầu tư",
+    badgeStyle: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    icon: FaUsers,
+  },
+  {
+    value: "môi giới",
+    label: "Môi giới",
+    badgeStyle: "bg-blue-50 text-blue-700 border-blue-200",
+    icon: FaUsers,
+  },
 ];
 
-// Status types
+// Cấu hình trạng thái tài khoản (Chỉ gồm Mở và Khóa)
 const STATUS_TYPES = [
   {
     value: "hoạt động",
-    label: "Hoạt động",
-    color: "green",
+    label: "Mở",
+    badgeStyle: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dotColor: "bg-emerald-500",
     icon: FaCheckCircle,
   },
-  { value: "khóa", label: "Khóa", color: "red", icon: FaBan },
   {
-    value: "chờ xác thực",
-    label: "Chờ xác thực",
-    color: "yellow",
-    icon: FaClock,
+    value: "khóa",
+    label: "Khóa",
+    badgeStyle: "bg-rose-50 text-rose-700 border-rose-200",
+    dotColor: "bg-rose-500",
+    icon: FaBan,
   },
 ];
 
@@ -60,7 +78,6 @@ const UserManager = () => {
     totalPages: 0,
   });
 
-  // Fetch users
   const fetchUsers = async (page = 1, search = "") => {
     try {
       setLoading(true);
@@ -78,14 +95,12 @@ const UserManager = () => {
 
       setUsers(response.data.users);
       setPagination(response.data.pagination);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách người dùng:", error);
-      if (error.response?.status === 403) {
-        setError(
-          "Không có quyền truy cập. Vui lòng đăng nhập với tài khoản admin."
-        );
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách tài khoản:", err);
+      if (err.response?.status === 403) {
+        setError("Không có quyền truy cập. Vui lòng đăng nhập với tài khoản admin.");
       } else {
-        setError("Không thể tải danh sách người dùng. Vui lòng thử lại sau.");
+        setError("Không thể tải danh sách tài khoản. Vui lòng thử lại sau.");
       }
     } finally {
       setLoading(false);
@@ -142,16 +157,12 @@ const UserManager = () => {
         fetchUsers(pagination.page, searchTerm);
         setEditingUser(null);
 
-        // Show success toast
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       }
-    } catch (error) {
-      console.error("Lỗi khi cập nhật người dùng:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.";
-      alert(errorMessage);
+    } catch (err) {
+      console.error("Lỗi khi cập nhật người dùng:", err);
+      alert(err.response?.data?.message || "Có lỗi xảy ra khi cập nhật. Vui lòng thử lại.");
     }
   };
 
@@ -166,17 +177,16 @@ const UserManager = () => {
   };
 
   const getStatusInfo = (value) => {
-    return STATUS_TYPES.find((type) => type.value === value) || STATUS_TYPES[0];
+    if (value === "khóa") return STATUS_TYPES[1];
+    return STATUS_TYPES[0]; // Mặc định là "Mở"
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96 animate-fadeIn">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">
-            Đang tải dữ liệu...
-          </p>
+      <div className="flex items-center justify-center h-80">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+          <p className="text-xs font-medium text-slate-500">Đang tải danh sách tài khoản...</p>
         </div>
       </div>
     );
@@ -184,222 +194,163 @@ const UserManager = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-96 animate-fadeIn">
-        <div className="flex items-start gap-3 p-6 bg-red-50 border-l-4 border-red-500 rounded-lg shadow-lg max-w-md">
-          <FaExclamationTriangle className="text-2xl text-red-500 flex-shrink-0 mt-1" />
-          <div>
-            <h3 className="text-lg font-bold text-red-700 mb-1">
-              Có lỗi xảy ra
-            </h3>
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        </div>
+      <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
+        {error}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fadeInUp">
-      {/* Success Toast */}
+    <div className="space-y-5">
+      {/* Toast thông báo lưu thành công */}
       {saveSuccess && (
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-6 py-4 bg-green-500 text-white rounded-lg shadow-2xl animate-slideInRight">
-          <FaCheckCircle className="text-2xl" />
-          <div>
-            <p className="font-bold">Cập nhật thành công!</p>
-            <p className="text-sm">Thông tin người dùng đã được lưu</p>
-          </div>
+        <div className="fixed top-20 right-6 z-50 flex items-center gap-2.5 px-4 py-3 bg-emerald-600 text-white rounded-lg shadow-lg text-xs font-semibold animate-fadeIn">
+          <FaCheckCircle className="text-base" />
+          <span>Cập nhật thông tin tài khoản thành công!</span>
         </div>
       )}
 
-      {/* Header Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between animate-fadeInUp">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
-            <FaUsers className="text-xl text-white" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Quản lý người dùng
-            </h2>
-            <p className="text-sm text-gray-500">
-              Tổng cộng:{" "}
-              <span className="font-bold text-purple-600">
-                {pagination.total}
-              </span>{" "}
-              người dùng
-            </p>
-          </div>
+      {/* 1. Header & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+            Quản lý tài khoản
+          </h2>
+          <p className="text-xs text-slate-500">
+            Tổng số: <span className="font-semibold text-slate-800">{pagination.total}</span> tài khoản trên hệ thống
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-700 transition-all duration-300 bg-white border-2 border-gray-300 rounded-xl hover:border-purple-400 hover:scale-105 active:scale-95">
-            <FaFilter />
-            <span>Bộ lọc</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search Section */}
-      <div className="animate-fadeInUp" style={{ animationDelay: "100ms" }}>
-        <form onSubmit={handleSearch} className="relative">
-          <FaSearch className="absolute text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo tên, email, số điện thoại..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full py-3 pl-12 pr-32 text-sm font-medium text-gray-700 transition-all duration-300 bg-white border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 focus:outline-none hover:border-purple-400"
-          />
+        {/* Thanh tìm kiếm chuẩn SEO / Enterprise */}
+        <form onSubmit={handleSearch} className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-80">
+            <FaSearch className="absolute text-slate-400 left-3 top-1/2 -translate-y-1/2 text-xs" />
+            <input
+              type="text"
+              placeholder="Tìm theo tên, email, số điện thoại..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors shadow-2xs"
+            />
+          </div>
           <button
             type="submit"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2 text-sm font-bold text-white transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg hover:shadow-lg hover:scale-105 active:scale-95"
+            className="px-3.5 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-xs flex-shrink-0"
           >
             Tìm kiếm
           </button>
         </form>
       </div>
 
-      {/* Stats Cards */}
-      <div
-        className="grid grid-cols-1 gap-4 md:grid-cols-3 animate-fadeInUp"
-        style={{ animationDelay: "200ms" }}
-      >
-        <div className="p-4 bg-white border-2 border-green-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
-              <FaCheckCircle className="text-2xl text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-600">
-                Đang hoạt động
-              </p>
-              <p className="text-2xl font-bold text-gray-800">
-                {users.filter((u) => u.TrangThai === "hoạt động").length}
-              </p>
-            </div>
+      {/* 2. Thống kê trạng thái tài khoản (Subtle Summary Badges) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="p-3.5 bg-white border border-slate-200/90 rounded-xl flex items-center gap-3 shadow-2xs">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 flex-shrink-0">
+            <FaUsers className="text-sm" />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Tất cả tài khoản
+            </span>
+            <p className="text-lg font-bold text-slate-900 leading-tight">
+              {pagination.total || users.length}
+            </p>
           </div>
         </div>
 
-        <div className="p-4 bg-white border-2 border-red-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-lg">
-              <FaBan className="text-2xl text-red-600" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-600">Đã khóa</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {users.filter((u) => u.TrangThai === "khóa").length}
-              </p>
-            </div>
+        <div className="p-3.5 bg-white border border-slate-200/90 rounded-xl flex items-center gap-3 shadow-2xs">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 flex-shrink-0">
+            <FaCheckCircle className="text-sm" />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Tài khoản Mở
+            </span>
+            <p className="text-lg font-bold text-slate-900 leading-tight">
+              {users.filter((u) => u.TrangThai === "hoạt động" || u.TrangThai !== "khóa").length}
+            </p>
           </div>
         </div>
 
-        <div className="p-4 bg-white border-2 border-yellow-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg">
-              <FaClock className="text-2xl text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-600">
-                Chờ xác thực
-              </p>
-              <p className="text-2xl font-bold text-gray-800">
-                {users.filter((u) => u.TrangThai === "chờ xác thực").length}
-              </p>
-            </div>
+        <div className="p-3.5 bg-white border border-slate-200/90 rounded-xl flex items-center gap-3 shadow-2xs">
+          <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100 flex-shrink-0">
+            <FaBan className="text-sm" />
+          </div>
+          <div>
+            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Tài khoản Khóa
+            </span>
+            <p className="text-lg font-bold text-slate-900 leading-tight">
+              {users.filter((u) => u.TrangThai === "khóa").length}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Table Section */}
-      <div
-        className="overflow-hidden bg-white rounded-2xl shadow-xl animate-fadeInUp"
-        style={{ animationDelay: "300ms" }}
-      >
+      {/* 3. Bảng Dữ Liệu Doanh Nghiệp (Data Table) */}
+      <div className="bg-white border border-slate-200/90 rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2 border-gray-200">
-                <th className="px-4 py-4 text-xs font-bold tracking-wider text-left text-gray-700 uppercase">
-                  ID
-                </th>
-                <th className="px-4 py-4 text-xs font-bold tracking-wider text-left text-gray-700 uppercase">
-                  Người dùng
-                </th>
-                <th className="px-4 py-4 text-xs font-bold tracking-wider text-left text-gray-700 uppercase">
-                  Liên hệ
-                </th>
-                <th className="px-4 py-4 text-xs font-bold tracking-wider text-left text-gray-700 uppercase">
-                  Loại TK
-                </th>
-                <th className="px-4 py-4 text-xs font-bold tracking-wider text-left text-gray-700 uppercase">
-                  Trạng thái
-                </th>
-                <th className="px-4 py-4 text-xs font-bold tracking-wider text-center text-gray-700 uppercase">
-                  Bài đăng
-                </th>
-                <th className="px-4 py-4 text-xs font-bold tracking-wider text-left text-gray-700 uppercase">
-                  Ngày tạo
-                </th>
-                <th className="px-4 py-4 text-xs font-bold tracking-wider text-center text-gray-700 uppercase">
-                  Thao tác
-                </th>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-4 py-3 w-16">ID</th>
+                <th className="px-4 py-3">Tài khoản</th>
+                <th className="px-4 py-3">Thông tin liên hệ</th>
+                <th className="px-4 py-3">Loại tài khoản</th>
+                <th className="px-4 py-3">Trạng thái</th>
+                <th className="px-4 py-3 text-center">Bài đăng</th>
+                <th className="px-4 py-3">Ngày tạo</th>
+                <th className="px-4 py-3 text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {users.map((user, index) => {
-                const isEditing =
-                  editingUser && editingUser.MaNgDung === user.MaNgDung;
-                const roleInfo = getRoleInfo(
-                  isEditing ? editingUser.LoaiTaiKhoan : user.LoaiTaiKhoan
-                );
-                const statusInfo = getStatusInfo(
-                  isEditing ? editingUser.TrangThai : user.TrangThai
-                );
-                const RoleIcon = roleInfo.icon;
-                const StatusIcon = statusInfo.icon;
+            <tbody className="divide-y divide-slate-100">
+              {users.map((user) => {
+                const isEditing = editingUser && editingUser.MaNgDung === user.MaNgDung;
+                const roleInfo = getRoleInfo(isEditing ? editingUser.LoaiTaiKhoan : user.LoaiTaiKhoan);
+                const statusInfo = getStatusInfo(isEditing ? editingUser.TrangThai : user.TrangThai);
 
                 return (
                   <tr
                     key={user.MaNgDung}
-                    className="transition-all duration-300 hover:bg-purple-50 animate-fadeInUp"
-                    style={{ animationDelay: `${(index + 4) * 50}ms` }}
+                    className="hover:bg-slate-50/75 transition-colors"
                   >
-                    <td className="px-4 py-4 text-sm font-bold text-gray-800">
+                    <td className="px-4 py-3 font-mono font-medium text-slate-500">
                       #{user.MaNgDung}
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
+
+                    {/* Avatar & Tên */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
                         <img
-                          src={
-                            user.AnhDaiDien || "https://via.placeholder.com/40"
-                          }
+                          src={user.AnhDaiDien || "/placeholder.svg?height=32&width=32"}
                           alt="Avatar"
-                          className="flex-shrink-0 w-10 h-10 border-2 border-gray-200 rounded-full"
+                          className="w-8 h-8 rounded-full border border-slate-200 object-cover flex-shrink-0"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "https://ui-avatars.com/api/?name=User&background=64748b&color=fff";
+                          }}
                         />
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-gray-800 truncate">
-                            {user.HoTen}
+                          <p className="font-semibold text-slate-900 truncate">
+                            {user.HoTen || "Chưa đặt tên"}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="space-y-1">
-                        <p className="text-xs text-gray-600 truncate">
-                          {user.Email}
-                        </p>
-                        <p className="text-xs font-semibold text-gray-700">
-                          {user.SDT}
-                        </p>
-                      </div>
+
+                    {/* Liên hệ */}
+                    <td className="px-4 py-3">
+                      <p className="text-slate-800 font-medium truncate">{user.Email}</p>
+                      <p className="text-slate-500 text-[11px] font-mono">{user.SDT || "Chưa có SĐT"}</p>
                     </td>
-                    <td className="px-4 py-4">
+
+                    {/* Loại tài khoản */}
+                    <td className="px-4 py-3">
                       {isEditing ? (
                         <select
                           value={editingUser.LoaiTaiKhoan}
                           onChange={handleRoleChange}
-                          className="px-3 py-2 text-xs font-bold transition-all duration-300 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 focus:outline-none"
+                          className="px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                         >
                           {ACCOUNT_TYPES.map((type) => (
                             <option key={type.value} value={type.value}>
@@ -408,20 +359,22 @@ const UserManager = () => {
                           ))}
                         </select>
                       ) : (
-                        <div
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-${roleInfo.color}-700 bg-${roleInfo.color}-100 rounded-full`}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-semibold ${roleInfo.badgeStyle}`}
                         >
-                          <RoleIcon />
+                          <roleInfo.icon className="text-[9px]" />
                           <span>{roleInfo.label}</span>
-                        </div>
+                        </span>
                       )}
                     </td>
-                    <td className="px-4 py-4">
+
+                    {/* Trạng thái */}
+                    <td className="px-4 py-3">
                       {isEditing ? (
                         <select
                           value={editingUser.TrangThai}
                           onChange={handleStatusChange}
-                          className="px-3 py-2 text-xs font-bold transition-all duration-300 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-100 focus:outline-none"
+                          className="px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                         >
                           {STATUS_TYPES.map((type) => (
                             <option key={type.value} value={type.value}>
@@ -430,51 +383,57 @@ const UserManager = () => {
                           ))}
                         </select>
                       ) : (
-                        <div
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-${statusInfo.color}-700 bg-${statusInfo.color}-100 rounded-full`}
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11px] font-semibold ${statusInfo.badgeStyle}`}
                         >
-                          <StatusIcon />
+                          <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dotColor}`}></span>
                           <span>{statusInfo.label}</span>
-                        </div>
+                        </span>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className="inline-flex items-center justify-center w-8 h-8 text-xs font-bold text-white bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full">
-                        {user.SoBaiDang}
-                      </span>
+
+                    {/* Số bài đăng */}
+                    <td className="px-4 py-3 text-center font-semibold text-slate-700">
+                      {user.SoBaiDang || 0}
                     </td>
-                    <td className="px-4 py-4 text-xs text-gray-600">
+
+                    {/* Ngày tạo */}
+                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
                       {new Date(user.NgayTao).toLocaleDateString("vi-VN")}
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        {isEditing ? (
-                          <>
-                            <button
-                              onClick={handleSave}
-                              className="flex items-center justify-center w-9 h-9 text-green-600 transition-all duration-300 bg-green-100 rounded-lg hover:bg-green-200 hover:scale-110 active:scale-95"
-                              title="Lưu"
-                            >
-                              <FaCheck />
-                            </button>
-                            <button
-                              onClick={handleCancel}
-                              className="flex items-center justify-center w-9 h-9 text-red-600 transition-all duration-300 bg-red-100 rounded-lg hover:bg-red-200 hover:scale-110 active:scale-95"
-                              title="Hủy"
-                            >
-                              <FaTimes />
-                            </button>
-                          </>
-                        ) : (
+
+                    {/* Thao tác */}
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      {isEditing ? (
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => handleEdit(user)}
-                            className="flex items-center justify-center w-9 h-9 text-blue-600 transition-all duration-300 bg-blue-100 rounded-lg hover:bg-blue-200 hover:scale-110 active:scale-95"
-                            title="Chỉnh sửa"
+                            type="button"
+                            onClick={handleSave}
+                            className="p-1.5 text-white bg-emerald-600 hover:bg-emerald-700 rounded transition-colors shadow-2xs"
+                            title="Lưu thay đổi"
                           >
-                            <FaEdit />
+                            <FaCheck className="text-xs" />
                           </button>
-                        )}
-                      </div>
+                          <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded transition-colors"
+                            title="Hủy bỏ"
+                          >
+                            <FaTimes className="text-xs" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(user)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-slate-700 hover:text-blue-700 hover:bg-slate-100 rounded border border-slate-200 transition-colors"
+                          title="Sửa quyền hoặc trạng thái"
+                        >
+                          <FaEdit className="text-[10px]" />
+                          <span>Sửa</span>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -482,40 +441,37 @@ const UserManager = () => {
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div
-          className="flex items-center justify-between px-6 py-4 bg-white rounded-xl shadow-lg animate-fadeInUp"
-          style={{ animationDelay: "400ms" }}
-        >
-          <button
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page === 1}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-700 transition-all duration-300 bg-gray-100 rounded-lg hover:bg-gray-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          >
-            <FaChevronLeft />
-            <span>Trước</span>
-          </button>
+        {/* Phân trang Pagination chuẩn mực */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50/50 text-xs">
+          <span className="text-slate-500">
+            Hiển thị trang <b className="text-slate-800">{pagination.page}</b> /{" "}
+            <b>{pagination.totalPages || 1}</b>
+          </span>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">
-              Trang <span className="text-purple-600">{pagination.page}</span> /{" "}
-              {pagination.totalPages}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => handlePageChange(pagination.page - 1)}
+              disabled={pagination.page <= 1}
+              className="p-1.5 text-slate-600 hover:bg-slate-200 rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-slate-200"
+              title="Trang trước"
+            >
+              <FaChevronLeft className="text-[10px]" />
+            </button>
+            <span className="px-2 font-medium text-slate-700">
+              Trang {pagination.page}
             </span>
+            <button
+              onClick={() => handlePageChange(pagination.page + 1)}
+              disabled={pagination.page >= pagination.totalPages}
+              className="p-1.5 text-slate-600 hover:bg-slate-200 rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-slate-200"
+              title="Trang tiếp"
+            >
+              <FaChevronRight className="text-[10px]" />
+            </button>
           </div>
-
-          <button
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === pagination.totalPages}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-700 transition-all duration-300 bg-gray-100 rounded-lg hover:bg-gray-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-          >
-            <span>Sau</span>
-            <FaChevronRight />
-          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 };

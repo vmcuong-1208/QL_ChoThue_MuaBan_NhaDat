@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
   FaUsers,
   FaHome,
@@ -20,14 +20,21 @@ import {
   FaCalendarAlt,
   FaBell,
   FaSearch,
-  FaCog,
+  FaExternalLinkAlt,
+  FaShieldAlt,
+  FaIdCard,
+  FaClipboardList,
+  FaLayerGroup,
+  FaBullhorn,
 } from "react-icons/fa";
-import PropertyTypeManager from "./PropertyTypeManager";
+import CategoryManager from "./CategoryManager";
+import ContentManager from "./ContentManager";
 import UserManager from "./UserManager";
-import VerificationManager from "./VerificationManager";
+import PropertyModerationManager from "./PropertyModerationManager";
+import BrokerVerificationManager from "./BrokerVerificationManager";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { API_URL, SERVER_URL } from "../../services/api";
+import { API_URL } from "../../services/api";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -64,12 +71,18 @@ const AdminPanel = () => {
     switch (activeTab) {
       case "dashboard":
         return <Dashboard />;
+      case "categories":
       case "property-types":
-        return <PropertyTypeManager />;
+        return <CategoryManager />;
       case "users":
         return <UserManager />;
+      case "broker-verification":
+        return <BrokerVerificationManager />;
+      case "properties":
       case "verification":
-        return <VerificationManager />;
+        return <PropertyModerationManager />;
+      case "content":
+        return <ContentManager />;
       default:
         return <Dashboard />;
     }
@@ -77,10 +90,10 @@ const AdminPanel = () => {
 
   if (!currentUser) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">Đang tải...</p>
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-3 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+          <p className="text-sm font-medium text-slate-600">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
@@ -91,33 +104,39 @@ const AdminPanel = () => {
       id: "dashboard",
       icon: FaTachometerAlt,
       label: "Tổng quan",
-      color: "blue",
     },
     {
-      id: "property-types",
-      icon: FaHome,
-      label: "Quản lý loại nhà đất",
-      color: "green",
+      id: "categories",
+      icon: FaLayerGroup,
+      label: "Quản lý danh mục",
     },
     {
       id: "users",
       icon: FaUsers,
-      label: "Quản lý người dùng",
-      color: "purple",
+      label: "Quản lý tài khoản",
     },
     {
-      id: "verification",
-      icon: FaCheckCircle,
-      label: "Quản lý xác thực",
-      color: "orange",
+      id: "broker-verification",
+      icon: FaIdCard,
+      label: "Xác minh môi giới",
+    },
+    {
+      id: "properties",
+      icon: FaClipboardList,
+      label: "Quản lý tin đăng",
+    },
+    {
+      id: "content",
+      icon: FaBullhorn,
+      label: "Quản lý nội dung",
     },
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      {/* Sidebar */}
+    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-800 antialiased">
+      {/* Sidebar - Chuẩn Dark Navy Slate Doanh nghiệp */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 bg-white shadow-2xl
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-200 bg-slate-900 border-r border-slate-800 shadow-lg
           ${isSidebarOpen ? "w-64" : "w-20"}
           ${
             isMobileMenuOpen
@@ -126,47 +145,63 @@ const AdminPanel = () => {
           }`}
       >
         {/* Sidebar Header */}
-        <div className="relative flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800 bg-slate-950/60">
           <div
             className={`flex items-center gap-3 ${
-              !isSidebarOpen && "justify-center"
+              !isSidebarOpen && "justify-center w-full"
             }`}
           >
-            <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg shadow-lg">
-              <FaBuilding className="text-xl text-blue-600" />
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-600 text-white shadow-xs">
+              <FaBuilding className="text-lg" />
             </div>
             {isSidebarOpen && (
-              <div className="animate-fadeIn">
-                <h2 className="text-lg font-bold text-white">BĐS Admin</h2>
-                <p className="text-xs text-blue-100">Dashboard v2.0</p>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-white tracking-tight truncate">
+                  BĐS 3MAN
+                </h2>
+                <p className="text-[11px] font-medium text-slate-400">
+                  Cổng Quản Trị
+                </p>
               </div>
             )}
           </div>
 
-          {/* Desktop Toggle */}
-          <button
-            onClick={toggleSidebar}
-            className="items-center justify-center hidden w-8 h-8 text-white transition-all duration-300 rounded-lg lg:flex bg-white/20 hover:bg-white/30 active:scale-95"
-          >
-            {isSidebarOpen ? (
-              <FaChevronLeft className="text-sm" />
-            ) : (
-              <FaChevronRight className="text-sm" />
-            )}
-          </button>
+          {/* Desktop Toggle Button */}
+          {isSidebarOpen && (
+            <button
+              onClick={toggleSidebar}
+              className="items-center justify-center hidden w-7 h-7 text-slate-400 transition-colors rounded-md lg:flex hover:text-white hover:bg-slate-800"
+              title="Thu gọn menu"
+            >
+              <FaChevronLeft className="text-xs" />
+            </button>
+          )}
 
-          {/* Mobile Close */}
+          {/* Mobile Close Button */}
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center justify-center w-8 h-8 text-white transition-all duration-300 rounded-lg lg:hidden bg-white/20 hover:bg-white/30"
+            className="flex items-center justify-center w-8 h-8 text-slate-400 transition-colors rounded-lg lg:hidden hover:text-white hover:bg-slate-800"
           >
             <FaTimes className="text-sm" />
           </button>
         </div>
 
-        {/* User Profile */}
+        {/* Khi thu nhỏ, nút mở rộng nằm ngay dưới header */}
+        {!isSidebarOpen && (
+          <div className="hidden lg:flex justify-center py-2 border-b border-slate-800">
+            <button
+              onClick={toggleSidebar}
+              className="flex items-center justify-center w-8 h-8 text-slate-400 transition-colors rounded-md hover:text-white hover:bg-slate-800"
+              title="Mở rộng menu"
+            >
+              <FaChevronRight className="text-xs" />
+            </button>
+          </div>
+        )}
+
+        {/* User Mini Profile */}
         <div
-          className={`p-4 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50
+          className={`p-3.5 border-b border-slate-800/80 bg-slate-900/50
           ${!isSidebarOpen && "flex justify-center"}`}
         >
           <div
@@ -174,30 +209,37 @@ const AdminPanel = () => {
               !isSidebarOpen && "flex-col"
             }`}
           >
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <img
-                src={currentUser.AnhDaiDien || "https://via.placeholder.com/40"}
+                src={currentUser.AnhDaiDien || "/placeholder.svg?height=40&width=40"}
                 alt="Admin"
-                className="w-12 h-12 border-2 border-blue-400 rounded-full shadow-md"
+                className="w-9 h-9 border border-slate-700 rounded-full object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff";
+                }}
               />
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
             </div>
             {isSidebarOpen && (
-              <div className="flex-1 min-w-0 animate-fadeIn">
-                <p className="text-sm font-bold text-gray-800 truncate">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-white truncate">
                   {currentUser.HoTen || currentUser.Email}
                 </p>
-                <p className="text-xs font-semibold text-blue-600">
-                  {currentUser.LoaiTaiKhoan}
-                </p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <FaShieldAlt className="text-[10px] text-blue-400" />
+                  <span className="text-[11px] font-medium text-blue-400">
+                    Quản trị viên
+                  </span>
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Menu */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {menuItems.map((item, index) => {
+          {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
 
@@ -208,28 +250,22 @@ const AdminPanel = () => {
                   setActiveTab(item.id);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`group relative w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold transition-all duration-300 rounded-xl
+                className={`group w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-lg transition-colors
                   ${
                     isActive
-                      ? `bg-gradient-to-r from-${item.color}-600 to-${item.color}-500 text-white shadow-lg scale-105`
-                      : "text-gray-700 hover:bg-gray-100 hover:scale-105"
+                      ? "bg-blue-600 text-white shadow-xs font-semibold"
+                      : "text-slate-300 hover:text-white hover:bg-slate-800"
                   }
-                  ${!isSidebarOpen && "justify-center"}
-                  animate-fadeInUp`}
-                style={{ animationDelay: `${index * 50}ms` }}
+                  ${!isSidebarOpen && "justify-center px-2"}`}
+                title={!isSidebarOpen ? item.label : undefined}
               >
                 <Icon
-                  className={`text-lg ${
-                    !isActive && `group-hover:text-${item.color}-600`
-                  } transition-colors duration-300`}
+                  className={`text-base flex-shrink-0 ${
+                    isActive ? "text-white" : "text-slate-400 group-hover:text-white"
+                  }`}
                 />
                 {isSidebarOpen && (
-                  <span className="animate-fadeIn">{item.label}</span>
-                )}
-
-                {/* Active Indicator */}
-                {isActive && !isSidebarOpen && (
-                  <div className="absolute left-0 w-1 h-8 bg-white rounded-r-full animate-scaleIn"></div>
+                  <span className="truncate">{item.label}</span>
                 )}
               </button>
             );
@@ -237,84 +273,112 @@ const AdminPanel = () => {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-gray-200">
+        <div className="p-3 border-t border-slate-800 bg-slate-950/40">
           <button
             onClick={handleLogout}
-            className={`group w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-red-600 transition-all duration-300 rounded-xl hover:bg-red-50 hover:scale-105 active:scale-95
-              ${!isSidebarOpen && "justify-center"}`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-rose-400 transition-colors rounded-lg hover:bg-rose-950/30 hover:text-rose-300
+              ${!isSidebarOpen && "justify-center px-2"}`}
+            title="Đăng xuất"
           >
-            <FaSignOutAlt className="text-lg" />
-            {isSidebarOpen && <span className="animate-fadeIn">Đăng xuất</span>}
+            <FaSignOutAlt className="text-sm flex-shrink-0" />
+            {isSidebarOpen && <span>Đăng xuất</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
+        className={`flex-1 flex flex-col transition-all duration-200 min-w-0 ${
           isSidebarOpen ? "lg:ml-64" : "lg:ml-20"
         }`}
       >
-        {/* Top Header */}
-        <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm lg:px-6">
+        {/* Top Header - Chuẩn Trắng Tinh Tế & Phẳng */}
+        <header className="sticky top-0 z-40 flex items-center justify-between h-16 px-4 bg-white border-b border-slate-200/90 shadow-2xs lg:px-6">
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="flex items-center justify-center w-10 h-10 text-gray-700 transition-all duration-300 bg-gray-100 rounded-lg lg:hidden hover:bg-gray-200 active:scale-95"
-          >
-            <FaBars />
-          </button>
-
-          {/* Page Title */}
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-800 lg:text-2xl">
-              {getTabTitle(activeTab)}
-            </h1>
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="flex items-center justify-center w-9 h-9 text-slate-600 transition-colors bg-slate-100 rounded-lg lg:hidden hover:bg-slate-200"
+            >
+              <FaBars className="text-sm" />
+            </button>
+
+            {/* Breadcrumb & Tab Title */}
+            <div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                <span>Hệ thống</span>
+                <span>/</span>
+                <span className="text-slate-800 font-medium">{getTabTitle(activeTab)}</span>
+              </div>
+              <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">
+                {getTabTitle(activeTab)}
+              </h1>
+            </div>
           </div>
 
-          {/* Header Actions */}
-          <div className="flex items-center gap-2">
-            {/* Search (Desktop) */}
-            <div className="items-center hidden gap-2 px-3 py-2 bg-gray-100 rounded-lg lg:flex">
-              <FaSearch className="text-gray-400" />
-              <input
-                type="text"
-                placeholder="Tìm kiếm..."
-                className="text-sm transition-all duration-300 bg-transparent border-none outline-none w-36 focus:w-64"
-              />
-            </div>
+          {/* Header Right Actions */}
+          <div className="flex items-center gap-2.5">
+            {/* Quick Link to Website */}
+            <Link
+              to="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200"
+              title="Mở trang chủ website trong tab mới"
+            >
+              <FaExternalLinkAlt className="text-[10px]" />
+              <span>Xem Website</span>
+            </Link>
 
             {/* Notifications */}
-            <button className="relative flex items-center justify-center w-10 h-10 text-gray-700 transition-all duration-300 bg-gray-100 rounded-lg hover:bg-gray-200 hover:scale-110 active:scale-95">
-              <FaBell />
-              <span className="absolute w-2 h-2 bg-red-500 border-2 border-white rounded-full top-1 right-1"></span>
+            <button
+              className="relative flex items-center justify-center w-9 h-9 text-slate-600 transition-colors bg-slate-100 rounded-lg hover:bg-slate-200 border border-slate-200"
+              title="Thông báo hệ thống"
+            >
+              <FaBell className="text-xs" />
+              <span className="absolute w-2 h-2 bg-blue-600 rounded-full top-2 right-2"></span>
             </button>
 
-            {/* Settings */}
-            <button className="flex items-center justify-center w-10 h-10 text-gray-700 transition-all duration-300 bg-gray-100 rounded-lg hover:bg-gray-200 hover:scale-110 active:scale-95">
-              <FaCog />
-            </button>
+            {/* User Pill */}
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+              <span className="hidden md:inline text-xs font-semibold text-slate-800">
+                {currentUser.HoTen || "Admin"}
+              </span>
+              <img
+                src={currentUser.AnhDaiDien || "/placeholder.svg?height=32&width=32"}
+                alt="Avatar"
+                className="w-8 h-8 rounded-full border border-slate-300 object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff";
+                }}
+              />
+            </div>
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 p-4 overflow-y-auto lg:p-6 bg-gradient-to-br from-gray-50 to-blue-50">
-          {renderContent()}
+        {/* Content Body */}
+        <main className="flex-1 p-4 overflow-y-auto lg:p-6 bg-slate-50/70">
+          <div className="max-w-7xl mx-auto">
+            {renderContent()}
+          </div>
         </main>
       </div>
 
-      {/* Mobile Overlay */}
+      {/* Mobile Backdrop */}
       {isMobileMenuOpen && (
         <div
           onClick={() => setIsMobileMenuOpen(false)}
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden animate-fadeIn"
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs lg:hidden"
         ></div>
       )}
     </div>
   );
 };
 
-// Modern Dashboard Component
+// =========================================================================
+// DASHBOARD TỔNG QUAN - Chuẩn Thẻ Doanh Nghiệp (Corporate Metrics)
+// =========================================================================
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [recentActivities, setRecentActivities] = useState([]);
@@ -331,14 +395,12 @@ const Dashboard = () => {
 
         setStats(response.data.stats);
         setRecentActivities(response.data.recentActivities);
-      } catch (error) {
-        console.error("Lỗi khi lấy thống kê:", error);
-        if (error.response?.status === 403) {
-          setError(
-            "Không có quyền truy cập. Vui lòng đăng nhập với tài khoản admin.",
-          );
+      } catch (err) {
+        console.error("Lỗi khi lấy thống kê:", err);
+        if (err.response?.status === 403) {
+          setError("Không có quyền truy cập. Vui lòng đăng nhập với tài khoản admin.");
         } else {
-          setError("Không thể tải thống kê. Vui lòng thử lại sau.");
+          setError("Không thể tải thống kê hệ thống. Vui lòng thử lại sau.");
         }
       } finally {
         setLoading(false);
@@ -350,12 +412,10 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
-          <p className="text-lg font-semibold text-gray-700">
-            Đang tải thống kê...
-          </p>
+      <div className="flex items-center justify-center h-80">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+          <p className="text-xs font-medium text-slate-500">Đang tải dữ liệu tổng quan...</p>
         </div>
       </div>
     );
@@ -363,155 +423,142 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="p-6 border-l-4 border-red-500 rounded-lg shadow-lg bg-red-50">
-          <p className="text-lg font-semibold text-red-700">{error}</p>
-        </div>
+      <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
+        <p className="font-semibold">{error}</p>
       </div>
     );
   }
 
+  // 4 Chỉ số KPI cốt lõi - Phối màu kinh doanh chuẩn mực
   const statCards = [
     {
-      title: "Tổng số người dùng",
+      title: "Tổng số tài khoản",
       value: stats?.totalUsers || 0,
-      change: `+${stats?.newUsersThisMonth || 0}`,
-      changeLabel: "trong tháng",
+      badgeText: `+${stats?.newUsersThisMonth || 0} trong tháng`,
+      isPositive: true,
       icon: FaUsers,
-      color: "blue",
-      bgGradient: "from-blue-500 to-blue-600",
+      iconBg: "bg-blue-50 text-blue-600 border-blue-100",
     },
     {
-      title: "Bài đăng mới",
+      title: "Bài đăng mới trong tháng",
       value: stats?.newPostsThisMonth || 0,
-      change: "+12%",
-      changeLabel: "so với tháng trước",
+      badgeText: "+12% so với tháng trước",
+      isPositive: true,
       icon: FaChartLine,
-      color: "green",
-      bgGradient: "from-green-500 to-emerald-600",
+      iconBg: "bg-emerald-50 text-emerald-600 border-emerald-100",
     },
     {
-      title: "Tổng số bài đăng",
+      title: "Tổng số tin bất động sản",
       value: stats?.totalPosts || 0,
-      change: "+8%",
-      changeLabel: "tăng trưởng",
+      badgeText: "+8% tăng trưởng",
+      isPositive: true,
       icon: FaHome,
-      color: "purple",
-      bgGradient: "from-purple-500 to-pink-600",
+      iconBg: "bg-indigo-50 text-indigo-600 border-indigo-100",
     },
     {
-      title: "Loại nhà đất",
+      title: "Danh mục loại nhà đất",
       value: stats?.totalPropertyTypes || 0,
-      change: "Ổn định",
-      changeLabel: "không thay đổi",
+      badgeText: "Đang hoạt động",
+      isPositive: null,
       icon: FaBuilding,
-      color: "orange",
-      bgGradient: "from-orange-500 to-red-600",
+      iconBg: "bg-amber-50 text-amber-600 border-amber-100",
     },
   ];
 
   return (
-    <div className="space-y-6 animate-fadeInUp">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {statCards.map((stat, index) => {
+    <div className="space-y-6">
+      {/* 1. KPI Stats Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((stat, idx) => {
           const Icon = stat.icon;
           return (
             <div
-              key={index}
-              className="relative overflow-hidden transition-all duration-300 bg-white shadow-lg group rounded-2xl hover:shadow-2xl hover:scale-105 animate-fadeInUp"
-              style={{ animationDelay: `${index * 100}ms` }}
+              key={idx}
+              className="p-5 bg-white border border-slate-200/90 rounded-xl shadow-xs transition-colors hover:border-slate-300"
             >
-              {/* Background Gradient */}
-              <div
-                className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-5 group-hover:opacity-10 transition-opacity duration-300`}
-              ></div>
-
-              <div className="relative p-6">
-                {/* Icon */}
-                <div className={`flex items-center justify-between mb-4`}>
-                  <div
-                    className={`flex items-center justify-center w-14 h-14 bg-gradient-to-br ${stat.bgGradient} rounded-xl shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <Icon className="text-2xl text-white" />
-                  </div>
-                  <div
-                    className={`px-3 py-1 text-xs font-bold text-${stat.color}-700 bg-${stat.color}-100 rounded-full`}
-                  >
-                    {stat.change}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <h3 className="mb-2 text-sm font-semibold text-gray-600">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   {stat.title}
-                </h3>
-                <p className="mb-1 text-3xl font-bold text-gray-800">
+                </span>
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center border ${stat.iconBg}`}>
+                  <Icon className="text-base" />
+                </div>
+              </div>
+
+              <div className="flex items-baseline justify-between gap-2 mt-1">
+                <span className="text-2xl font-bold text-slate-900 tracking-tight">
                   {stat.value.toLocaleString()}
-                </p>
-                <p className="flex items-center gap-1 text-xs text-gray-500">
-                  <FaArrowUp className="text-green-500" />
-                  {stat.changeLabel}
-                </p>
+                </span>
+                {stat.badgeText && (
+                  <span
+                    className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                      stat.isPositive === true
+                        ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                        : stat.isPositive === false
+                        ? "text-rose-700 bg-rose-50 border-rose-200"
+                        : "text-slate-600 bg-slate-50 border-slate-200"
+                    }`}
+                  >
+                    {stat.isPositive === true && <FaArrowUp className="text-[9px]" />}
+                    {stat.isPositive === false && <FaArrowDown className="text-[9px]" />}
+                    <span>{stat.badgeText}</span>
+                  </span>
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Recent Activities */}
-      <div
-        className="p-6 bg-white shadow-lg rounded-2xl animate-fadeInUp"
-        style={{ animationDelay: "400ms" }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="flex items-center gap-2 text-xl font-bold text-gray-800">
-            <FaCalendarAlt className="text-blue-600" />
-            Hoạt động gần đây
-          </h2>
-          <button className="px-4 py-2 text-sm font-semibold text-blue-600 transition-all duration-300 rounded-lg bg-blue-50 hover:bg-blue-100 hover:scale-105">
-            Xem tất cả
-          </button>
+      {/* 2. Recent Activities Section */}
+      <div className="bg-white border border-slate-200/90 rounded-xl shadow-xs overflow-hidden">
+        <div className="flex items-center justify-between p-4 sm:px-6 border-b border-slate-200 bg-slate-50/50">
+          <div className="flex items-center gap-2">
+            <FaCalendarAlt className="text-slate-500 text-sm" />
+            <h2 className="text-sm font-bold text-slate-800">
+              Hoạt động đăng tin gần đây
+            </h2>
+          </div>
+          <span className="text-xs font-medium text-slate-500">
+            Cập nhật tự động theo thời gian thực
+          </span>
         </div>
 
-        <div className="space-y-3">
+        <div className="divide-y divide-slate-100">
           {recentActivities.length > 0 ? (
-            recentActivities.map((activity, index) => (
+            recentActivities.map((act, index) => (
               <div
                 key={index}
-                className="flex items-start gap-4 p-4 transition-all duration-300 bg-gray-50 rounded-xl hover:bg-gray-100 hover:scale-[1.02] animate-fadeInUp"
-                style={{ animationDelay: `${(index + 5) * 100}ms` }}
+                className="flex items-start gap-3.5 p-4 hover:bg-slate-50/80 transition-colors"
               >
-                <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-white rounded-full bg-gradient-to-br from-blue-500 to-indigo-600">
-                  <FaUserCircle className="text-lg" />
+                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 mt-0.5 border border-slate-200">
+                  <FaUserCircle className="text-base" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800">
-                    <strong className="font-bold text-gray-900">
-                      {activity.userName}
+                  <p className="text-xs sm:text-sm text-slate-800 leading-normal">
+                    <strong className="font-semibold text-slate-900">
+                      {act.userName}
                     </strong>
-                    {" đã đăng bài: "}
-                    <span className="text-gray-600">{activity.content}</span>
+                    {" vừa đăng bất động sản mới: "}
+                    <span className="font-medium text-blue-700">
+                      {act.content}
+                    </span>
                   </p>
-                  <p className="flex items-center gap-1 mt-1 text-xs text-gray-500">
-                    <FaCalendarAlt className="text-gray-400" />
-                    {new Date(activity.createdAt).toLocaleDateString("vi-VN", {
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {new Date(act.createdAt).toLocaleDateString("vi-VN", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </p>
                 </div>
               </div>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="flex items-center justify-center w-16 h-16 mb-4 text-gray-400 bg-gray-100 rounded-full">
-                <FaCalendarAlt className="text-2xl" />
-              </div>
-              <p className="text-sm font-semibold text-gray-500">
-                Chưa có hoạt động nào
-              </p>
+            <div className="py-12 text-center text-slate-400 text-xs font-medium">
+              Chưa có dữ liệu hoạt động nào gần đây.
             </div>
           )}
         </div>
@@ -522,10 +569,14 @@ const Dashboard = () => {
 
 const getTabTitle = (tab) => {
   const titles = {
-    dashboard: "Tổng quan",
-    "property-types": "Quản lý loại nhà đất",
-    users: "Quản lý người dùng",
-    verification: "Quản lý xác thực",
+    dashboard: "Tổng quan thống kê",
+    categories: "Quản lý danh mục",
+    "property-types": "Quản lý danh mục",
+    users: "Quản lý tài khoản",
+    "broker-verification": "Xác minh môi giới",
+    properties: "Quản lý tin đăng",
+    verification: "Quản lý tin đăng",
+    content: "Quản lý nội dung",
   };
   return titles[tab] || "Tổng quan";
 };
