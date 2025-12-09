@@ -7,6 +7,7 @@ import {
   FaRegHeart,
   FaShareAlt,
   FaCheckCircle,
+  FaFlag,
 } from "react-icons/fa";
 
 const PropertyMainInfo = ({
@@ -17,6 +18,7 @@ const PropertyMainInfo = ({
   isFavorite,
   onToggleFavorite,
   onShare,
+  onOpenReportModal,
 }) => {
   if (!property) return null;
 
@@ -52,6 +54,16 @@ const PropertyMainInfo = ({
           >
             {isFavorite ? <FaHeart /> : <FaRegHeart />}
           </button>
+          {onOpenReportModal && (
+            <button
+              onClick={onOpenReportModal}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-700 transition-all bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 hover:scale-105 shadow-sm"
+              title="Báo cáo tin đăng sai phạm"
+            >
+              <FaFlag className="text-rose-500 text-xs" />
+              <span className="hidden sm:inline">Báo cáo</span>
+            </button>
+          )}
         </div>
       </div>
 

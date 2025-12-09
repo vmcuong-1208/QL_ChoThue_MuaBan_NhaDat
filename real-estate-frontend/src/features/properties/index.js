@@ -11,3 +11,4 @@ export { default as SearchResults } from "./SearchResults";
 export { default as Recommendations } from "./Recommendations";
 export { default as Favorites } from "./Favorites";
 export { default as PriceReference } from "./PriceReference";
+export { default as ContactRequestManager } from "./ContactRequestManager";

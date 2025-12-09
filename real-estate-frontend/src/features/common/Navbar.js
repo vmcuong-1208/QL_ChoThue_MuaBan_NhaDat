@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { FaHeart, FaMap, FaBars, FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import NotificationBell from "./NotificationBell";
 
 const SCROLL_TRIGGER = 480;
 
@@ -182,7 +183,8 @@ const Navbar = () => {
 
             {/* Avatar / Login Button */}
             {currentUser ? (
-              <div className="relative flex items-center">
+              <div className="relative flex items-center gap-3">
+                <NotificationBell isTransparent={isTransparent} />
                 <div
                   className="overflow-hidden transition-all duration-300 transform border-2 border-blue-600 rounded-full cursor-pointer w-11 h-11 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-200 hover:scale-110"
                   onClick={toggleDropdown}
@@ -229,6 +231,13 @@ const Navbar = () => {
                       📝 <span>Quản lý bài đăng</span>
                     </Link>
                     <Link
+                      to="/yeu-cau-lien-he"
+                      className="flex items-center gap-3 px-5 py-3.5 text-base font-bold text-gray-800 transition-all duration-200 border-b border-gray-100 hover:bg-blue-50 hover:text-blue-700"
+                      onClick={() => setShowDropdown(false)}
+                    >
+                      📬 <span>Yêu cầu liên hệ</span>
+                    </Link>
+                    <Link
                       to="/tin-nhan"
                       className="flex items-center gap-3 px-5 py-3.5 text-base font-bold text-gray-800 transition-all duration-200 border-b border-gray-100 hover:bg-purple-50 hover:text-purple-700"
                       onClick={() => setShowDropdown(false)}
@@ -266,7 +275,8 @@ const Navbar = () => {
 
           {/* ===== RIGHT: AVATAR (Mobile Only) ===== */}
           {currentUser && (
-            <div className="flex items-center md:hidden">
+            <div className="flex items-center gap-2 md:hidden">
+              <NotificationBell isTransparent={isTransparent} />
               <div
                 className="w-10 h-10 overflow-hidden transition-all duration-300 transform border-2 border-blue-600 rounded-full cursor-pointer hover:border-blue-400 hover:shadow-lg hover:scale-110"
                 onClick={toggleMobileMenu}
@@ -416,6 +426,16 @@ const Navbar = () => {
                   <span className="text-xl">📝</span>
                 </div>
                 <span>Quản lý bài đăng</span>
+              </Link>
+
+              <Link
+                to="/yeu-cau-lien-he"
+                className="flex items-center gap-3 px-5 py-4 text-base font-bold text-gray-800 transition-all duration-200 border-b border-gray-100 hover:bg-blue-50 hover:text-blue-700"
+              >
+                <div className="flex items-center justify-center flex-shrink-0 w-6 h-6">
+                  <span className="text-xl">📬</span>
+                </div>
+                <span>Yêu cầu liên hệ</span>
               </Link>
 
               <Link

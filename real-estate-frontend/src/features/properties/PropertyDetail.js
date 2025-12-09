@@ -14,6 +14,7 @@ import PropertyLegalDocs from "./property-detail/PropertyLegalDocs";
 import PropertyMapSection from "./property-detail/PropertyMapSection";
 import SellerCard from "./property-detail/SellerCard";
 import ShareModal from "./property-detail/ShareModal";
+import ReportListingModal from "./property-detail/ReportListingModal";
 import PromotionalPopup from "../common/PromotionalPopup";
 import usePropertyDetail from "../../hooks/usePropertyDetail";
 
@@ -51,6 +52,7 @@ const PropertyDetail = () => {
 
   // Share modal state
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
@@ -283,6 +285,7 @@ const PropertyDetail = () => {
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}
                 onShare={() => setShowShareModal(true)}
+                onOpenReportModal={() => setShowReportModal(true)}
               />
 
               <PropertyDescription description={property.MoTa} />
@@ -330,6 +333,7 @@ const PropertyDetail = () => {
               onSuggestedMessageClick={handleOpenChat}
               formatPrice={formatPrice}
               formatDate={formatDate}
+              onOpenReportModal={() => setShowReportModal(true)}
             />
           </div>
         </div>
@@ -344,6 +348,14 @@ const PropertyDetail = () => {
         onShareZalo={shareToZalo}
         onCopyLink={copyToClipboard}
         copySuccess={copySuccess}
+      />
+
+      {/* Report Listing Modal */}
+      <ReportListingModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        property={property}
+        currentUser={currentUser}
       />
 
       {/* Fullscreen Media Viewer */}

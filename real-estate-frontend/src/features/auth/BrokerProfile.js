@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import {
@@ -22,8 +22,16 @@ import {
   FaBath,
   FaAngleRight,
   FaPaperPlane,
+  FaStar,
+  FaRegStar,
+  FaThumbsUp,
+  FaEdit,
+  FaTrashAlt,
+  FaQuoteLeft,
 } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
 import { API_URL, SERVER_URL } from "../../services/api";
+import ReviewModal from "./ReviewModal";
 
 const formatPrice = (price) => {
   if (!price || Number(price) === 0) return "Thỏa thuận";
@@ -78,6 +86,22 @@ const BrokerProfile = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [showShareModal, setShowShareModal] = useState(false);
 
+  const { currentUser } = useAuth();
+
+  // Reviews states
+  const [reviewsData, setReviewsData] = useState({
+    summary: {
+      totalReviews: 0,
+      avgRating: 5.0,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      percentages: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    },
+    items: [],
+  });
+  const [selectedStarFilter, setSelectedStarFilter] = useState("all");
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
   // Inquiry form states
   const [inquiryName, setInquiryName] = useState("");
   const [inquiryPhone, setInquiryPhone] = useState("");
@@ -87,6 +111,57 @@ const BrokerProfile = () => {
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
+  };
+
+  // Tải danh sách đánh giá môi giới
+  const fetchReviews = useCallback(async () => {
+    if (!id) return;
+    try {
+      setLoadingReviews(true);
+      const res = await axios.get(
+        `${API_URL}/broker-reviews/${id}?star=${selectedStarFilter}`
+      );
+      if (res.data) {
+        setReviewsData(res.data);
+      }
+    } catch (err) {
+      console.warn("Lỗi tải đánh giá môi giới:", err.message);
+    } finally {
+      setLoadingReviews(false);
+    }
+  }, [id, selectedStarFilter]);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
+
+  // Xóa đánh giá
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa nhận xét đánh giá này không?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${API_URL}/broker-reviews/${reviewId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      showToast("Đã xóa đánh giá thành công.");
+      fetchReviews();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Lỗi xóa đánh giá", "error");
+    }
+  };
+
+  const renderStars = (score, max = 5) => {
+    const num = Math.round(Number(score) || 0);
+    return (
+      <div className="flex items-center gap-0.5 text-amber-400">
+        {[...Array(max)].map((_, i) => (
+          <FaStar
+            key={i}
+            className={i < num ? "text-amber-400" : "text-slate-200"}
+          />
+        ))}
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -445,6 +520,15 @@ const BrokerProfile = () => {
                     <FaAward className="text-blue-500 text-xs" />
                     {broker.LoaiTaiKhoan || "Môi giới"}
                   </span>
+
+                  {/* Đánh giá trung bình */}
+                  <a
+                    href="#danh-gia"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
+                  >
+                    <FaStar className="text-amber-500 text-xs" />
+                    <span>{reviewsData.summary.avgRating}/5 ({reviewsData.summary.totalReviews} đánh giá)</span>
+                  </a>
                 </div>
 
                 {/* Meta details */}
@@ -504,6 +588,16 @@ const BrokerProfile = () => {
               )}
 
               <button
+                type="button"
+                onClick={() => setShowReviewModal(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm transition-all shadow-sm active:scale-95"
+                title="Đánh giá chất lượng dịch vụ của nhà môi giới"
+              >
+                <FaStar className="text-xs" />
+                <span>Đánh giá môi giới</span>
+              </button>
+
+              <button
                 onClick={() => setShowShareModal(true)}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm transition-colors"
                 title="Chia sẻ hồ sơ môi giới"
@@ -558,13 +652,16 @@ const BrokerProfile = () => {
           </div>
 
           <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-sm flex items-center gap-3">
-            <div className="w-11 h-11 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 text-lg">
-              <FaComments />
+            <div className="w-11 h-11 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0 text-lg">
+              <FaStar />
             </div>
             <div>
-              <div className="text-xs font-medium text-slate-500">Tỷ lệ phản hồi</div>
-              <div className="text-xl font-bold text-slate-900 tracking-tight">
-                100% <span className="text-xs font-normal text-emerald-600">trong 1 giờ</span>
+              <div className="text-xs font-medium text-slate-500">Đánh giá uy tín</div>
+              <div className="text-xl font-bold text-slate-900 tracking-tight flex items-baseline gap-1.5">
+                <span>{reviewsData.summary.avgRating}/5</span>
+                <span className="text-xs font-normal text-slate-500">
+                  ({reviewsData.summary.totalReviews} lượt)
+                </span>
               </div>
             </div>
           </div>
@@ -829,6 +926,221 @@ const BrokerProfile = () => {
                 )}
               </div>
             </div>
+
+            {/* ĐÁNH GIÁ & NHẬN XÉT MÔI GIỚI (REVIEWS & RATINGS) */}
+            <div id="danh-gia" className="bg-white rounded-xl border border-slate-200/90 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span className="w-1.5 h-5 bg-amber-500 rounded-full inline-block" />
+                    Đánh giá &amp; Nhận xét về môi giới
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Thông tin đánh giá khách quan từ khách hàng đã liên hệ hoặc làm việc cùng
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs transition-all shadow-xs active:scale-95"
+                >
+                  <FaStar className="text-xs" />
+                  <span>Viết đánh giá môi giới</span>
+                </button>
+              </div>
+
+              {/* Hộp Thống kê Đánh giá (Score Box + Star Distribution) */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-5 bg-slate-50 rounded-xl border border-slate-200/80 items-center">
+                {/* Score Summary */}
+                <div className="md:col-span-4 text-center md:border-r border-slate-200 md:pr-4">
+                  <div className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                    {reviewsData.summary.avgRating}
+                    <span className="text-base text-slate-400 font-normal"> / 5</span>
+                  </div>
+                  <div className="flex justify-center my-2">
+                    {renderStars(reviewsData.summary.avgRating)}
+                  </div>
+                  <div className="text-xs font-medium text-slate-500">
+                    ({reviewsData.summary.totalReviews} đánh giá)
+                  </div>
+
+                  {/* Highlights (Đúng theo mẫu ví dụ của yêu cầu) */}
+                  <div className="mt-3 pt-3 border-t border-slate-200/80 space-y-1.5 text-left text-[11px] text-slate-700">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="text-amber-500 font-bold">★★★★★</span>
+                      <span>Rất hài lòng</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="text-amber-500 font-bold">★★★★☆</span>
+                      <span>Tư vấn nhanh chóng</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="text-amber-500 font-bold">★★★★★</span>
+                      <span>Hỗ trợ nhiệt tình</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Star Distribution Progress Bars */}
+                <div className="md:col-span-8 space-y-2 text-xs">
+                  {[5, 4, 3, 2, 1].map((s) => {
+                    const count = reviewsData.summary.distribution[s] || 0;
+                    const pct = reviewsData.summary.percentages[s] || 0;
+                    return (
+                      <div
+                        key={s}
+                        onClick={() => setSelectedStarFilter(selectedStarFilter === String(s) ? "all" : String(s))}
+                        className="flex items-center gap-3 cursor-pointer group"
+                      >
+                        <span className="w-12 text-slate-600 font-semibold group-hover:text-amber-600 flex items-center gap-1">
+                          <span>{s}</span>
+                          <FaStar className="text-amber-400 text-[10px]" />
+                        </span>
+                        <div className="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-14 text-right text-slate-500 text-[11px]">
+                          {pct}% ({count})
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Star Filter Pills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-slate-500 mr-1">Lọc theo:</span>
+                {[
+                  { key: "all", label: "Tất cả" },
+                  { key: "5", label: "5 sao (Rất hài lòng)" },
+                  { key: "4", label: "4 sao (Hài lòng)" },
+                  { key: "3", label: "3 sao (Bình thường)" },
+                  { key: "2", label: "2 sao (Chưa hài lòng)" },
+                  { key: "1", label: "1 sao (Không hài lòng)" },
+                ].map((pill) => (
+                  <button
+                    key={pill.key}
+                    type="button"
+                    onClick={() => setSelectedStarFilter(pill.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      selectedStarFilter === pill.key
+                        ? "bg-amber-500 text-white shadow-xs"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {pill.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Danh sách các nhận xét đánh giá */}
+              <div className="space-y-3 pt-2">
+                {loadingReviews ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    Đang tải đánh giá...
+                  </div>
+                ) : reviewsData.items && reviewsData.items.length > 0 ? (
+                  reviewsData.items.map((rev) => {
+                    const isOwn = currentUser && String(currentUser.MaNgDung) === String(rev.MaKhachHang);
+                    return (
+                      <div
+                        key={rev.MaDG}
+                        className="p-4 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50/50 transition-colors space-y-2"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            {rev.AvatarKhachHang ? (
+                              <img
+                                src={rev.AvatarKhachHang.startsWith("http") ? rev.AvatarKhachHang : `${SERVER_URL}${rev.AvatarKhachHang}`}
+                                alt={rev.TenKhachHang}
+                                className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                                onError={(e) => {
+                                  e.target.src = "/placeholder.svg?height=40&width=40";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-xs">
+                                {(rev.TenKhachHang || "KH").slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+
+                            <div>
+                              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                <span>{rev.TenKhachHang || "Khách hàng ẩn danh"}</span>
+                                {isOwn && (
+                                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-semibold border border-blue-200">
+                                    Đánh giá của bạn
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                                <div className="flex items-center gap-0.5 text-amber-400">
+                                  {[...Array(5)].map((_, i) => (
+                                    <FaStar
+                                      key={i}
+                                      className={i < rev.SoSao ? "text-amber-400" : "text-slate-200"}
+                                      size={11}
+                                    />
+                                  ))}
+                                </div>
+                                <span>&bull;</span>
+                                <span>{formatDate(rev.NgayTao)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Thao tác xóa nếu là chủ bài đánh giá */}
+                          {isOwn && (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setShowReviewModal(true)}
+                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-xs transition-colors"
+                                title="Chỉnh sửa đánh giá"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(rev.MaDG)}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg text-xs transition-colors"
+                                title="Xóa đánh giá"
+                              >
+                                <FaTrashAlt />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {rev.TieuDe && (
+                          <div className="font-bold text-xs text-slate-800">
+                            {rev.TieuDe}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line pl-0.5">
+                          "{rev.NoiDung}"
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="py-10 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500 space-y-2">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto text-amber-400 text-lg shadow-xs">
+                      <FaStar />
+                    </div>
+                    <div className="font-semibold text-slate-700">Chưa có đánh giá nào</div>
+                    <p className="text-slate-500 max-w-sm mx-auto text-[11px]">
+                      Chưa có nhận xét nào phù hợp với bộ lọc. Hãy liên hệ với môi giới và gửi đánh giá đầu tiên!
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* RIGHT COLUMN: STICKY INQUIRY & TRUST SIDEBAR (4 COLS) */}
@@ -957,6 +1269,221 @@ const BrokerProfile = () => {
                 )}
               </div>
             </div>
+
+            {/* ĐÁNH GIÁ & NHẬN XÉT MÔI GIỚI (REVIEWS & RATINGS) */}
+            <div id="danh-gia" className="bg-white rounded-xl border border-slate-200/90 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <span className="w-1.5 h-5 bg-amber-500 rounded-full inline-block" />
+                    Đánh giá &amp; Nhận xét về môi giới
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Thông tin đánh giá khách quan từ khách hàng đã liên hệ hoặc làm việc cùng
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowReviewModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs transition-all shadow-xs active:scale-95"
+                >
+                  <FaStar className="text-xs" />
+                  <span>Viết đánh giá môi giới</span>
+                </button>
+              </div>
+
+              {/* Hộp Thống kê Đánh giá (Score Box + Star Distribution) */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 p-5 bg-slate-50 rounded-xl border border-slate-200/80 items-center">
+                {/* Score Summary */}
+                <div className="md:col-span-4 text-center md:border-r border-slate-200 md:pr-4">
+                  <div className="text-4xl font-extrabold text-slate-900 tracking-tight">
+                    {reviewsData.summary.avgRating}
+                    <span className="text-base text-slate-400 font-normal"> / 5</span>
+                  </div>
+                  <div className="flex justify-center my-2">
+                    {renderStars(reviewsData.summary.avgRating)}
+                  </div>
+                  <div className="text-xs font-medium text-slate-500">
+                    ({reviewsData.summary.totalReviews} đánh giá)
+                  </div>
+
+                  {/* Highlights (Đúng theo mẫu ví dụ của yêu cầu) */}
+                  <div className="mt-3 pt-3 border-t border-slate-200/80 space-y-1.5 text-left text-[11px] text-slate-700">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="text-amber-500 font-bold">★★★★★</span>
+                      <span>Rất hài lòng</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="text-amber-500 font-bold">★★★★☆</span>
+                      <span>Tư vấn nhanh chóng</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span className="text-amber-500 font-bold">★★★★★</span>
+                      <span>Hỗ trợ nhiệt tình</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Star Distribution Progress Bars */}
+                <div className="md:col-span-8 space-y-2 text-xs">
+                  {[5, 4, 3, 2, 1].map((s) => {
+                    const count = reviewsData.summary.distribution[s] || 0;
+                    const pct = reviewsData.summary.percentages[s] || 0;
+                    return (
+                      <div
+                        key={s}
+                        onClick={() => setSelectedStarFilter(selectedStarFilter === String(s) ? "all" : String(s))}
+                        className="flex items-center gap-3 cursor-pointer group"
+                      >
+                        <span className="w-12 text-slate-600 font-semibold group-hover:text-amber-600 flex items-center gap-1">
+                          <span>{s}</span>
+                          <FaStar className="text-amber-400 text-[10px]" />
+                        </span>
+                        <div className="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-14 text-right text-slate-500 text-[11px]">
+                          {pct}% ({count})
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Star Filter Pills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-slate-500 mr-1">Lọc theo:</span>
+                {[
+                  { key: "all", label: "Tất cả" },
+                  { key: "5", label: "5 sao (Rất hài lòng)" },
+                  { key: "4", label: "4 sao (Hài lòng)" },
+                  { key: "3", label: "3 sao (Bình thường)" },
+                  { key: "2", label: "2 sao (Chưa hài lòng)" },
+                  { key: "1", label: "1 sao (Không hài lòng)" },
+                ].map((pill) => (
+                  <button
+                    key={pill.key}
+                    type="button"
+                    onClick={() => setSelectedStarFilter(pill.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      selectedStarFilter === pill.key
+                        ? "bg-amber-500 text-white shadow-xs"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {pill.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Danh sách các nhận xét đánh giá */}
+              <div className="space-y-3 pt-2">
+                {loadingReviews ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    Đang tải đánh giá...
+                  </div>
+                ) : reviewsData.items && reviewsData.items.length > 0 ? (
+                  reviewsData.items.map((rev) => {
+                    const isOwn = currentUser && String(currentUser.MaNgDung) === String(rev.MaKhachHang);
+                    return (
+                      <div
+                        key={rev.MaDG}
+                        className="p-4 rounded-xl border border-slate-200/80 bg-white hover:bg-slate-50/50 transition-colors space-y-2"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            {rev.AvatarKhachHang ? (
+                              <img
+                                src={rev.AvatarKhachHang.startsWith("http") ? rev.AvatarKhachHang : `${SERVER_URL}${rev.AvatarKhachHang}`}
+                                alt={rev.TenKhachHang}
+                                className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                                onError={(e) => {
+                                  e.target.src = "/placeholder.svg?height=40&width=40";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-xs">
+                                {(rev.TenKhachHang || "KH").slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+
+                            <div>
+                              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                <span>{rev.TenKhachHang || "Khách hàng ẩn danh"}</span>
+                                {isOwn && (
+                                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-semibold border border-blue-200">
+                                    Đánh giá của bạn
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                                <div className="flex items-center gap-0.5 text-amber-400">
+                                  {[...Array(5)].map((_, i) => (
+                                    <FaStar
+                                      key={i}
+                                      className={i < rev.SoSao ? "text-amber-400" : "text-slate-200"}
+                                      size={11}
+                                    />
+                                  ))}
+                                </div>
+                                <span>&bull;</span>
+                                <span>{formatDate(rev.NgayTao)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Thao tác xóa nếu là chủ bài đánh giá */}
+                          {isOwn && (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setShowReviewModal(true)}
+                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-xs transition-colors"
+                                title="Chỉnh sửa đánh giá"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(rev.MaDG)}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg text-xs transition-colors"
+                                title="Xóa đánh giá"
+                              >
+                                <FaTrashAlt />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {rev.TieuDe && (
+                          <div className="font-bold text-xs text-slate-800">
+                            {rev.TieuDe}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line pl-0.5">
+                          "{rev.NoiDung}"
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="py-10 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500 space-y-2">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto text-amber-400 text-lg shadow-xs">
+                      <FaStar />
+                    </div>
+                    <div className="font-semibold text-slate-700">Chưa có đánh giá nào</div>
+                    <p className="text-slate-500 max-w-sm mx-auto text-[11px]">
+                      Chưa có nhận xét nào phù hợp với bộ lọc. Hãy liên hệ với môi giới và gửi đánh giá đầu tiên!
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1002,6 +1529,23 @@ const BrokerProfile = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* REVIEW MODAL */}
+      {broker && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          broker={broker}
+          onSuccess={() => {
+            fetchReviews();
+            showToast("Gửi đánh giá môi giới thành công!");
+          }}
+          onOpenContactModal={() => {
+            const el = document.querySelector('form');
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
       )}
     </div>
   );

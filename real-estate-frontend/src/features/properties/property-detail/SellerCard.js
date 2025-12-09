@@ -1,9 +1,15 @@
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaCheckCircle,
   FaPhone,
   FaCommentDots,
+  FaPaperPlane,
+  FaStar,
+  FaFlag,
 } from "react-icons/fa";
+import { useAuth } from "../../../context/AuthContext";
+import ContactRequestModal from "./ContactRequestModal";
 
 const SellerCard = ({
   seller,
@@ -15,7 +21,11 @@ const SellerCard = ({
   onSuggestedMessageClick,
   formatPrice,
   formatDate,
+  onOpenReportModal,
 }) => {
+  const { currentUser } = useAuth();
+  const [showContactModal, setShowContactModal] = useState(false);
+
   if (!property) return null;
 
   return (
@@ -79,6 +89,17 @@ const SellerCard = ({
                 <span className="inline-block px-2 py-0.5 text-xs font-medium text-blue-700 rounded-full bg-blue-50 border border-blue-100">
                   {seller?.LoaiTaiKhoan || "Người dùng"}
                 </span>
+
+                {seller?.MaNgDung && (
+                  <Link
+                    to={`/profile/${seller.MaNgDung}#danh-gia`}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-full hover:bg-amber-100 transition-colors"
+                    title="Xem đánh giá từ khách hàng"
+                  >
+                    <FaStar className="text-amber-500 text-[10px]" />
+                    <span>Xem đánh giá</span>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -100,6 +121,16 @@ const SellerCard = ({
                 </svg>
               </Link>
             )}
+
+            {/* Nút Gửi yêu cầu tư vấn & liên hệ */}
+            <button
+              type="button"
+              onClick={() => setShowContactModal(true)}
+              className="flex items-center justify-center w-full gap-2 py-2.5 mb-3 text-sm font-bold text-white transition-all rounded-lg shadow-sm bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 active:scale-98"
+            >
+              <FaPaperPlane className="text-xs" />
+              <span>Gửi yêu cầu tư vấn</span>
+            </button>
 
             {seller?.SDT && (
               <button
@@ -227,7 +258,31 @@ const SellerCard = ({
             </li>
           </ul>
         </div>
+
+        {/* Nút Báo cáo tin sai phạm */}
+        {onOpenReportModal && (
+          <div className="pt-1 text-center">
+            <button
+              type="button"
+              onClick={onOpenReportModal}
+              className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-600 transition-colors py-1.5 px-3 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-200"
+            >
+              <FaFlag className="text-[11px] text-red-500" />
+              <span>Báo cáo tin đăng sai phạm</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Modal Gửi yêu cầu tư vấn / liên hệ */}
+      <ContactRequestModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        property={property}
+        seller={seller}
+        currentUser={currentUser}
+        formatPrice={formatPrice}
+      />
     </div>
   );
 };

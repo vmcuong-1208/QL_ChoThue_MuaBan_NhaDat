@@ -29,6 +29,7 @@ import {
   Favorites,
   SearchResults,
   PriceReference,
+  ContactRequestManager,
 
   // Map & GIS
   MapPage,
@@ -134,6 +135,15 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <Favorites />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/yeu-cau-lien-he"
+            element={
+              <ProtectedRoute>
+                <ContactRequestManager />
               </ProtectedRoute>
             }
           />

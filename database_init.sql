@@ -19,6 +19,7 @@ CREATE TABLE NGUOIDUNG (
     MoTaBanThan TEXT,
     TrangThai ENUM('hoạt động', 'khóa', 'chờ xác thực') DEFAULT 'chờ xác thực',
     GoogleId VARCHAR(255) NULL UNIQUE,
+    LastSeen DATETIME NULL DEFAULT CURRENT_TIMESTAMP, -- // Chú thích: Lưu thời gian trực tuyến cuối cho Socket.IO
     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
     NgayCapNhat DATETIME ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT chk_auth_method 
@@ -312,4 +313,105 @@ CREATE TABLE IF NOT EXISTS TRANGGIOITHIEU (
     Website VARCHAR(100) DEFAULT 'https://bds3man.vn',
     Fanpage VARCHAR(255) DEFAULT 'https://facebook.com/bds3man',
     NgayCapNhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- // =========================================================================
+-- // BỔ SUNG: BẢNG YÊU CẦU LIÊN HỆ & TƯ VẤN BẤT ĐỘNG SẢN (CONTACT REQUESTS)
+-- // Cho phép khách hàng gửi thông tin, nhu cầu tư vấn đến môi giới phụ trách tin đăng
+-- // =========================================================================
+CREATE TABLE IF NOT EXISTS YEUCAULIENHE (
+    MaYCLH INT AUTO_INCREMENT PRIMARY KEY,
+    MaTTND INT NOT NULL,
+    MaNgGui INT NULL,
+    MaMoiGioi INT NOT NULL,
+    HoTen VARCHAR(100) NOT NULL,
+    SoDienThoai VARCHAR(20) NOT NULL,
+    Email VARCHAR(100) NULL,
+    NoiDung TEXT NOT NULL,
+    -- // Chú thích: 4 trạng thái theo dõi tư vấn: MOI_NHAN, DANG_LIEN_HE, DA_TU_VAN, HOAN_THANH, DA_HUY
+    TrangThai ENUM('MOI_NHAN', 'DANG_LIEN_HE', 'DA_TU_VAN', 'HOAN_THANH', 'DA_HUY') DEFAULT 'MOI_NHAN',
+    GhiChuMoiGioi TEXT NULL,
+    LichSuTuVan JSON NULL, -- // Chú thích: Lưu lịch sử nhật ký các lần tư vấn và ghi chú của môi giới
+    NgayGui DATETIME DEFAULT CURRENT_TIMESTAMP,
+    NgayXuLy DATETIME NULL,
+    FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE,
+    FOREIGN KEY (MaNgGui) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE SET NULL,
+    FOREIGN KEY (MaMoiGioi) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_yclh_ttnd ON YEUCAULIENHE(MaTTND);
+CREATE INDEX idx_yclh_moigioi ON YEUCAULIENHE(MaMoiGioi);
+CREATE INDEX idx_yclh_nggui ON YEUCAULIENHE(MaNgGui);
+CREATE INDEX idx_yclh_trangthai ON YEUCAULIENHE(TrangThai);
+
+-- // =========================================================================
+-- // BỔ SUNG: BẢNG THÔNG BÁO HỆ THỐNG (NOTIFICATIONS)
+-- // Gửi thông báo đến môi giới khi có khách hàng mới liên hệ hoặc tương tác
+-- // =========================================================================
+CREATE TABLE IF NOT EXISTS THONGBAO (
+    MaTB INT AUTO_INCREMENT PRIMARY KEY,
+    MaNgDung INT NOT NULL,
+    TieuDe VARCHAR(255) NOT NULL,
+    NoiDung TEXT NOT NULL,
+    LoaiTB VARCHAR(50) DEFAULT 'LIEN_HE',
+    LienKet VARCHAR(255) NULL,
+    TrangThaiDoc TINYINT(1) DEFAULT 0,
+    DuLieuThem JSON NULL,
+    NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_tb_ngdung ON THONGBAO(MaNgDung);
+CREATE INDEX idx_tb_trangthaidoc ON THONGBAO(TrangThaiDoc);
+CREATE INDEX idx_tb_ngaytao ON THONGBAO(NgayTao);
+
+-- // =========================================================================
+-- // BỔ SUNG: BẢNG ĐÁNH GIÁ MÔI GIỚI (BROKER REVIEWS & RATINGS)
+-- // Cho phép khách hàng gửi đánh giá (1-5 sao) và nhận xét chất lượng tư vấn, thái độ của môi giới
+-- // =========================================================================
+CREATE TABLE IF NOT EXISTS DANHGIAMOIGIOI (
+    MaDG INT AUTO_INCREMENT PRIMARY KEY,
+    MaMoiGioi INT NOT NULL,
+    MaKhachHang INT NOT NULL,
+    SoSao TINYINT NOT NULL,
+    NoiDung TEXT NOT NULL,
+    TieuDe VARCHAR(150) NULL,
+    MaYCLH INT NULL,
+    NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    NgayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    TrangThai ENUM('HIEN_THI', 'AN') DEFAULT 'HIEN_THI',
+    INDEX idx_dg_moigioi (MaMoiGioi),
+    INDEX idx_dg_khachhang (MaKhachHang),
+    INDEX idx_dg_sosao (SoSao),
+    INDEX idx_dg_ngaytao (NgayTao),
+    FOREIGN KEY (MaMoiGioi) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE,
+    FOREIGN KEY (MaKhachHang) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- // =========================================================================
+-- // BỔ SUNG: BẢNG BÁO CÁO TIN SAI PHẠM (PROPERTY LISTING REPORTS)
+-- // Cho phép khách hàng báo cáo tin đăng có dấu hiệu vi phạm gửi đến Admin xử lý
+-- // =========================================================================
+CREATE TABLE IF NOT EXISTS BAOCAOSAIPHAM (
+    MaBC INT AUTO_INCREMENT PRIMARY KEY,
+    MaTTND INT NOT NULL,
+    MaNgBaoCao INT NULL,
+    HoTen VARCHAR(100) NULL,
+    SoDienThoai VARCHAR(20) NULL,
+    Email VARCHAR(100) NULL,
+    LyDo VARCHAR(100) NOT NULL,
+    MoTaChiTiet TEXT NULL,
+    TrangThai ENUM('CHO_XU_LY', 'DANG_KIEM_TRA', 'DA_XU_LY', 'DA_GO_TIN') DEFAULT 'CHO_XU_LY',
+    GhiChuAdmin TEXT NULL,
+    MaAdminXuLy INT NULL,
+    NgayBaoCao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    NgayXuLy DATETIME NULL,
+    INDEX idx_bc_ttnd (MaTTND),
+    INDEX idx_bc_ngbaocao (MaNgBaoCao),
+    INDEX idx_bc_trangthai (TrangThai),
+    INDEX idx_bc_ngaybaocao (NgayBaoCao),
+    FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE,
+    FOREIGN KEY (MaNgBaoCao) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

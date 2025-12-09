@@ -13,6 +13,7 @@ import {
   FaRulerCombined,
   FaCheckCircle,
   FaSearch,
+  FaEnvelopeOpenText,
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import locationService from "../../services/locationService";
@@ -335,14 +336,24 @@ const Post = () => {
             )}
           </div>
 
-          {/* Nút đăng tin mới */}
-          <Link
-            to="/dang-bai"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white rounded-xl shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 transition-all whitespace-nowrap"
-          >
-            <FaPlus className="text-base" />
-            Đăng tin mới
-          </Link>
+          {/* Nút Xem yêu cầu liên hệ & Nút đăng tin mới */}
+          <div className="flex items-center gap-2">
+            <Link
+              to="/yeu-cau-lien-he"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold text-blue-700 bg-white border-2 border-blue-200 rounded-xl shadow-xs hover:bg-blue-50 hover:border-blue-400 transition-all whitespace-nowrap"
+            >
+              <FaEnvelopeOpenText className="text-base text-blue-600" />
+              <span>Yêu cầu liên hệ</span>
+            </Link>
+
+            <Link
+              to="/dang-bai"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white rounded-xl shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 transition-all whitespace-nowrap"
+            >
+              <FaPlus className="text-base" />
+              Đăng tin mới
+            </Link>
+          </div>
         </div>
 
         {/* Không có bài đăng */}

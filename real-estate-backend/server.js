@@ -18,6 +18,7 @@ const server = http.createServer(app);
 
 // Khởi tạo socket.io
 const io = setupSocket(server);
+app.set("io", io);
 
 // Middleware cơ bản
 app.use(
@@ -91,6 +92,18 @@ app.use("/api/broker-verification", brokerVerificationRoutes);
 
 const contentRoutes = require("./routes/content");
 app.use("/api/content", contentRoutes);
+
+const contactRequestRoutes = require("./routes/contactRequests");
+app.use("/api/contact-requests", contactRequestRoutes);
+
+const notificationRoutes = require("./routes/notifications");
+app.use("/api/notifications", notificationRoutes);
+
+const brokerReviewRoutes = require("./routes/brokerReviews");
+app.use("/api/broker-reviews", brokerReviewRoutes);
+
+const propertyReportRoutes = require("./routes/propertyReports");
+app.use("/api/property-reports", propertyReportRoutes);
 
 const momoPaymentRoutes = require("./routes/momo-payment");
 app.use("/api/momo-payment", momoPaymentRoutes);

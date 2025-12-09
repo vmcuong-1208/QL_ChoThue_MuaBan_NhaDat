@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   FaUsers,
   FaHome,
@@ -26,22 +26,32 @@ import {
   FaClipboardList,
   FaLayerGroup,
   FaBullhorn,
+  FaFlag,
 } from "react-icons/fa";
 import CategoryManager from "./CategoryManager";
 import ContentManager from "./ContentManager";
 import UserManager from "./UserManager";
 import PropertyModerationManager from "./PropertyModerationManager";
 import BrokerVerificationManager from "./BrokerVerificationManager";
+import ReportManager from "./ReportManager";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { API_URL } from "../../services/api";
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabParam || "dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { currentUser, logout } = useAuth();
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -81,6 +91,8 @@ const AdminPanel = () => {
       case "properties":
       case "verification":
         return <PropertyModerationManager />;
+      case "reports":
+        return <ReportManager />;
       case "content":
         return <ContentManager />;
       default:
@@ -124,6 +136,11 @@ const AdminPanel = () => {
       id: "properties",
       icon: FaClipboardList,
       label: "Quản lý tin đăng",
+    },
+    {
+      id: "reports",
+      icon: FaFlag,
+      label: "Báo cáo sai phạm",
     },
     {
       id: "content",
@@ -576,6 +593,7 @@ const getTabTitle = (tab) => {
     "broker-verification": "Xác minh môi giới",
     properties: "Quản lý tin đăng",
     verification: "Quản lý tin đăng",
+    reports: "Quản lý Báo cáo tin sai phạm",
     content: "Quản lý nội dung",
   };
   return titles[tab] || "Tổng quan";

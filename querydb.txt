@@ -340,3 +340,93 @@ ADD INDEX idx_google_id (GoogleId);
 --     Fanpage VARCHAR(255) DEFAULT 'https://facebook.com/bds3man',
 --     NgayCapNhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 -- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- // =========================================================================
+-- // 5. BỔ SUNG: BẢNG YÊU CẦU LIÊN HỆ & TƯ VẤN (KHÁCH HÀNG -> MÔI GIỚI)
+-- // =========================================================================
+-- CREATE TABLE IF NOT EXISTS YEUCAULIENHE (
+--     MaYCLH INT AUTO_INCREMENT PRIMARY KEY,
+--     MaTTND INT NOT NULL,
+--     MaNgGui INT NULL,
+--     MaMoiGioi INT NOT NULL,
+--     HoTen VARCHAR(100) NOT NULL,
+--     SoDienThoai VARCHAR(20) NOT NULL,
+--     Email VARCHAR(100) NULL,
+--     NoiDung TEXT NOT NULL,
+--     TrangThai ENUM('MOI_NHAN', 'DANG_LIEN_HE', 'DA_TU_VAN', 'HOAN_THANH', 'DA_HUY') DEFAULT 'MOI_NHAN',
+--     GhiChuMoiGioi TEXT NULL,
+--     LichSuTuVan JSON NULL,
+--     NgayGui DATETIME DEFAULT CURRENT_TIMESTAMP,
+--     NgayXuLy DATETIME NULL,
+--     FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE,
+--     FOREIGN KEY (MaNgGui) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE SET NULL,
+--     FOREIGN KEY (MaMoiGioi) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- // =========================================================================
+-- // 6. BỔ SUNG: BẢNG THÔNG BÁO CHO MÔI GIỚI KHI CÓ KHÁCH HÀNG LIÊN HỆ (NOTIFICATIONS)
+-- // =========================================================================
+-- CREATE TABLE IF NOT EXISTS THONGBAO (
+--     MaTB INT AUTO_INCREMENT PRIMARY KEY,
+--     MaNgDung INT NOT NULL,
+--     TieuDe VARCHAR(255) NOT NULL,
+--     NoiDung TEXT NOT NULL,
+--     LoaiTB VARCHAR(50) DEFAULT 'LIEN_HE',
+--     LienKet VARCHAR(255) NULL,
+--     TrangThaiDoc TINYINT(1) DEFAULT 0,
+--     DuLieuThem JSON NULL,
+--     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (MaNgDung) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- // =========================================================================
+-- // 7. BỔ SUNG: BẢNG ĐÁNH GIÁ MÔI GIỚI (BROKER REVIEWS & RATINGS)
+-- // Cho phép khách hàng gửi đánh giá (1-5 sao) và nhận xét chất lượng tư vấn, thái độ của môi giới
+-- // =========================================================================
+-- CREATE TABLE IF NOT EXISTS DANHGIAMOIGIOI (
+--     MaDG INT AUTO_INCREMENT PRIMARY KEY,
+--     MaMoiGioi INT NOT NULL,
+--     MaKhachHang INT NOT NULL,
+--     SoSao TINYINT NOT NULL,
+--     NoiDung TEXT NOT NULL,
+--     TieuDe VARCHAR(150) NULL,
+--     MaYCLH INT NULL,
+--     NgayTao DATETIME DEFAULT CURRENT_TIMESTAMP,
+--     NgayCapNhat DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     TrangThai ENUM('HIEN_THI', 'AN') DEFAULT 'HIEN_THI',
+--     INDEX idx_dg_moigioi (MaMoiGioi),
+--     INDEX idx_dg_khachhang (MaKhachHang),
+--     INDEX idx_dg_sosao (SoSao),
+--     INDEX idx_dg_ngaytao (NgayTao),
+--     FOREIGN KEY (MaMoiGioi) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE,
+--     FOREIGN KEY (MaKhachHang) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE CASCADE
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- // =========================================================================
+-- // 8. BỔ SUNG: BẢNG BÁO CÁO TIN SAI PHẠM (PROPERTY LISTING REPORTS)
+-- // Cho phép người dùng báo cáo tin đăng vi phạm gửi đến Admin để xử lý
+-- // =========================================================================
+-- CREATE TABLE IF NOT EXISTS BAOCAOSAIPHAM (
+--     MaBC INT AUTO_INCREMENT PRIMARY KEY,
+--     MaTTND INT NOT NULL,
+--     MaNgBaoCao INT NULL,
+--     HoTen VARCHAR(100) NULL,
+--     SoDienThoai VARCHAR(20) NULL,
+--     Email VARCHAR(100) NULL,
+--     LyDo VARCHAR(100) NOT NULL,
+--     MoTaChiTiet TEXT NULL,
+--     TrangThai ENUM('CHO_XU_LY', 'DANG_KIEM_TRA', 'DA_XU_LY', 'DA_GO_TIN') DEFAULT 'CHO_XU_LY',
+--     GhiChuAdmin TEXT NULL,
+--     MaAdminXuLy INT NULL,
+--     NgayBaoCao DATETIME DEFAULT CURRENT_TIMESTAMP,
+--     NgayXuLy DATETIME NULL,
+--     INDEX idx_bc_ttnd (MaTTND),
+--     INDEX idx_bc_ngbaocao (MaNgBaoCao),
+--     INDEX idx_bc_trangthai (TrangThai),
+--     INDEX idx_bc_ngaybaocao (NgayBaoCao),
+--     FOREIGN KEY (MaTTND) REFERENCES THONGTINNHADAT(MaTTND) ON DELETE CASCADE,
+--     FOREIGN KEY (MaNgBaoCao) REFERENCES NGUOIDUNG(MaNgDung) ON DELETE SET NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
