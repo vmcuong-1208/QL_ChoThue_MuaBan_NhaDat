@@ -66,8 +66,8 @@ const createPayment = async ({ userId, amount, orderInfo, upgradeType = "broker"
   if (momoResponse.resultCode === 0) {
     try {
       await db.promise().query(
-        `INSERT INTO GIAODICH (MaNgDung, OrderId, Amount, OrderInfo, UpgradeType, TrangThai, NgayTao) 
-         VALUES (?, ?, ?, ?, ?, 'PENDING', NOW())`,
+        `INSERT INTO GIAODICH (MaNgDung, OrderId, Amount, OrderInfo, UpgradeType, LoaiDichVu, PhuongThucThanhToan, TrangThai, NgayTao) 
+         VALUES (?, ?, ?, ?, ?, 'NANG_CAP_MOI_GIOI', 'MoMo', 'PENDING', NOW())`,
         [userId, orderId, amount, orderInfo, upgradeType]
       );
     } catch (dbError) {
@@ -101,11 +101,13 @@ const handleCallback = async (callbackData) => {
     const [transactions] = await db.promise().query(`SELECT * FROM GIAODICH WHERE OrderId = ?`, [orderId]);
     if (transactions.length > 0) {
       const transaction = transactions[0];
-      if (transaction.UpgradeType === "broker") {
-        await db
-          .promise()
-          .query(`UPDATE NGUOIDUNG SET LoaiTaiKhoan = 'Môi giới' WHERE MaNgDung = ?`, [transaction.MaNgDung]);
-      }
+      // Cập nhật trạng thái thanh toán trong hồ sơ xác minh môi giới (nếu có)
+      await db.promise().query(
+        `UPDATE XACMINHMOIGIOI 
+         SET TrangThaiThanhToan = 'DA_THANH_TOAN', MaGiaoDichMoMo = ?, PhuongThucThanhToan = 'MoMo' 
+         WHERE MaNgDung = ? AND TrangThai = 'PENDING'`,
+        [transId, transaction.MaNgDung]
+      );
     }
   } else {
     await db
@@ -177,11 +179,13 @@ const checkStatus = async (orderId, userId) => {
             orderId,
           ]);
 
-        if (transaction.UpgradeType === "broker") {
-          await db
-            .promise()
-            .query(`UPDATE NGUOIDUNG SET LoaiTaiKhoan = 'Môi giới' WHERE MaNgDung = ?`, [transaction.MaNgDung]);
-        }
+        // Cập nhật trạng thái thanh toán trong hồ sơ xác minh môi giới (nếu có)
+        await db.promise().query(
+          `UPDATE XACMINHMOIGIOI 
+           SET TrangThaiThanhToan = 'DA_THANH_TOAN', MaGiaoDichMoMo = ?, PhuongThucThanhToan = 'MoMo' 
+           WHERE MaNgDung = ? AND TrangThai = 'PENDING'`,
+          [momoStatusResponse.transId, transaction.MaNgDung]
+        );
         transaction.TrangThai = "SUCCESS";
       } else if (momoStatusResponse.resultCode === 1006) {
         await db

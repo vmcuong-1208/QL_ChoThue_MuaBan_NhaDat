@@ -3,6 +3,9 @@ const router = express.Router();
 const brokerReviewController = require("../controllers/brokerReviewController");
 const authenticateToken = require("../middleware/authenticateToken");
 
+// 0. Lịch sử đánh giá của người dùng hiện tại (Đặt trước :brokerId)
+router.get("/user/my-reviews", authenticateToken, brokerReviewController.getMyReviews);
+
 // 1. Xem danh sách đánh giá & thống kê của môi giới (công khai)
 router.get("/:brokerId", brokerReviewController.getBrokerReviews);
 

@@ -10,3 +10,5 @@ export * from "./chat";
 export * from "./admin";
 export * from "./payment";
 export * from "./common";
+export * from "./reviews";
+export * from "./reports";

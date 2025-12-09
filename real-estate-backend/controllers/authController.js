@@ -78,7 +78,16 @@ const verify = async (req, res) => {
 };
 
 const update = async (req, res) => {
-  const { HoTen, DiaChi, MoTaBanThan, SDT } = req.body;
+  const {
+    HoTen,
+    DiaChi,
+    MoTaBanThan,
+    SDT,
+    TenChungChi,
+    SoChungChi,
+    NgayCapChungChi,
+    KhuVucChuyenMon,
+  } = req.body;
   const MaNgDung = req.user.MaNgDung;
 
   try {
@@ -87,7 +96,11 @@ const update = async (req, res) => {
       DiaChi,
       MoTaBanThan,
       SDT,
-      file: req.file,
+      TenChungChi,
+      SoChungChi,
+      NgayCapChungChi,
+      KhuVucChuyenMon,
+      files: req.files || (req.file ? { AnhDaiDien: [req.file] } : {}),
     });
 
     res.json({
@@ -218,6 +231,26 @@ const updateLastSeen = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.MaNgDung;
+    const { oldPassword, newPassword } = req.body;
+
+    await authService.changePassword({ userId, oldPassword, newPassword });
+    res.json({
+      success: true,
+      message: "Đổi mật khẩu thành công!",
+    });
+  } catch (error) {
+    console.error("❌ Lỗi đổi mật khẩu:", error);
+    const status = error.status || 500;
+    res.status(status).json({
+      success: false,
+      message: error.message || "Lỗi máy chủ khi đổi mật khẩu",
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -229,4 +262,5 @@ module.exports = {
   verifyOtp,
   resetPassword,
   updateLastSeen,
+  changePassword,
 };

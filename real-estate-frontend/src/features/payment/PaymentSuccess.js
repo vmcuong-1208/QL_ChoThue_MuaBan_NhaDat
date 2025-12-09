@@ -10,6 +10,19 @@ const PaymentSuccess = () => {
   const [message, setMessage] = useState("Đang xử lý kết quả thanh toán...")
 
   useEffect(() => {
+    document.title = "Kết quả thanh toán nâng cấp tài khoản | Bất Động Sản 3MAN";
+    
+    // Đảm bảo bot tìm kiếm không lập chỉ mục trang callback thanh toán
+    let robotsMeta = document.querySelector('meta[name="robots"]');
+    if (!robotsMeta) {
+      robotsMeta = document.createElement("meta");
+      robotsMeta.name = "robots";
+      robotsMeta.content = "noindex, nofollow";
+      document.head.appendChild(robotsMeta);
+    } else {
+      robotsMeta.content = "noindex, nofollow";
+    }
+
     const urlParams = new URLSearchParams(location.search)
     const resultCode = urlParams.get("resultCode")
     const orderId = urlParams.get("orderId")
@@ -24,21 +37,20 @@ const PaymentSuccess = () => {
     if (resultCode === "0") {
       // Thanh toán thành công
       setStatus("success")
-      setMessage("Thanh toán thành công! Tài khoản của bạn đã được nâng cấp.")
+      setMessage("Thanh toán thành công! Hồ sơ nâng cấp tài khoản của bạn đã được gửi và chuyển sang trạng thái Chờ xét duyệt.")
 
-      // Tự động chuyển về trang chủ sau 3 giây
+      // Tự động chuyển về trang đăng ký sau 3 giây
       setTimeout(() => {
-        navigate("/")
-        window.location.reload() // Reload để cập nhật UI
+        navigate("/dang-ky-moi-gioi")
       }, 3000)
     } else {
       // Thanh toán thất bại
       setStatus("failed")
-      setMessage("Thanh toán thất bại. Vui lòng thử lại.")
+      setMessage("Thanh toán thất bại hoặc đã bị hủy. Bạn có thể thử lại.")
 
-      // Tự động chuyển về trang chủ sau 3 giây
+      // Tự động chuyển về trang đăng ký sau 3 giây
       setTimeout(() => {
-        navigate("/")
+        navigate("/dang-ky-moi-gioi")
       }, 3000)
     }
   }, [location, navigate])

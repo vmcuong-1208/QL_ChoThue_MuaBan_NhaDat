@@ -1,20 +1,27 @@
 const mysql = require('mysql2');
 require('dotenv').config(); // Load biến môi trường từ .env
 
-const connection = mysql.createConnection({
+// Sử dụng Connection Pool thay vì single connection để tự động reconnect và xử lý đa luồng an toàn
+const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASS || '',
-    database: process.env.DB_NAME || 'datn_bdstc'
+    database: process.env.DB_NAME || 'QUANLYTHUEMUABANNHADAT',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
 });
 
-connection.connect(err => {
+pool.getConnection((err, connection) => {
     if (err) {
         console.error('❌ Lỗi kết nối MySQL: ', err.message);
-        console.warn('💡 Gợi ý: Hãy đảm bảo MySQL Server (XAMPP / MySQL Workbench) đã bật và database "' + (process.env.DB_NAME || 'datn_bdstc') + '" đã được import từ file "querydb.txt" (hoặc "init-database.sql").');
+        console.warn('💡 Gợi ý: Hãy đảm bảo MySQL Server (XAMPP / MySQL Workbench) đã bật và database "' + (process.env.DB_NAME || 'QUANLYTHUEMUABANNHADAT') + '" đã sẵn sàng.');
         return;
     }
-    console.log('✅ Kết nối MySQL thành công!');
+    console.log('✅ Kết nối MySQL (Connection Pool) thành công!');
+    connection.release();
 });
 
-module.exports = connection;
+module.exports = pool;

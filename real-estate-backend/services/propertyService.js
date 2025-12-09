@@ -76,6 +76,9 @@ const getAllProperties = async (filters) => {
     filterConditions.push("tt.MaNgDung = ?");
     values.push(filters.MaNgDung);
   }
+  if (filters.featured === "true" || filters.featured === true || filters.featured === "1" || filters.featured === 1) {
+    filterConditions.push("tt.Featured = 1");
+  }
 
   // Lọc theo trạng thái duyệt: Mặc định người dùng ngoài chỉ xem tin APPROVED
   if (filters.trangThaiDuyet) {

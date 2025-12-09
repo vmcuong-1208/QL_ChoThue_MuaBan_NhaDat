@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }) => {
         setToken(authToken);
         setCurrentUser(user);
 
-        return { success: true, message: "Đăng nhập thành công!" };
+        return { success: true, message: "Đăng nhập thành công!", user };
       } else {
         return {
           success: false,

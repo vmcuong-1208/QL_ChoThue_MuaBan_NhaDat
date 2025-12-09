@@ -158,6 +158,13 @@ const CategoryManager = () => {
     }
   }, [selectedProvinceFilter, selectedProjectStatusFilter, searchTerm]);
 
+  // Tải trước số lượng tổng quan của tất cả danh mục khi component mount
+  useEffect(() => {
+    fetchTypes();
+    fetchProvinces();
+    fetchProjects();
+  }, [fetchTypes, fetchProvinces, fetchProjects]);
+
   // Load initial data and when tab changes
   useEffect(() => {
     setSearchTerm("");
@@ -166,10 +173,8 @@ const CategoryManager = () => {
     } else if (activeTab === "provinces") {
       fetchProvinces();
     } else if (activeTab === "districts") {
-      if (provinces.length === 0) fetchProvinces();
       fetchDistricts();
     } else if (activeTab === "projects") {
-      if (provinces.length === 0) fetchProvinces();
       fetchProjects();
     }
   }, [activeTab, fetchTypes, fetchProvinces, fetchDistricts, fetchProjects]);

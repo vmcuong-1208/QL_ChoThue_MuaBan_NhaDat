@@ -14,6 +14,7 @@ import {
   FaCheckCircle,
   FaSearch,
   FaEnvelopeOpenText,
+  FaChartLine,
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import locationService from "../../services/locationService";
@@ -34,10 +35,41 @@ const Post = () => {
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [summaryStats, setSummaryStats] = useState(null);
+
+  // Lấy dữ liệu thống kê hoạt động tóm tắt của môi giới
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await axios.get(`${API_URL}/broker-analytics`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data?.success && res.data?.data?.summary) {
+          setSummaryStats(res.data.data.summary);
+        }
+      } catch (e) {
+        console.warn("Không thể tải thống kê tóm tắt:", e.message);
+      }
+    };
+    fetchAnalytics();
+  }, []);
 
   useEffect(() => {
     if (!currentUser) {
       navigate("/auth");
+      return;
+    }
+    const role = (currentUser?.LoaiTaiKhoan || "").toLowerCase();
+    const isBrokerOrAdmin =
+      role.includes("môi") ||
+      role.includes("broker") ||
+      role.includes("admin") ||
+      role.includes("đầu tư");
+
+    if (!isBrokerOrAdmin) {
+      navigate("/");
     }
   }, [navigate, currentUser]);
 
@@ -336,25 +368,98 @@ const Post = () => {
             )}
           </div>
 
-          {/* Nút Xem yêu cầu liên hệ & Nút đăng tin mới */}
-          <div className="flex items-center gap-2">
+          {/* Nút Thống kê, Yêu cầu liên hệ & Nút đăng tin mới */}
+          <div className="flex items-center gap-2 flex-wrap">
             <Link
-              to="/yeu-cau-lien-he"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold text-blue-700 bg-white border-2 border-blue-200 rounded-xl shadow-xs hover:bg-blue-50 hover:border-blue-400 transition-all whitespace-nowrap"
+              to="/thong-ke"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-indigo-700 bg-white border-2 border-indigo-200 rounded-xl shadow-xs hover:bg-indigo-50 hover:border-indigo-400 transition-all whitespace-nowrap"
+            >
+              <FaChartLine className="text-base text-indigo-600" />
+              <span>Xem thống kê</span>
+            </Link>
+
+            <Link
+              to="/quan-ly-khach-hang"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-blue-700 bg-white border-2 border-blue-200 rounded-xl shadow-xs hover:bg-blue-50 hover:border-blue-400 transition-all whitespace-nowrap"
             >
               <FaEnvelopeOpenText className="text-base text-blue-600" />
-              <span>Yêu cầu liên hệ</span>
+              <span>Khách quan tâm</span>
             </Link>
 
             <Link
               to="/dang-bai"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white rounded-xl shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 transition-all whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold text-white rounded-xl shadow-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 transition-all whitespace-nowrap"
             >
               <FaPlus className="text-base" />
               Đăng tin mới
             </Link>
           </div>
         </div>
+
+        {/* ✅ WIDGET THỐNG KÊ HOẠT ĐỘNG (THEO MẪU YÊU CẦU) */}
+        {summaryStats && (
+          <div className="p-5 mb-6 bg-white border border-slate-200/90 shadow-2xs rounded-2xl animate-fadeIn">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📊</span>
+                <h2 className="text-xs font-black tracking-wider uppercase sm:text-sm text-slate-800">
+                  THỐNG KÊ HOẠT ĐỘNG
+                </h2>
+              </div>
+              <Link
+                to="/thong-ke"
+                className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                <span>Xem phân tích chi tiết</span>
+                <span>→</span>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="flex items-center justify-between p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl">
+                <div>
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Tổng lượt xem
+                  </div>
+                  <div className="mt-0.5 text-2xl font-black text-slate-900">
+                    {summaryStats.tongLuotXem.toLocaleString("vi-VN")}
+                  </div>
+                </div>
+                <div className="flex items-center justify-center text-sm text-blue-600 bg-blue-100 rounded-lg w-9 h-9">
+                  <FaEye />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-xl">
+                <div>
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Tổng lượt liên hệ
+                  </div>
+                  <div className="mt-0.5 text-2xl font-black text-emerald-600">
+                    {summaryStats.tongLuotLienHe.toLocaleString("vi-VN")}
+                  </div>
+                </div>
+                <div className="flex items-center justify-center text-sm text-emerald-600 bg-emerald-100 rounded-lg w-9 h-9">
+                  <FaEnvelopeOpenText />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl">
+                <div>
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Tin đang hoạt động
+                  </div>
+                  <div className="mt-0.5 text-2xl font-black text-indigo-600">
+                    {summaryStats.tinDangHoatDong.toLocaleString("vi-VN")}
+                  </div>
+                </div>
+                <div className="flex items-center justify-center text-sm text-indigo-600 bg-indigo-100 rounded-lg w-9 h-9">
+                  <FaCheckCircle />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Không có bài đăng */}
         {properties.length === 0 ? (

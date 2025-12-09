@@ -309,9 +309,29 @@ const updateReportStatus = async (reportId, updateData, adminId, io = null) => {
   return updated;
 };
 
+/**
+ * 4. Lấy lịch sử báo cáo của người dùng
+ */
+const getMyReports = async (userId) => {
+  const reports = await queryAsync(
+    `SELECT r.MaBC, r.MaTTND, r.LyDo, r.MoTaChiTiet, r.TrangThai, r.NgayBaoCao, r.NgayXuLy, r.GhiChuAdmin,
+            t.TieuDe AS TieuDeTinDang, t.Gia, t.DiaChi, t.TrangThaiDuyet,
+            (SELECT DuongDanAnh FROM HINHANHBDS WHERE MaTTND = t.MaTTND LIMIT 1) AS HinhAnh,
+            u.HoTen AS TenMoiGioi
+     FROM BAOCAOSAIPHAM r
+     LEFT JOIN THONGTINNHADAT t ON r.MaTTND = t.MaTTND
+     LEFT JOIN NGUOIDUNG u ON t.MaNgDung = u.MaNgDung
+     WHERE r.MaNgBaoCao = ?
+     ORDER BY r.NgayBaoCao DESC`,
+    [userId]
+  );
+  return reports;
+};
+
 module.exports = {
   createReport,
   getReports,
   updateReportStatus,
+  getMyReports,
   VALID_REASONS,
 };

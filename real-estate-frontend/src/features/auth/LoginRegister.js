@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import {
   FaGoogle,
   FaEye,
@@ -18,14 +18,26 @@ import { API_URL } from "../../services/api";
 
 const LoginRegister = () => {
   const navigate = useNavigate();
-  const { token, login } = useAuth();
+  const location = useLocation();
+  const { token, currentUser, login } = useAuth();
 
   // State cho form
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(() => {
+    return !location.search.includes("register") && location.state?.mode !== "register";
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [forgotPasswordStep, setForgotPasswordStep] = useState(0);
+
+  // Sync mode when URL query param changes
+  useEffect(() => {
+    if (location.search.includes("register") || location.state?.mode === "register") {
+      setIsLogin(false);
+    } else if (location.search.includes("login") || location.state?.mode === "login") {
+      setIsLogin(true);
+    }
+  }, [location.search, location.state]);
 
   // ✅ State cho animation
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -44,12 +56,18 @@ const LoginRegister = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [apiMessage, setApiMessage] = useState({ type: "", text: "" });
 
-  // Kiểm tra nếu đã đăng nhập
+  // Kiểm tra nếu đã đăng nhập: Admin chuyển vào /admin-panel, User chuyển vào /
   useEffect(() => {
     if (token) {
-      navigate("/");
+      const user = currentUser || JSON.parse(localStorage.getItem("userInfo") || "{}");
+      const isAdmin = (user?.LoaiTaiKhoan || "").toLowerCase() === "admin";
+      if (isAdmin) {
+        navigate("/admin-panel", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
     }
-  }, [navigate, token]);
+  }, [navigate, token, currentUser]);
 
   // ✅ Xử lý chuyển đổi với animation mượt
   const toggleForm = () => {
@@ -170,9 +188,17 @@ const LoginRegister = () => {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
+        const loggedUser =
+          result.user ||
+          JSON.parse(localStorage.getItem("userInfo") || "{}");
+        const isAdmin =
+          (loggedUser?.LoaiTaiKhoan || "").toLowerCase() === "admin";
+
         setApiMessage({
           type: "success",
-          text: "Đăng nhập thành công!",
+          text: isAdmin
+            ? "Đăng nhập thành công! Đang chuyển hướng đến trang Quản trị..."
+            : "Đăng nhập thành công!",
         });
 
         setFormData({
@@ -187,7 +213,11 @@ const LoginRegister = () => {
         });
 
         setTimeout(() => {
-          navigate("/");
+          if (isAdmin) {
+            navigate("/admin-panel");
+          } else {
+            navigate("/");
+          }
         }, 1000);
       } else {
         setApiMessage({

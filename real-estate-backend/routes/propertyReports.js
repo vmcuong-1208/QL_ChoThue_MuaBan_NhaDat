@@ -35,6 +35,9 @@ const requireAdmin = (req, res, next) => {
 // 1. Lấy danh sách các lý do báo cáo chuẩn (Công khai)
 router.get("/reasons", propertyReportController.getReasons);
 
+// 1.1 Lấy lịch sử báo cáo của người dùng đăng nhập
+router.get("/user/my-reports", authenticateToken, propertyReportController.getMyReports);
+
 // 2. Khách hàng gửi báo cáo tin sai phạm (Công khai / Đăng nhập)
 router.post("/", optionalAuth, propertyReportController.createReport);
 

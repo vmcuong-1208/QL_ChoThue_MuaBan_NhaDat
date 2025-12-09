@@ -17,6 +17,12 @@ CREATE TABLE NGUOIDUNG (
     HoTen VARCHAR(100),
     AnhDaiDien VARCHAR(255),
     MoTaBanThan TEXT,
+    -- // Chú thích: Bổ sung các trường hồ sơ nghề nghiệp môi giới (Chứng chỉ hành nghề & Khu vực chuyên môn)
+    TenChungChi VARCHAR(255) NULL,
+    SoChungChi VARCHAR(100) NULL,
+    NgayCapChungChi DATE NULL,
+    FileChungChi VARCHAR(255) NULL,
+    KhuVucChuyenMon TEXT NULL,
     TrangThai ENUM('hoạt động', 'khóa', 'chờ xác thực') DEFAULT 'chờ xác thực',
     GoogleId VARCHAR(255) NULL UNIQUE,
     LastSeen DATETIME NULL DEFAULT CURRENT_TIMESTAMP, -- // Chú thích: Lưu thời gian trực tuyến cuối cho Socket.IO
@@ -329,8 +335,8 @@ CREATE TABLE IF NOT EXISTS YEUCAULIENHE (
     SoDienThoai VARCHAR(20) NOT NULL,
     Email VARCHAR(100) NULL,
     NoiDung TEXT NOT NULL,
-    -- // Chú thích: 4 trạng thái theo dõi tư vấn: MOI_NHAN, DANG_LIEN_HE, DA_TU_VAN, HOAN_THANH, DA_HUY
-    TrangThai ENUM('MOI_NHAN', 'DANG_LIEN_HE', 'DA_TU_VAN', 'HOAN_THANH', 'DA_HUY') DEFAULT 'MOI_NHAN',
+    -- // Chú thích: 6 trạng thái chăm sóc khách hàng quan tâm (CRM Lead): MOI_NHAN (Mới nhận), DANG_LIEN_HE (Đang liên hệ), DANG_TU_VAN (Đang tư vấn), DA_XEM_NHA (Đã xem nhà), DA_GIAO_DICH (Đã giao dịch), KHONG_NHU_CAU (Không có nhu cầu), HOAN_THANH, DA_HUY
+    TrangThai ENUM('MOI_NHAN', 'DANG_LIEN_HE', 'DANG_TU_VAN', 'DA_XEM_NHA', 'DA_GIAO_DICH', 'KHONG_NHU_CAU', 'HOAN_THANH', 'DA_HUY') DEFAULT 'MOI_NHAN',
     GhiChuMoiGioi TEXT NULL,
     LichSuTuVan JSON NULL, -- // Chú thích: Lưu lịch sử nhật ký các lần tư vấn và ghi chú của môi giới
     NgayGui DATETIME DEFAULT CURRENT_TIMESTAMP,

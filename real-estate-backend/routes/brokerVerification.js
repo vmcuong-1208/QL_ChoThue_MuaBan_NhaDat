@@ -48,6 +48,7 @@ const requireAdmin = (req, res, next) => {
 
 // Route cho môi giới
 router.get("/status", authenticateToken, brokerVerificationController.getVerificationStatus);
+router.post("/cancel", authenticateToken, brokerVerificationController.cancelVerification);
 
 router.post(
   "/request",

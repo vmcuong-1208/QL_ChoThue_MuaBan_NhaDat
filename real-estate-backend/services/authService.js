@@ -78,6 +78,11 @@ const login = async ({ Email, MatKhau, TenDangNhap }) => {
       TrangThai: user.TrangThai,
       AnhDaiDien: avatarUrl,
       MoTaBanThan: user.MoTaBanThan,
+      TenChungChi: user.TenChungChi || null,
+      SoChungChi: user.SoChungChi || null,
+      NgayCapChungChi: user.NgayCapChungChi || null,
+      FileChungChi: user.FileChungChi || null,
+      KhuVucChuyenMon: user.KhuVucChuyenMon || null,
     },
   };
 };
@@ -86,7 +91,9 @@ const getProfile = async (MaNgDung) => {
   const [results] = await db
     .promise()
     .query(
-      `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan, TrangThai FROM NGUOIDUNG WHERE MaNgDung = ?`,
+      `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan, 
+              TenChungChi, SoChungChi, NgayCapChungChi, FileChungChi, KhuVucChuyenMon, TrangThai 
+       FROM NGUOIDUNG WHERE MaNgDung = ?`,
       [MaNgDung]
     );
 
@@ -107,13 +114,30 @@ const getProfile = async (MaNgDung) => {
     user.AnhDaiDien = `http://localhost:5000${user.AnhDaiDien.startsWith("/") ? "" : "/"}${user.AnhDaiDien}`;
   }
 
+  if (user.FileChungChi && !user.FileChungChi.startsWith("http")) {
+    user.FileChungChi = `http://localhost:5000${user.FileChungChi.startsWith("/") ? "" : "/"}${user.FileChungChi}`;
+  }
+
   return user;
 };
 
-const updateProfile = async (MaNgDung, { HoTen, DiaChi, MoTaBanThan, SDT, file }) => {
+const updateProfile = async (
+  MaNgDung,
+  {
+    HoTen,
+    DiaChi,
+    MoTaBanThan,
+    SDT,
+    TenChungChi,
+    SoChungChi,
+    NgayCapChungChi,
+    KhuVucChuyenMon,
+    files = {},
+  }
+) => {
   const [userStatus] = await db
     .promise()
-    .query("SELECT TrangThai, AnhDaiDien FROM NGUOIDUNG WHERE MaNgDung = ?", [MaNgDung]);
+    .query("SELECT TrangThai, AnhDaiDien, FileChungChi FROM NGUOIDUNG WHERE MaNgDung = ?", [MaNgDung]);
 
   if (userStatus.length === 0 || userStatus[0].TrangThai === "khóa") {
     const err = new Error("Tài khoản đã bị khóa");
@@ -122,31 +146,62 @@ const updateProfile = async (MaNgDung, { HoTen, DiaChi, MoTaBanThan, SDT, file }
   }
 
   let AnhDaiDien = userStatus[0]?.AnhDaiDien || null;
-  if (file) {
-    AnhDaiDien = `/uploads/${file.filename}`;
+  if (files?.AnhDaiDien?.[0]) {
+    AnhDaiDien = `/uploads/${files.AnhDaiDien[0].filename}`;
   }
+
+  let FileChungChi = userStatus[0]?.FileChungChi || null;
+  if (files?.FileChungChi?.[0]) {
+    FileChungChi = `/uploads/${files.FileChungChi[0].filename}`;
+  }
+
+  const formattedDate = NgayCapChungChi && NgayCapChungChi.trim() ? NgayCapChungChi.trim() : null;
 
   const sql = `UPDATE NGUOIDUNG SET 
                  HoTen = COALESCE(?, HoTen), 
                  SDT = COALESCE(?, SDT),
                  DiaChi = COALESCE(?, DiaChi), 
                  AnhDaiDien = COALESCE(?, AnhDaiDien), 
-                 MoTaBanThan = COALESCE(?, MoTaBanThan), 
+                 MoTaBanThan = COALESCE(?, MoTaBanThan),
+                 TenChungChi = COALESCE(?, TenChungChi),
+                 SoChungChi = COALESCE(?, SoChungChi),
+                 NgayCapChungChi = COALESCE(?, NgayCapChungChi),
+                 FileChungChi = COALESCE(?, FileChungChi),
+                 KhuVucChuyenMon = COALESCE(?, KhuVucChuyenMon),
                  NgayCapNhat = NOW()
               WHERE MaNgDung = ?`;
 
-  await db.promise().query(sql, [HoTen, SDT, DiaChi, AnhDaiDien, MoTaBanThan, MaNgDung]);
+  await db
+    .promise()
+    .query(sql, [
+      HoTen,
+      SDT,
+      DiaChi,
+      AnhDaiDien,
+      MoTaBanThan,
+      TenChungChi,
+      SoChungChi,
+      formattedDate,
+      FileChungChi,
+      KhuVucChuyenMon,
+      MaNgDung,
+    ]);
 
   const [updatedUser] = await db
     .promise()
     .query(
-      `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan, TrangThai FROM NGUOIDUNG WHERE MaNgDung = ?`,
+      `SELECT MaNgDung, HoTen, Email, SDT, DiaChi, LoaiTaiKhoan, AnhDaiDien, MoTaBanThan, 
+              TenChungChi, SoChungChi, NgayCapChungChi, FileChungChi, KhuVucChuyenMon, TrangThai 
+       FROM NGUOIDUNG WHERE MaNgDung = ?`,
       [MaNgDung]
     );
 
   const user = updatedUser[0];
   if (user.AnhDaiDien && !user.AnhDaiDien.startsWith("http")) {
     user.AnhDaiDien = `http://localhost:5000${user.AnhDaiDien.startsWith("/") ? "" : "/"}${user.AnhDaiDien}`;
+  }
+  if (user.FileChungChi && !user.FileChungChi.startsWith("http")) {
+    user.FileChungChi = `http://localhost:5000${user.FileChungChi.startsWith("/") ? "" : "/"}${user.FileChungChi}`;
   }
 
   return user;
@@ -257,6 +312,47 @@ const updateLastSeen = async (userId) => {
   return lastSeenTime;
 };
 
+const changePassword = async ({ userId, oldPassword, newPassword }) => {
+  if (!userId || !oldPassword || !newPassword) {
+    const err = new Error("Vui lòng cung cấp đầy đủ mật khẩu cũ và mật khẩu mới!");
+    err.status = 400;
+    throw err;
+  }
+
+  if (newPassword.length < 6) {
+    const err = new Error("Mật khẩu mới phải có ít nhất 6 ký tự!");
+    err.status = 400;
+    throw err;
+  }
+
+  const [users] = await db
+    .promise()
+    .query("SELECT MaNgDung, MatKhau FROM NGUOIDUNG WHERE MaNgDung = ?", [userId]);
+
+  if (!users || users.length === 0) {
+    const err = new Error("Người dùng không tồn tại!");
+    err.status = 404;
+    throw err;
+  }
+
+  const user = users[0];
+  const isMatch = await bcrypt.compare(oldPassword, user.MatKhau);
+  if (!isMatch) {
+    const err = new Error("Mật khẩu hiện tại không chính xác!");
+    err.status = 400;
+    throw err;
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  await db
+    .promise()
+    .query("UPDATE NGUOIDUNG SET MatKhau = ? WHERE MaNgDung = ?", [hashedPassword, userId]);
+
+  return true;
+};
+
 module.exports = {
   register,
   login,
@@ -267,4 +363,5 @@ module.exports = {
   verifyOTP,
   resetPassword,
   updateLastSeen,
+  changePassword,
 };

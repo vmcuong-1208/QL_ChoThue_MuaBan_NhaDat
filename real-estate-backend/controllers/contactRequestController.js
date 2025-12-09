@@ -27,15 +27,16 @@ exports.createContactRequest = async (req, res) => {
 };
 
 /**
- * Môi giới lấy danh sách yêu cầu liên hệ gửi đến mình
+ * Môi giới lấy danh sách yêu cầu liên hệ / khách hàng quan tâm gửi đến mình
  */
 exports.getBrokerRequests = async (req, res) => {
   try {
     const brokerId = req.user.MaNgDung;
-    const { trangThai, search, page, limit } = req.query;
+    const { trangThai, maTTND, search, page, limit } = req.query;
 
     const result = await contactRequestService.getRequestsForBroker(brokerId, {
       trangThai,
+      maTTND,
       search,
       page,
       limit,
@@ -104,5 +105,18 @@ exports.getBrokerStats = async (req, res) => {
     res.json(stats);
   } catch (err) {
     res.status(500).json({ message: err.message || "Lỗi lấy thống kê yêu cầu" });
+  }
+};
+
+/**
+ * Danh sách tin đăng có khách quan tâm để lọc
+ */
+exports.getBrokerProperties = async (req, res) => {
+  try {
+    const brokerId = req.user.MaNgDung;
+    const properties = await contactRequestService.getBrokerPropertiesWithLeads(brokerId);
+    res.json({ properties });
+  } catch (err) {
+    res.status(500).json({ message: err.message || "Lỗi lấy danh sách bất động sản" });
   }
 };

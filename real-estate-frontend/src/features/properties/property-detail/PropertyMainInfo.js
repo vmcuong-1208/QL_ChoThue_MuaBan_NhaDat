@@ -73,8 +73,19 @@ const PropertyMainInfo = ({
       </p>
 
       <div className="flex flex-wrap items-center gap-4 mb-4">
-        <div className="text-3xl font-bold text-red-600">
-          {formatPrice(property.Gia)}
+        <div
+          className={`text-3xl font-bold ${
+            property.TrangThai === "cho thuê"
+              ? "text-emerald-600 flex items-baseline gap-1"
+              : "text-red-600"
+          }`}
+        >
+          <span>{formatPrice(property.Gia)}</span>
+          {property.TrangThai === "cho thuê" && (
+            <span className="text-base font-semibold text-slate-500">
+              / tháng
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg">
           <FaRulerCombined />
@@ -92,15 +103,21 @@ const PropertyMainInfo = ({
           <span>{property.SoLuotXem || 0} lượt xem</span>
         </div>
         <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+          className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1 ${
             property.TrangThai === "đang bán"
               ? "bg-green-100 text-green-700"
               : property.TrangThai === "cho thuê"
-              ? "bg-blue-100 text-blue-700"
+              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
               : "bg-gray-100 text-gray-700"
           }`}
         >
-          {property.TrangThai}
+          {property.TrangThai === "cho thuê" ? (
+            <>
+              <span>🔑</span> Cho thuê
+            </>
+          ) : (
+            property.TrangThai
+          )}
         </span>
       </div>
     </div>

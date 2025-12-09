@@ -79,3 +79,20 @@ exports.updateReportStatus = async (req, res) => {
 exports.getReasons = (req, res) => {
   res.json({ reasons: propertyReportService.VALID_REASONS });
 };
+
+/**
+ * Lấy lịch sử báo cáo của người dùng
+ */
+exports.getMyReports = async (req, res) => {
+  try {
+    const userId = req.user.MaNgDung;
+    const reports = await propertyReportService.getMyReports(userId);
+    res.json({
+      success: true,
+      data: reports,
+    });
+  } catch (err) {
+    console.error("Lỗi lấy lịch sử báo cáo của người dùng:", err);
+    res.status(500).json({ message: err.message || "Lỗi lấy lịch sử báo cáo" });
+  }
+};

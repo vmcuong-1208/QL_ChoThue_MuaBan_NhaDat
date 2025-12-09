@@ -30,6 +30,19 @@ const MoMoCallback = () => {
   const { handleLogout } = useAuthActions() // Sử dụng hook đăng xuất
 
   useEffect(() => {
+    document.title = "Xác nhận giao dịch thanh toán MoMo | Bất Động Sản 3MAN";
+
+    // Đảm bảo bot tìm kiếm không lập chỉ mục trang callback thanh toán
+    let robotsMeta = document.querySelector('meta[name="robots"]');
+    if (!robotsMeta) {
+      robotsMeta = document.createElement("meta");
+      robotsMeta.name = "robots";
+      robotsMeta.content = "noindex, nofollow";
+      document.head.appendChild(robotsMeta);
+    } else {
+      robotsMeta.content = "noindex, nofollow";
+    }
+
     const queryParams = new URLSearchParams(location.search)
     const resultCode = queryParams.get("resultCode")
     const orderId = queryParams.get("orderId")

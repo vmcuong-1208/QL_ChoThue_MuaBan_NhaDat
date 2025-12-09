@@ -25,8 +25,13 @@ const GoogleAuthSuccess = () => {
         setToken(token)
         setCurrentUser(user)
 
-        // Redirect về trang chủ
-        navigate("/", { replace: true })
+        // Redirect về trang quản trị nếu là Admin, ngược lại về trang chủ
+        const isAdmin = (user?.LoaiTaiKhoan || "").toLowerCase() === "admin";
+        if (isAdmin) {
+          navigate("/admin-panel", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
       } catch (error) {
         console.error("Error parsing user data:", error)
         navigate("/auth?error=invalid_data", { replace: true })

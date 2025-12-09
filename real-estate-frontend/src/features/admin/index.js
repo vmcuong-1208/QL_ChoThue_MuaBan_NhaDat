@@ -12,3 +12,4 @@ export { default as PropertyTypeManager } from "./PropertyTypeManager";
 export { default as CategoryManager } from "./CategoryManager";
 export { default as ContentManager } from "./ContentManager";
 export { default as ReportManager } from "./ReportManager";
+export { default as RevenueManager } from "./RevenueManager";

@@ -20,7 +20,7 @@ const getVerificationStatus = async (req, res) => {
 const submitVerification = async (req, res) => {
   try {
     const maNgDung = req.user.MaNgDung;
-    const { soCCCD } = req.body;
+    const { soCCCD, sdtLienHe, khuVucHoatDong } = req.body;
 
     if (!req.files || !req.files.anhCCCDMatTruoc || !req.files.anhCCCDMatSau) {
       return res.status(400).json({
@@ -28,11 +28,15 @@ const submitVerification = async (req, res) => {
       });
     }
 
+    if (!req.files.anhChanDung) {
+      return res.status(400).json({
+        message: "Vui lòng tải lên ảnh chân dung cá nhân!",
+      });
+    }
+
     const anhCCCDMatTruoc = `/uploads/broker-verification/${req.files.anhCCCDMatTruoc[0].filename}`;
     const anhCCCDMatSau = `/uploads/broker-verification/${req.files.anhCCCDMatSau[0].filename}`;
-    const anhChanDung = req.files.anhChanDung
-      ? `/uploads/broker-verification/${req.files.anhChanDung[0].filename}`
-      : null;
+    const anhChanDung = `/uploads/broker-verification/${req.files.anhChanDung[0].filename}`;
 
     const result = await brokerVerificationService.submitVerification({
       maNgDung,
@@ -40,14 +44,34 @@ const submitVerification = async (req, res) => {
       anhCCCDMatTruoc,
       anhCCCDMatSau,
       anhChanDung,
+      sdtLienHe,
+      khuVucHoatDong,
     });
 
     res.status(201).json({
-      message: "Gửi hồ sơ xác minh thành công! Vui lòng chờ Admin phê duyệt.",
+      message: "Gửi hồ sơ xác minh thành công! Vui lòng tiến hành thanh toán phí đăng ký môi giới.",
       data: result,
     });
   } catch (error) {
     console.error("Lỗi khi gửi hồ sơ xác minh môi giới:", error);
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
+/**
+ * Hủy hồ sơ đăng ký khi người dùng hủy thanh toán
+ */
+const cancelVerification = async (req, res) => {
+  try {
+    const maNgDung = req.user.MaNgDung;
+    const result = await brokerVerificationService.cancelPendingVerification(maNgDung);
+    res.json({
+      success: true,
+      message: "Đã hủy hồ sơ đăng ký môi giới.",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Lỗi khi hủy hồ sơ xác minh môi giới:", error);
     res.status(500).json({ message: "Lỗi server", error: error.message });
   }
 };
@@ -126,6 +150,7 @@ const updateVerificationStatus = async (req, res) => {
 module.exports = {
   getVerificationStatus,
   submitVerification,
+  cancelVerification,
   getAdminVerificationList,
   getAdminVerificationDetail,
   updateVerificationStatus,

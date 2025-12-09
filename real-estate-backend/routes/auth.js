@@ -27,8 +27,16 @@ router.post("/login", authController.login);
 // Verify token
 router.get("/verify", authenticateToken, authController.verify);
 
-// Cập nhật thông tin cá nhân
-router.put("/update", authenticateToken, upload.single("AnhDaiDien"), authController.update);
+// Cập nhật thông tin cá nhân / hồ sơ môi giới
+router.put(
+  "/update",
+  authenticateToken,
+  upload.fields([
+    { name: "AnhDaiDien", maxCount: 1 },
+    { name: "FileChungChi", maxCount: 1 },
+  ]),
+  authController.update
+);
 
 // Thông tin tài khoản hiện tại
 router.get("/me", authenticateToken, authController.me);
@@ -40,6 +48,9 @@ router.put("/upgrade", authenticateToken, authController.upgrade);
 router.post("/forgot-password", authController.forgotPassword);
 router.post("/verify-otp", authController.verifyOtp);
 router.post("/reset-password", authController.resetPassword);
+
+// Đổi mật khẩu
+router.post("/change-password", authenticateToken, authController.changePassword);
 
 // Cập nhật last seen
 router.put("/update-last-seen", authenticateToken, authController.updateLastSeen);

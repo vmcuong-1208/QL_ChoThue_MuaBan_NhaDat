@@ -275,9 +275,29 @@ const deleteReview = async (reviewId, userId, userRole = "") => {
   return { success: true, message: "Đã xóa đánh giá thành công." };
 };
 
+/**
+ * 5. Lấy danh sách đánh giá của khách hàng hiện tại
+ */
+const getMyReviews = async (customerId) => {
+  const reviews = await queryAsync(
+    `SELECT d.MaDG, d.MaMoiGioi, d.MaKhachHang, d.SoSao, d.NoiDung, d.TieuDe, d.NgayTao, d.NgayCapNhat,
+            COALESCE(u.HoTen, u.TenDangNhap, u.Email) AS TenMoiGioi,
+            u.AnhDaiDien AS AvatarMoiGioi,
+            u.SDT AS SDTMoiGioi,
+            u.Email AS EmailMoiGioi
+     FROM DANHGIAMOIGIOI d
+     LEFT JOIN NGUOIDUNG u ON d.MaMoiGioi = u.MaNgDung
+     WHERE d.MaKhachHang = ? AND d.TrangThai = 'HIEN_THI'
+     ORDER BY d.NgayTao DESC`,
+    [customerId]
+  );
+  return reviews;
+};
+
 module.exports = {
   getBrokerReviews,
   checkEligibility,
   createOrUpdateReview,
   deleteReview,
+  getMyReviews,
 };

@@ -81,3 +81,20 @@ exports.deleteReview = async (req, res) => {
     res.status(400).json({ message: err.message || "Lỗi xóa đánh giá" });
   }
 };
+
+/**
+ * Lấy lịch sử đánh giá của khách hàng hiện tại
+ */
+exports.getMyReviews = async (req, res) => {
+  try {
+    const customerId = req.user.MaNgDung;
+    const reviews = await brokerReviewService.getMyReviews(customerId);
+    res.json({
+      success: true,
+      data: reviews,
+    });
+  } catch (err) {
+    console.error("Lỗi lấy lịch sử đánh giá của người dùng:", err);
+    res.status(500).json({ message: err.message || "Lỗi lấy lịch sử đánh giá" });
+  }
+};

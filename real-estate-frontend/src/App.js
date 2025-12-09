@@ -19,8 +19,13 @@ import {
   LoginRegister,
   Profile,
   BrokerProfile,
+  BrokerRegistration,
   ProtectedRoute,
   GoogleAuthSuccess,
+
+  // Reviews & Reports
+  ReviewHistory,
+  ReportHistory,
 
   // Properties & Listings
   Post,
@@ -30,6 +35,7 @@ import {
   SearchResults,
   PriceReference,
   ContactRequestManager,
+  BrokerAnalytics,
 
   // Map & GIS
   MapPage,
@@ -88,7 +94,7 @@ function AppContent() {
           <Route
             path="/quan-ly-bai-dang"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["môi giới", "broker", "admin"]}>
                 <Post />
               </ProtectedRoute>
             }
@@ -97,7 +103,7 @@ function AppContent() {
           <Route
             path="/dang-bai"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["môi giới", "broker", "admin"]}>
                 <PostForm />
               </ProtectedRoute>
             }
@@ -106,7 +112,7 @@ function AppContent() {
           <Route
             path="/sua-bai/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRoles={["môi giới", "broker", "admin"]}>
                 <PostForm />
               </ProtectedRoute>
             }
@@ -144,6 +150,60 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <ContactRequestManager />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/lich-su-danh-gia"
+            element={
+              <ProtectedRoute>
+                <ReviewHistory />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/lich-su-bao-cao"
+            element={
+              <ProtectedRoute>
+                <ReportHistory />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dang-ky-moi-gioi"
+            element={
+              <ProtectedRoute>
+                <BrokerRegistration />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quan-ly-khach-hang"
+            element={
+              <ProtectedRoute requiredRoles={["môi giới", "broker", "admin"]}>
+                <ContactRequestManager />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/thong-ke"
+            element={
+              <ProtectedRoute requiredRoles={["môi giới", "broker", "admin"]}>
+                <BrokerAnalytics />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/thong-ke-moi-gioi"
+            element={
+              <ProtectedRoute requiredRoles={["môi giới", "broker", "admin"]}>
+                <BrokerAnalytics />
               </ProtectedRoute>
             }
           />

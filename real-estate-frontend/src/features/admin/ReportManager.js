@@ -260,76 +260,155 @@ const ReportManager = () => {
 
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
-        <div
+        {/* Card 1: Tổng số báo cáo */}
+        <button
+          type="button"
           onClick={() => setActiveTab("all")}
-          className={`p-4 rounded-xl border cursor-pointer transition-all ${
+          className={`p-3.5 rounded-xl border text-left transition-all flex items-center gap-3.5 ${
             activeTab === "all"
-              ? "bg-slate-900 text-white border-slate-900 shadow-md"
-              : "bg-white text-slate-800 border-slate-200 hover:border-slate-300"
+              ? "bg-blue-50/80 border-blue-400 ring-2 ring-blue-200 shadow-xs"
+              : "bg-white border-slate-200/90 hover:border-slate-300"
           }`}
         >
-          <div className="text-[11px] font-medium opacity-80">Tổng số báo cáo</div>
-          <div className="text-2xl font-black mt-1">{stats.total}</div>
-        </div>
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${
+              activeTab === "all"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            <FaFlag />
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Tổng số báo cáo
+            </div>
+            <div className="text-lg font-bold leading-tight text-slate-900">
+              {stats.total}{" "}
+              <span className="text-xs font-normal text-slate-500">báo cáo</span>
+            </div>
+          </div>
+        </button>
 
-        <div
+        {/* Card 2: Chờ xử lý */}
+        <button
+          type="button"
           onClick={() => setActiveTab("CHO_XU_LY")}
-          className={`p-4 rounded-xl border cursor-pointer transition-all ${
+          className={`p-3.5 rounded-xl border text-left transition-all flex items-center gap-3.5 ${
             activeTab === "CHO_XU_LY"
-              ? "bg-amber-600 text-white border-amber-600 shadow-md"
-              : "bg-white text-slate-800 border-slate-200 hover:border-amber-300"
+              ? "bg-blue-50/80 border-blue-400 ring-2 ring-blue-200 shadow-xs"
+              : "bg-white border-slate-200/90 hover:border-slate-300"
           }`}
         >
-          <div className="text-[11px] font-medium opacity-80 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-            <span>Chờ xử lý</span>
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${
+              activeTab === "CHO_XU_LY"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            <FaClock />
           </div>
-          <div className="text-2xl font-black mt-1 text-amber-600 group-hover:text-amber-700">
-            {stats.choXuLy}
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Chờ xử lý
+            </div>
+            <div className="text-lg font-bold leading-tight text-slate-900">
+              {stats.choXuLy}{" "}
+              <span className="text-xs font-normal text-slate-500">tin chờ</span>
+            </div>
           </div>
-        </div>
+        </button>
 
-        <div
+        {/* Card 3: Đang kiểm tra */}
+        <button
+          type="button"
           onClick={() => setActiveTab("DANG_KIEM_TRA")}
-          className={`p-4 rounded-xl border cursor-pointer transition-all ${
+          className={`p-3.5 rounded-xl border text-left transition-all flex items-center gap-3.5 ${
             activeTab === "DANG_KIEM_TRA"
-              ? "bg-blue-600 text-white border-blue-600 shadow-md"
-              : "bg-white text-slate-800 border-slate-200 hover:border-blue-300"
+              ? "bg-blue-50/80 border-blue-400 ring-2 ring-blue-200 shadow-xs"
+              : "bg-white border-slate-200/90 hover:border-slate-300"
           }`}
         >
-          <div className="text-[11px] font-medium opacity-80">Đang kiểm tra</div>
-          <div className="text-2xl font-black mt-1 text-blue-600">
-            {stats.dangKiemTra}
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${
+              activeTab === "DANG_KIEM_TRA"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            <FaSearch />
           </div>
-        </div>
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Đang kiểm tra
+            </div>
+            <div className="text-lg font-bold leading-tight text-slate-900">
+              {stats.dangKiemTra}{" "}
+              <span className="text-xs font-normal text-slate-500">đang duyệt</span>
+            </div>
+          </div>
+        </button>
 
-        <div
+        {/* Card 4: Đã xử lý (Bỏ qua) */}
+        <button
+          type="button"
           onClick={() => setActiveTab("DA_XU_LY")}
-          className={`p-4 rounded-xl border cursor-pointer transition-all ${
+          className={`p-3.5 rounded-xl border text-left transition-all flex items-center gap-3.5 ${
             activeTab === "DA_XU_LY"
-              ? "bg-slate-700 text-white border-slate-700 shadow-md"
-              : "bg-white text-slate-800 border-slate-200 hover:border-slate-300"
+              ? "bg-blue-50/80 border-blue-400 ring-2 ring-blue-200 shadow-xs"
+              : "bg-white border-slate-200/90 hover:border-slate-300"
           }`}
         >
-          <div className="text-[11px] font-medium opacity-80">Đã xử lý (Bỏ qua)</div>
-          <div className="text-2xl font-black mt-1 text-slate-600">
-            {stats.daXuLy}
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${
+              activeTab === "DA_XU_LY"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            <FaCheckCircle />
           </div>
-        </div>
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Đã xử lý (Bỏ qua)
+            </div>
+            <div className="text-lg font-bold leading-tight text-slate-900">
+              {stats.daXuLy}{" "}
+              <span className="text-xs font-normal text-slate-500">đã xong</span>
+            </div>
+          </div>
+        </button>
 
-        <div
+        {/* Card 5: Đã gỡ tin vi phạm */}
+        <button
+          type="button"
           onClick={() => setActiveTab("DA_GO_TIN")}
-          className={`p-4 rounded-xl border cursor-pointer transition-all ${
+          className={`p-3.5 rounded-xl border text-left transition-all flex items-center gap-3.5 ${
             activeTab === "DA_GO_TIN"
-              ? "bg-rose-600 text-white border-rose-600 shadow-md"
-              : "bg-white text-slate-800 border-slate-200 hover:border-rose-300"
+              ? "bg-blue-50/80 border-blue-400 ring-2 ring-blue-200 shadow-xs"
+              : "bg-white border-slate-200/90 hover:border-slate-300"
           }`}
         >
-          <div className="text-[11px] font-medium opacity-80">Đã gỡ tin vi phạm</div>
-          <div className="text-2xl font-black mt-1 text-rose-600">
-            {stats.daGoTin}
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center text-base flex-shrink-0 ${
+              activeTab === "DA_GO_TIN"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            <FaTimesCircle />
           </div>
-        </div>
+          <div>
+            <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+              Đã gỡ tin vi phạm
+            </div>
+            <div className="text-lg font-bold leading-tight text-slate-900">
+              {stats.daGoTin}{" "}
+              <span className="text-xs font-normal text-slate-500">đã gỡ</span>
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* Filter Tabs & Search Bar */}

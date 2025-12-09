@@ -27,6 +27,7 @@ import {
   FaLayerGroup,
   FaBullhorn,
   FaFlag,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 import CategoryManager from "./CategoryManager";
 import ContentManager from "./ContentManager";
@@ -34,6 +35,7 @@ import UserManager from "./UserManager";
 import PropertyModerationManager from "./PropertyModerationManager";
 import BrokerVerificationManager from "./BrokerVerificationManager";
 import ReportManager from "./ReportManager";
+import RevenueManager from "./RevenueManager";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { API_URL } from "../../services/api";
@@ -93,6 +95,8 @@ const AdminPanel = () => {
         return <PropertyModerationManager />;
       case "reports":
         return <ReportManager />;
+      case "revenue":
+        return <RevenueManager />;
       case "content":
         return <ContentManager />;
       default:
@@ -104,7 +108,7 @@ const AdminPanel = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-3 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+          <div className="w-10 h-10 border-blue-600 rounded-full border-3 border-t-transparent animate-spin"></div>
           <p className="text-sm font-medium text-slate-600">Đang tải dữ liệu...</p>
         </div>
       </div>
@@ -133,6 +137,11 @@ const AdminPanel = () => {
       label: "Xác minh môi giới",
     },
     {
+      id: "revenue",
+      icon: FaMoneyBillWave,
+      label: "Quản lý doanh thu",
+    },
+    {
       id: "properties",
       icon: FaClipboardList,
       label: "Quản lý tin đăng",
@@ -150,7 +159,7 @@ const AdminPanel = () => {
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-800 antialiased">
+    <div className="flex h-screen overflow-hidden font-sans antialiased bg-slate-50 text-slate-800">
       {/* Sidebar - Chuẩn Dark Navy Slate Doanh nghiệp */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-200 bg-slate-900 border-r border-slate-800 shadow-lg
@@ -168,12 +177,12 @@ const AdminPanel = () => {
               !isSidebarOpen && "justify-center w-full"
             }`}
           >
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-600 text-white shadow-xs">
+            <div className="flex items-center justify-center text-white bg-blue-600 rounded-lg shadow-xs w-9 h-9">
               <FaBuilding className="text-lg" />
             </div>
             {isSidebarOpen && (
               <div className="min-w-0">
-                <h2 className="text-sm font-bold text-white tracking-tight truncate">
+                <h2 className="text-sm font-bold tracking-tight text-white truncate">
                   BĐS 3MAN
                 </h2>
                 <p className="text-[11px] font-medium text-slate-400">
@@ -187,7 +196,7 @@ const AdminPanel = () => {
           {isSidebarOpen && (
             <button
               onClick={toggleSidebar}
-              className="items-center justify-center hidden w-7 h-7 text-slate-400 transition-colors rounded-md lg:flex hover:text-white hover:bg-slate-800"
+              className="items-center justify-center hidden transition-colors rounded-md w-7 h-7 text-slate-400 lg:flex hover:text-white hover:bg-slate-800"
               title="Thu gọn menu"
             >
               <FaChevronLeft className="text-xs" />
@@ -197,7 +206,7 @@ const AdminPanel = () => {
           {/* Mobile Close Button */}
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center justify-center w-8 h-8 text-slate-400 transition-colors rounded-lg lg:hidden hover:text-white hover:bg-slate-800"
+            className="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 lg:hidden hover:text-white hover:bg-slate-800"
           >
             <FaTimes className="text-sm" />
           </button>
@@ -205,10 +214,10 @@ const AdminPanel = () => {
 
         {/* Khi thu nhỏ, nút mở rộng nằm ngay dưới header */}
         {!isSidebarOpen && (
-          <div className="hidden lg:flex justify-center py-2 border-b border-slate-800">
+          <div className="justify-center hidden py-2 border-b lg:flex border-slate-800">
             <button
               onClick={toggleSidebar}
-              className="flex items-center justify-center w-8 h-8 text-slate-400 transition-colors rounded-md hover:text-white hover:bg-slate-800"
+              className="flex items-center justify-center w-8 h-8 transition-colors rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
               title="Mở rộng menu"
             >
               <FaChevronRight className="text-xs" />
@@ -230,7 +239,7 @@ const AdminPanel = () => {
               <img
                 src={currentUser.AnhDaiDien || "/placeholder.svg?height=40&width=40"}
                 alt="Admin"
-                className="w-9 h-9 border border-slate-700 rounded-full object-cover"
+                className="object-cover border rounded-full w-9 h-9 border-slate-700"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = "https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff";
@@ -297,7 +306,7 @@ const AdminPanel = () => {
               ${!isSidebarOpen && "justify-center px-2"}`}
             title="Đăng xuất"
           >
-            <FaSignOutAlt className="text-sm flex-shrink-0" />
+            <FaSignOutAlt className="flex-shrink-0 text-sm" />
             {isSidebarOpen && <span>Đăng xuất</span>}
           </button>
         </div>
@@ -315,22 +324,10 @@ const AdminPanel = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="flex items-center justify-center w-9 h-9 text-slate-600 transition-colors bg-slate-100 rounded-lg lg:hidden hover:bg-slate-200"
+              className="flex items-center justify-center transition-colors rounded-lg w-9 h-9 text-slate-600 bg-slate-100 lg:hidden hover:bg-slate-200"
             >
               <FaBars className="text-sm" />
             </button>
-
-            {/* Breadcrumb & Tab Title */}
-            <div>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                <span>Hệ thống</span>
-                <span>/</span>
-                <span className="text-slate-800 font-medium">{getTabTitle(activeTab)}</span>
-              </div>
-              <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">
-                {getTabTitle(activeTab)}
-              </h1>
-            </div>
           </div>
 
           {/* Header Right Actions */}
@@ -349,7 +346,7 @@ const AdminPanel = () => {
 
             {/* Notifications */}
             <button
-              className="relative flex items-center justify-center w-9 h-9 text-slate-600 transition-colors bg-slate-100 rounded-lg hover:bg-slate-200 border border-slate-200"
+              className="relative flex items-center justify-center transition-colors border rounded-lg w-9 h-9 text-slate-600 bg-slate-100 hover:bg-slate-200 border-slate-200"
               title="Thông báo hệ thống"
             >
               <FaBell className="text-xs" />
@@ -358,13 +355,13 @@ const AdminPanel = () => {
 
             {/* User Pill */}
             <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-              <span className="hidden md:inline text-xs font-semibold text-slate-800">
+              <span className="hidden text-xs font-semibold md:inline text-slate-800">
                 {currentUser.HoTen || "Admin"}
               </span>
               <img
                 src={currentUser.AnhDaiDien || "/placeholder.svg?height=32&width=32"}
                 alt="Avatar"
-                className="w-8 h-8 rounded-full border border-slate-300 object-cover"
+                className="object-cover w-8 h-8 border rounded-full border-slate-300"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = "https://ui-avatars.com/api/?name=Admin&background=2563eb&color=fff";
@@ -376,7 +373,7 @@ const AdminPanel = () => {
 
         {/* Content Body */}
         <main className="flex-1 p-4 overflow-y-auto lg:p-6 bg-slate-50/70">
-          <div className="max-w-7xl mx-auto">
+          <div className="mx-auto max-w-7xl">
             {renderContent()}
           </div>
         </main>
@@ -431,7 +428,7 @@ const Dashboard = () => {
     return (
       <div className="flex items-center justify-center h-80">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-3 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+          <div className="w-8 h-8 border-blue-600 rounded-full border-3 border-t-transparent animate-spin"></div>
           <p className="text-xs font-medium text-slate-500">Đang tải dữ liệu tổng quan...</p>
         </div>
       </div>
@@ -440,7 +437,7 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
+      <div className="p-4 text-xs border bg-rose-50 border-rose-200 rounded-xl text-rose-700">
         <p className="font-semibold">{error}</p>
       </div>
     );
@@ -491,10 +488,10 @@ const Dashboard = () => {
           return (
             <div
               key={idx}
-              className="p-5 bg-white border border-slate-200/90 rounded-xl shadow-xs transition-colors hover:border-slate-300"
+              className="p-5 transition-colors bg-white border shadow-xs border-slate-200/90 rounded-xl hover:border-slate-300"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <span className="text-xs font-semibold tracking-wider uppercase text-slate-500">
                   {stat.title}
                 </span>
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center border ${stat.iconBg}`}>
@@ -503,7 +500,7 @@ const Dashboard = () => {
               </div>
 
               <div className="flex items-baseline justify-between gap-2 mt-1">
-                <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                <span className="text-2xl font-bold tracking-tight text-slate-900">
                   {stat.value.toLocaleString()}
                 </span>
                 {stat.badgeText && (
@@ -528,10 +525,10 @@ const Dashboard = () => {
       </div>
 
       {/* 2. Recent Activities Section */}
-      <div className="bg-white border border-slate-200/90 rounded-xl shadow-xs overflow-hidden">
-        <div className="flex items-center justify-between p-4 sm:px-6 border-b border-slate-200 bg-slate-50/50">
+      <div className="overflow-hidden bg-white border shadow-xs border-slate-200/90 rounded-xl">
+        <div className="flex items-center justify-between p-4 border-b sm:px-6 border-slate-200 bg-slate-50/50">
           <div className="flex items-center gap-2">
-            <FaCalendarAlt className="text-slate-500 text-sm" />
+            <FaCalendarAlt className="text-sm text-slate-500" />
             <h2 className="text-sm font-bold text-slate-800">
               Hoạt động đăng tin gần đây
             </h2>
@@ -552,7 +549,7 @@ const Dashboard = () => {
                   <FaUserCircle className="text-base" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-slate-800 leading-normal">
+                  <p className="text-xs leading-normal sm:text-sm text-slate-800">
                     <strong className="font-semibold text-slate-900">
                       {act.userName}
                     </strong>
@@ -574,7 +571,7 @@ const Dashboard = () => {
               </div>
             ))
           ) : (
-            <div className="py-12 text-center text-slate-400 text-xs font-medium">
+            <div className="py-12 text-xs font-medium text-center text-slate-400">
               Chưa có dữ liệu hoạt động nào gần đây.
             </div>
           )}

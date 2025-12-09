@@ -27,9 +27,19 @@ const getVerificationStatus = async (maNgDung) => {
     [maNgDung]
   );
 
+  const latest = records.length > 0 ? records[0] : null;
+
+  // Nếu hồ sơ mới nhất chưa thanh toán thì không coi là đã nộp/chờ xét duyệt
+  if (latest && latest.TrangThaiThanhToan !== "DA_THANH_TOAN") {
+    return {
+      userStatus: "CHUA_XAC_MINH",
+      latestRecord: null,
+    };
+  }
+
   return {
     userStatus: user.TrangThaiXacMinhMoiGioi || "CHUA_XAC_MINH",
-    latestRecord: records.length > 0 ? records[0] : null,
+    latestRecord: latest,
   };
 };
 
@@ -42,6 +52,8 @@ const submitVerification = async ({
   anhCCCDMatTruoc,
   anhCCCDMatSau,
   anhChanDung = null,
+  sdtLienHe = null,
+  khuVucHoatDong = null,
 }) => {
   const promiseDb = db.promise();
 
@@ -54,12 +66,12 @@ const submitVerification = async ({
     throw new Error("Người dùng không tồn tại");
   }
 
-  // Chèn hồ sơ xác minh mới
+  // Chèn hồ sơ xác minh mới với trạng thái ban đầu: PENDING, TrangThaiThanhToan: CHUA_THANH_TOAN, Phí: 299000
   const [insertResult] = await promiseDb.query(
     `INSERT INTO XACMINHMOIGIOI 
-     (MaNgDung, SoCCCD, AnhCCCDMatTruoc, AnhCCCDMatSau, AnhChanDung, TrangThai, NgayGui) 
-     VALUES (?, ?, ?, ?, ?, 'PENDING', NOW())`,
-    [maNgDung, soCCCD, anhCCCDMatTruoc, anhCCCDMatSau, anhChanDung]
+     (MaNgDung, SoCCCD, AnhCCCDMatTruoc, AnhCCCDMatSau, AnhChanDung, SDTLienHe, KhuVucHoatDong, TrangThai, TrangThaiThanhToan, SoTienThanhToan, NgayGui) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', 'CHUA_THANH_TOAN', 299000.00, NOW())`,
+    [maNgDung, soCCCD, anhCCCDMatTruoc, anhCCCDMatSau, anhChanDung, sdtLienHe, khuVucHoatDong]
   );
 
   // Cập nhật trạng thái người dùng sang PENDING
@@ -71,7 +83,37 @@ const submitVerification = async ({
   return {
     maXacMinh: insertResult.insertId,
     status: "PENDING",
+    soTienThanhToan: 299000,
   };
+};
+
+/**
+ * Hủy hồ sơ đăng ký môi giới đang PENDING của người dùng nếu họ hủy thanh toán
+ */
+const cancelPendingVerification = async (maNgDung) => {
+  const promiseDb = db.promise();
+
+  // Xóa tất cả hồ sơ chưa thanh toán của user này
+  await promiseDb.query(
+    "DELETE FROM XACMINHMOIGIOI WHERE MaNgDung = ? AND TrangThaiThanhToan = 'CHUA_THANH_TOAN'",
+    [maNgDung]
+  );
+
+  // Đặt lại trạng thái người dùng về CHUA_XAC_MINH (hoặc trạng thái cũ nếu chưa phải môi giới)
+  const [users] = await promiseDb.query(
+    "SELECT LoaiTaiKhoan FROM NGUOIDUNG WHERE MaNgDung = ?",
+    [maNgDung]
+  );
+
+  const isBroker = users.length > 0 && (users[0].LoaiTaiKhoan || "").toLowerCase().includes("môi");
+  if (!isBroker) {
+    await promiseDb.query(
+      "UPDATE NGUOIDUNG SET TrangThaiXacMinhMoiGioi = 'CHUA_XAC_MINH' WHERE MaNgDung = ?",
+      [maNgDung]
+    );
+  }
+
+  return { success: true };
 };
 
 /**
@@ -117,6 +159,12 @@ const getAdminVerificationList = async ({
       xm.AnhCCCDMatTruoc,
       xm.AnhCCCDMatSau,
       xm.AnhChanDung,
+      xm.SDTLienHe,
+      xm.KhuVucHoatDong,
+      xm.TrangThaiThanhToan,
+      xm.SoTienThanhToan,
+      xm.PhuongThucThanhToan,
+      xm.MaGiaoDichMoMo,
       xm.TrangThai,
       xm.GhiChuAdmin,
       xm.NgayGui,
@@ -221,7 +269,7 @@ const updateVerificationStatus = async ({
 
   // 1. Lấy thông tin hồ sơ
   const [records] = await promiseDb.query(
-    "SELECT MaXacMinh, MaNgDung FROM XACMINHMOIGIOI WHERE MaXacMinh = ?",
+    "SELECT MaXacMinh, MaNgDung, TrangThaiThanhToan FROM XACMINHMOIGIOI WHERE MaXacMinh = ?",
     [maXacMinh]
   );
   if (!records || records.length === 0) {
@@ -229,6 +277,11 @@ const updateVerificationStatus = async ({
   }
 
   const maNgDung = records[0].MaNgDung;
+  const daThanhToan = records[0].TrangThaiThanhToan === "DA_THANH_TOAN";
+
+  if (status === "VERIFIED" && !daThanhToan) {
+    throw new Error("Không thể phê duyệt hồ sơ chưa hoàn tất thanh toán phí đăng ký!");
+  }
 
   // 2. Cập nhật bảng XACMINHMOIGIOI
   await promiseDb.query(
@@ -238,11 +291,31 @@ const updateVerificationStatus = async ({
     [status, ghiChuAdmin, adminId, maXacMinh]
   );
 
-  // 3. Cập nhật trạng thái người dùng trong NGUOIDUNG
-  await promiseDb.query(
-    "UPDATE NGUOIDUNG SET TrangThaiXacMinhMoiGioi = ? WHERE MaNgDung = ?",
-    [status, maNgDung]
-  );
+  // 3. Cập nhật trạng thái người dùng trong NGUOIDUNG (nếu VERIFIED thì nâng cấp thành Môi giới)
+  if (status === "VERIFIED") {
+    // Lấy thông tin KhuVucHoatDong, SDTLienHe từ hồ sơ để cập nhật đồng bộ sang NGUOIDUNG nếu có
+    const [fullRecord] = await promiseDb.query(
+      "SELECT SDTLienHe, KhuVucHoatDong FROM XACMINHMOIGIOI WHERE MaXacMinh = ?",
+      [maXacMinh]
+    );
+    const sdt = fullRecord[0]?.SDTLienHe;
+    const kv = fullRecord[0]?.KhuVucHoatDong;
+
+    await promiseDb.query(
+      `UPDATE NGUOIDUNG 
+       SET TrangThaiXacMinhMoiGioi = ?, 
+           LoaiTaiKhoan = 'môi giới',
+           SDT = COALESCE(?, SDT),
+           KhuVucChuyenMon = COALESCE(?, KhuVucChuyenMon)
+       WHERE MaNgDung = ?`,
+      [status, sdt || null, kv || null, maNgDung]
+    );
+  } else {
+    await promiseDb.query(
+      "UPDATE NGUOIDUNG SET TrangThaiXacMinhMoiGioi = ? WHERE MaNgDung = ?",
+      [status, maNgDung]
+    );
+  }
 
   return {
     maXacMinh,

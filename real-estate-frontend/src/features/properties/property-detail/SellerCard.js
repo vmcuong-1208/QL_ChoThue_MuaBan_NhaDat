@@ -183,7 +183,11 @@ const SellerCard = ({
                 <div
                   className="flex items-start gap-2 p-2 text-xs text-gray-700 transition-all duration-300 bg-gray-100 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 hover:shadow-sm group"
                   onClick={() =>
-                    onSuggestedMessageClick("Cần hỏi còn không? Tôi muốn hỏi thêm thông tin")
+                    onSuggestedMessageClick(
+                      property.TrangThai === "cho thuê"
+                        ? "Bất động sản này còn cho thuê không ạ?"
+                        : "Cần hỏi còn không? Tôi muốn hỏi thêm thông tin"
+                    )
                   }
                 >
                   <svg
@@ -200,14 +204,20 @@ const SellerCard = ({
                     />
                   </svg>
                   <span className="flex-1 leading-tight">
-                    Cần hỏi còn không? Tôi muốn hỏi thêm thông tin
+                    {property.TrangThai === "cho thuê"
+                      ? "Bất động sản này còn cho thuê không ạ?"
+                      : "Cần hỏi còn không? Tôi muốn hỏi thêm thông tin"}
                   </span>
                 </div>
 
                 <div
                   className="flex items-start gap-2 p-2 text-xs text-gray-700 transition-all duration-300 bg-gray-100 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 hover:shadow-sm group"
                   onClick={() =>
-                    onSuggestedMessageClick("Gửi cho tôi thêm hình/video nhé!")
+                    onSuggestedMessageClick(
+                      property.TrangThai === "cho thuê"
+                        ? "Tôi muốn hẹn lịch đến xem nhà trực tiếp!"
+                        : "Gửi cho tôi thêm hình/video nhé!"
+                    )
                   }
                 >
                   <svg
@@ -224,7 +234,9 @@ const SellerCard = ({
                     />
                   </svg>
                   <span className="flex-1 leading-tight">
-                    Gửi cho tôi thêm hình/video nhé!
+                    {property.TrangThai === "cho thuê"
+                      ? "Tôi muốn hẹn lịch đến xem nhà trực tiếp!"
+                      : "Gửi cho tôi thêm hình/video nhé!"}
                   </span>
                 </div>
               </div>
@@ -241,6 +253,12 @@ const SellerCard = ({
               <span className="font-medium">BDS{property.MaTTND}</span>
             </li>
             <li className="flex justify-between">
+              <span className="text-gray-600">Hình thức:</span>
+              <span className={`font-semibold ${property.TrangThai === "cho thuê" ? "text-emerald-700" : "text-blue-700"}`}>
+                {property.TrangThai === "cho thuê" ? "🔑 Cho thuê BĐS" : "Mua bán"}
+              </span>
+            </li>
+            <li className="flex justify-between">
               <span className="text-gray-600">Loại BĐS:</span>
               <span className="font-medium">{property.LoaiBDS || "Không xác định"}</span>
             </li>
@@ -249,9 +267,49 @@ const SellerCard = ({
               <span className="font-medium">{property.DienTich} m²</span>
             </li>
             <li className="flex justify-between">
-              <span className="text-gray-600">Giá:</span>
-              <span className="font-medium text-red-600">{formatPrice(property.Gia)}</span>
+              <span className="text-gray-600">
+                {property.TrangThai === "cho thuê" ? "Giá thuê:" : "Giá bán:"}
+              </span>
+              <span
+                className={`font-bold ${
+                  property.TrangThai === "cho thuê"
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                }`}
+              >
+                {formatPrice(property.Gia)}
+                {property.TrangThai === "cho thuê" && (
+                  <span className="text-xs font-normal text-slate-500">
+                    {" "}
+                    / tháng
+                  </span>
+                )}
+              </span>
             </li>
+            {property.TrangThai === "cho thuê" && property.TienDatCoc && (
+              <li className="flex justify-between">
+                <span className="text-gray-600">Tiền đặt cọc:</span>
+                <span className="font-bold text-blue-700">
+                  {formatPrice(property.TienDatCoc)}
+                </span>
+              </li>
+            )}
+            {property.TrangThai === "cho thuê" && property.ThoiHanThue && (
+              <li className="flex justify-between">
+                <span className="text-gray-600">Thời hạn thuê:</span>
+                <span className="font-medium text-slate-800">
+                  {property.ThoiHanThue}
+                </span>
+              </li>
+            )}
+            {property.TrangThai === "cho thuê" && property.NoiThat && (
+              <li className="flex justify-between">
+                <span className="text-gray-600">Nội thất:</span>
+                <span className="font-medium text-purple-700">
+                  {property.NoiThat}
+                </span>
+              </li>
+            )}
             <li className="flex justify-between">
               <span className="text-gray-600">Ngày đăng:</span>
               <span className="font-medium">{formatDate(property.NgayTao)}</span>

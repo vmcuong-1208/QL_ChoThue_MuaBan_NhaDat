@@ -105,8 +105,17 @@ app.use("/api/broker-reviews", brokerReviewRoutes);
 const propertyReportRoutes = require("./routes/propertyReports");
 app.use("/api/property-reports", propertyReportRoutes);
 
+const brokerAnalyticsRoutes = require("./routes/brokerAnalytics");
+app.use("/api/broker-analytics", brokerAnalyticsRoutes);
+
 const momoPaymentRoutes = require("./routes/momo-payment");
 app.use("/api/momo-payment", momoPaymentRoutes);
+
+const sepayRoutes = require("./routes/sepay");
+app.use("/api/sepay", sepayRoutes);
+
+const revenueRoutes = require("./routes/revenue");
+app.use("/api/admin/revenue", revenueRoutes);
 
 const chatbotRoutes = require("./routes/chatbot");
 app.use("/api/chatbot", chatbotRoutes);

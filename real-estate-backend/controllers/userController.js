@@ -32,6 +32,18 @@ const getUserById = async (req, res) => {
   }
 };
 
+const getVerifiedBrokers = async (req, res) => {
+  try {
+    const limit = req.query.limit || 8;
+    const brokers = await userService.getVerifiedBrokers(limit);
+    res.json(brokers);
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách môi giới:", error);
+    res.status(500).json({ message: "Lỗi server", error: error.message });
+  }
+};
+
 module.exports = {
   getUserById,
+  getVerifiedBrokers,
 };

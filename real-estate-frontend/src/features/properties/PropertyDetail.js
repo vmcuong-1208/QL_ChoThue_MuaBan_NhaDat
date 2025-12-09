@@ -9,6 +9,7 @@ import { API_URL } from "../../services/api";
 import MediaGallery from "./property-detail/MediaGallery";
 import FullscreenViewer from "./property-detail/FullscreenViewer";
 import PropertyMainInfo from "./property-detail/PropertyMainInfo";
+import PropertyRentalInfo from "./property-detail/PropertyRentalInfo";
 import PropertyDescription from "./property-detail/PropertyDescription";
 import PropertyLegalDocs from "./property-detail/PropertyLegalDocs";
 import PropertyMapSection from "./property-detail/PropertyMapSection";
@@ -287,6 +288,17 @@ const PropertyDetail = () => {
                 onShare={() => setShowShareModal(true)}
                 onOpenReportModal={() => setShowReportModal(true)}
               />
+
+              {/* Thông tin cho thuê chuyên sâu (nếu bài đăng là cho thuê hoặc có dữ liệu thuê) */}
+              {(property.TrangThai === "cho thuê" ||
+                property.TienDatCoc ||
+                property.ThoiHanThue ||
+                property.TienIch) && (
+                <PropertyRentalInfo
+                  property={property}
+                  formatPrice={formatPrice}
+                />
+              )}
 
               <PropertyDescription description={property.MoTa} />
 

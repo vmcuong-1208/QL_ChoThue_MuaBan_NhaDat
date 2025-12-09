@@ -372,9 +372,11 @@ const BrokerVerificationManager = () => {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                   <th className="px-4 py-3 w-14">ID</th>
-                  <th className="px-4 py-3">Môi giới</th>
+                  <th className="px-4 py-3">Người dùng</th>
                   <th className="px-4 py-3">Số điện thoại</th>
+                  <th className="px-4 py-3">Khu vực dự kiến</th>
                   <th className="px-4 py-3">Số CCCD</th>
+                  <th className="px-4 py-3">Thanh toán</th>
                   <th className="px-4 py-3">Ngày gửi yêu cầu</th>
                   <th className="px-4 py-3">Trạng thái</th>
                   <th className="px-4 py-3 text-right">Thao tác</th>
@@ -413,12 +415,30 @@ const BrokerVerificationManager = () => {
 
                     {/* SĐT */}
                     <td className="px-4 py-3 font-mono text-slate-800 font-medium">
-                      {item.SDT || <span className="text-slate-400 font-sans italic">Chưa có</span>}
+                      {item.SDTLienHe || item.SDT || <span className="text-slate-400 font-sans italic">Chưa có</span>}
+                    </td>
+
+                    {/* Khu vực dự kiến */}
+                    <td className="px-4 py-3 text-slate-700 max-w-[150px] truncate">
+                      {item.KhuVucHoatDong || <span className="text-slate-400 italic">Toàn quốc</span>}
                     </td>
 
                     {/* Số CCCD */}
                     <td className="px-4 py-3 font-mono text-slate-700">
                       {item.SoCCCD || <span className="text-slate-400 font-sans italic">Xem trên ảnh</span>}
+                    </td>
+
+                    {/* Trạng thái Thanh toán */}
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {item.TrangThaiThanhToan === "DA_THANH_TOAN" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <FaCheck className="text-[10px]" /> Đã thanh toán (299k)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                          <FaClock className="text-[10px]" /> Chờ thanh toán
+                        </span>
+                      )}
                     </td>
 
                     {/* Ngày gửi */}
@@ -526,18 +546,26 @@ const BrokerVerificationManager = () => {
                   <FaUser className="text-blue-600" />
                   <span>Thông tin cá nhân môi giới</span>
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   <div>
                     <span className="text-[11px] text-slate-500">Họ và tên:</span>
                     <p className="text-xs font-bold text-slate-900">{selectedRecord.HoTen || "—"}</p>
                   </div>
                   <div>
-                    <span className="text-[11px] text-slate-500">Số điện thoại:</span>
-                    <p className="text-xs font-bold text-slate-900 font-mono">{selectedRecord.SDT || "Chưa có"}</p>
+                    <span className="text-[11px] text-slate-500">Số điện thoại liên hệ:</span>
+                    <p className="text-xs font-bold text-slate-900 font-mono">
+                      {selectedRecord.SDTLienHe || selectedRecord.SDT || "Chưa có"}
+                    </p>
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-500">Email:</span>
                     <p className="text-xs font-bold text-slate-900 truncate">{selectedRecord.Email || "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-slate-500">Khu vực hoạt động dự kiến:</span>
+                    <p className="text-xs font-bold text-emerald-700">
+                      {selectedRecord.KhuVucHoatDong || "Chưa chỉ định"}
+                    </p>
                   </div>
                   <div>
                     <span className="text-[11px] text-slate-500">Số CCCD/CMND khai báo:</span>
@@ -546,13 +574,27 @@ const BrokerVerificationManager = () => {
                     </p>
                   </div>
                   <div>
+                    <span className="text-[11px] text-slate-500">Phí đăng ký & Thanh toán:</span>
+                    <div className="mt-0.5">
+                      {selectedRecord.TrangThaiThanhToan === "DA_THANH_TOAN" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                          ✅ Đã thanh toán 299.000 VNĐ ({selectedRecord.PhuongThucThanhToan || "MoMo"})
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-100 text-rose-800">
+                          ⚠️ Chưa thanh toán phí
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
                     <span className="text-[11px] text-slate-500">Ngày gửi yêu cầu:</span>
                     <p className="text-xs font-bold text-slate-900">
                       {new Date(selectedRecord.NgayGui).toLocaleString("vi-VN")}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[11px] text-slate-500">Trạng thái hiện tại:</span>
+                    <span className="text-[11px] text-slate-500">Trạng thái hồ sơ:</span>
                     <div className="mt-0.5">{getStatusBadge(selectedRecord.TrangThai)}</div>
                   </div>
                 </div>
@@ -678,7 +720,16 @@ const BrokerVerificationManager = () => {
                   type="button"
                   disabled={actionLoading}
                   onClick={() => handleUpdateStatus("VERIFIED")}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg transition-colors shadow-xs"
+                  className={`inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white rounded-lg transition-colors shadow-xs ${
+                    selectedRecord.TrangThaiThanhToan === "DA_THANH_TOAN"
+                      ? "bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                      : "bg-slate-400 hover:bg-slate-500 cursor-not-allowed"
+                  }`}
+                  title={
+                    selectedRecord.TrangThaiThanhToan !== "DA_THANH_TOAN"
+                      ? "Khách hàng chưa thanh toán phí đăng ký môi giới"
+                      : "Phê duyệt tài khoản lên Môi giới chính thức"
+                  }
                 >
                   <FaCheck />
                   <span>Duyệt xác minh</span>

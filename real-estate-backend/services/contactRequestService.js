@@ -159,39 +159,52 @@ const createContactRequest = async (data, io = null) => {
 };
 
 /**
- * 2. Môi giới xem danh sách khách hàng đã liên hệ
+ * 2. Môi giới xem danh sách khách hàng đã liên hệ (Quản lý khách hàng quan tâm / Leads)
  */
 const getRequestsForBroker = async (brokerId, options = {}) => {
-  const { trangThai = "all", search = "", page = 1, limit = 20 } = options;
+  const { trangThai = "all", maTTND = "", search = "", page = 1, limit = 20 } = options;
 
   let whereClauses = [`y.MaMoiGioi = ?`];
   const params = [brokerId];
 
   if (trangThai && trangThai !== "all") {
-    // Tương thích cả trạng thái cũ và mới
+    // 6 trạng thái nghiệp vụ chuẩn của Môi giới
     if (trangThai === "MOI_NHAN") {
       whereClauses.push(`(y.TrangThai = 'MOI_NHAN' OR y.TrangThai = 'CHUA_XU_LY')`);
     } else if (trangThai === "DANG_LIEN_HE") {
       whereClauses.push(`y.TrangThai = 'DANG_LIEN_HE'`);
-    } else if (trangThai === "DA_TU_VAN") {
-      whereClauses.push(`(y.TrangThai = 'DA_TU_VAN' OR y.TrangThai = 'DA_LIEN_HE')`);
-    } else if (trangThai === "HOAN_THANH") {
-      whereClauses.push(`y.TrangThai = 'HOAN_THANH'`);
+    } else if (trangThai === "DANG_TU_VAN") {
+      whereClauses.push(`(y.TrangThai = 'DANG_TU_VAN' OR y.TrangThai = 'DA_TU_VAN' OR y.TrangThai = 'DA_LIEN_HE')`);
+    } else if (trangThai === "DA_XEM_NHA") {
+      whereClauses.push(`y.TrangThai = 'DA_XEM_NHA'`);
+    } else if (trangThai === "DA_GIAO_DICH") {
+      whereClauses.push(`(y.TrangThai = 'DA_GIAO_DICH' OR y.TrangThai = 'HOAN_THANH')`);
+    } else if (trangThai === "KHONG_NHU_CAU") {
+      whereClauses.push(`(y.TrangThai = 'KHONG_NHU_CAU' OR y.TrangThai = 'DA_HUY')`);
     } else {
       whereClauses.push(`y.TrangThai = ?`);
       params.push(trangThai);
     }
   }
 
+  // Lọc theo tin đăng bất động sản
+  if (maTTND && maTTND !== "all" && maTTND !== "") {
+    whereClauses.push(`y.MaTTND = ?`);
+    params.push(Number(maTTND));
+  }
+
+  // Tìm kiếm theo tên, số điện thoại, email, tiêu đề BĐS hoặc mã tin
   if (search && search.trim() !== "") {
-    whereClauses.push(`(y.HoTen LIKE ? OR y.SoDienThoai LIKE ? OR t.TieuDe LIKE ?)`);
+    whereClauses.push(
+      `(y.HoTen LIKE ? OR y.SoDienThoai LIKE ? OR y.Email LIKE ? OR t.TieuDe LIKE ? OR CAST(y.MaTTND AS CHAR) LIKE ?)`
+    );
     const kw = `%${search.trim()}%`;
-    params.push(kw, kw, kw);
+    params.push(kw, kw, kw, kw, kw);
   }
 
   const whereSql = `WHERE ${whereClauses.join(" AND ")}`;
 
-  // Đếm tổng số
+  // Đếm tổng số bản ghi
   const [countRes] = await queryAsync(
     `SELECT COUNT(*) AS total
      FROM YEUCAULIENHE y
@@ -201,7 +214,7 @@ const getRequestsForBroker = async (brokerId, options = {}) => {
   );
   const total = countRes?.total || 0;
 
-  // Lấy dữ liệu
+  // Lấy dữ liệu phân trang
   const offset = (Number(page) - 1) * Number(limit);
   const dataParams = [...params, Number(limit), Number(offset)];
 
@@ -303,17 +316,34 @@ const updateRequestStatus = async (requestId, userId, updateData, userRole = "")
   // Chuẩn hóa trạng thái nếu truyền kiểu cũ
   if (TrangThai === "CHUA_XU_LY") TrangThai = "MOI_NHAN";
   if (TrangThai === "DA_LIEN_HE") TrangThai = "DANG_LIEN_HE";
+  if (TrangThai === "DA_TU_VAN") TrangThai = "DANG_TU_VAN";
+  if (TrangThai === "HOAN_THANH") TrangThai = "DA_GIAO_DICH";
+  if (TrangThai === "DA_HUY") TrangThai = "KHONG_NHU_CAU";
 
-  const validStatuses = ["MOI_NHAN", "DANG_LIEN_HE", "DA_TU_VAN", "HOAN_THANH", "DA_HUY"];
+  const validStatuses = [
+    "MOI_NHAN",
+    "DANG_LIEN_HE",
+    "DANG_TU_VAN",
+    "DA_XEM_NHA",
+    "DA_GIAO_DICH",
+    "KHONG_NHU_CAU",
+    "HOAN_THANH",
+    "DA_HUY",
+  ];
   if (TrangThai && !validStatuses.includes(TrangThai)) {
-    throw new Error("Trạng thái cập nhật không hợp lệ! (Cho phép: MOI_NHAN, DANG_LIEN_HE, DA_TU_VAN, HOAN_THANH, DA_HUY)");
+    throw new Error(
+      "Trạng thái cập nhật không hợp lệ! (Cho phép: MOI_NHAN, DANG_LIEN_HE, DANG_TU_VAN, DA_XEM_NHA, DA_GIAO_DICH, KHONG_NHU_CAU)"
+    );
   }
 
   // Cập nhật mảng lịch sử tư vấn
   let history = [];
   if (request.LichSuTuVan) {
     try {
-      history = typeof request.LichSuTuVan === "string" ? JSON.parse(request.LichSuTuVan) : request.LichSuTuVan;
+      history =
+        typeof request.LichSuTuVan === "string"
+          ? JSON.parse(request.LichSuTuVan)
+          : request.LichSuTuVan;
     } catch (e) {}
   }
   history.push({
@@ -340,7 +370,7 @@ const updateRequestStatus = async (requestId, userId, updateData, userRole = "")
 };
 
 /**
- * 5. Thống kê KPI yêu cầu liên hệ cho Môi giới theo 4 trạng thái chuẩn
+ * 5. Thống kê KPI yêu cầu liên hệ / khách hàng quan tâm cho Môi giới
  */
 const getBrokerStats = async (brokerId) => {
   const [stats] = await queryAsync(
@@ -348,9 +378,10 @@ const getBrokerStats = async (brokerId) => {
        COUNT(*) AS total,
        SUM(CASE WHEN TrangThai = 'MOI_NHAN' OR TrangThai = 'CHUA_XU_LY' THEN 1 ELSE 0 END) AS moiNhan,
        SUM(CASE WHEN TrangThai = 'DANG_LIEN_HE' THEN 1 ELSE 0 END) AS dangLienHe,
-       SUM(CASE WHEN TrangThai = 'DA_TU_VAN' OR TrangThai = 'DA_LIEN_HE' THEN 1 ELSE 0 END) AS daTuVan,
-       SUM(CASE WHEN TrangThai = 'HOAN_THANH' THEN 1 ELSE 0 END) AS hoanThanh,
-       SUM(CASE WHEN TrangThai = 'DA_HUY' THEN 1 ELSE 0 END) AS daHuy
+       SUM(CASE WHEN TrangThai = 'DANG_TU_VAN' OR TrangThai = 'DA_TU_VAN' OR TrangThai = 'DA_LIEN_HE' THEN 1 ELSE 0 END) AS dangTuVan,
+       SUM(CASE WHEN TrangThai = 'DA_XEM_NHA' THEN 1 ELSE 0 END) AS daXemNha,
+       SUM(CASE WHEN TrangThai = 'DA_GIAO_DICH' OR TrangThai = 'HOAN_THANH' THEN 1 ELSE 0 END) AS daGiaoDich,
+       SUM(CASE WHEN TrangThai = 'KHONG_NHU_CAU' OR TrangThai = 'DA_HUY' THEN 1 ELSE 0 END) AS khongNhuCau
      FROM YEUCAULIENHE
      WHERE MaMoiGioi = ?`,
     [brokerId]
@@ -360,13 +391,35 @@ const getBrokerStats = async (brokerId) => {
     total: stats?.total || 0,
     moiNhan: stats?.moiNhan || 0,
     dangLienHe: stats?.dangLienHe || 0,
-    daTuVan: stats?.daTuVan || 0,
-    hoanThanh: stats?.hoanThanh || 0,
-    daHuy: stats?.daHuy || 0,
+    dangTuVan: stats?.dangTuVan || 0,
+    daXemNha: stats?.daXemNha || 0,
+    daGiaoDich: stats?.daGiaoDich || 0,
+    khongNhuCau: stats?.khongNhuCau || 0,
     // Tương thích các key cũ
+    daTuVan: stats?.dangTuVan || 0,
+    hoanThanh: stats?.daGiaoDich || 0,
+    daHuy: stats?.khongNhuCau || 0,
     pending: stats?.moiNhan || 0,
-    contacted: stats?.daTuVan || 0,
+    contacted: stats?.dangTuVan || 0,
   };
+};
+
+/**
+ * 6. Lấy danh sách các tin đăng của môi giới có khách hàng quan tâm
+ */
+const getBrokerPropertiesWithLeads = async (brokerId) => {
+  const properties = await queryAsync(
+    `SELECT t.MaTTND, t.TieuDe, t.Gia, t.DiaChi,
+            COUNT(y.MaYCLH) AS totalLeads
+     FROM THONGTINNHADAT t
+     INNER JOIN YEUCAULIENHE y ON t.MaTTND = y.MaTTND
+     WHERE y.MaMoiGioi = ?
+     GROUP BY t.MaTTND, t.TieuDe, t.Gia, t.DiaChi
+     ORDER BY totalLeads DESC, t.MaTTND DESC`,
+    [brokerId]
+  );
+
+  return properties;
 };
 
 module.exports = {
@@ -375,4 +428,5 @@ module.exports = {
   getRequestsForCustomer,
   updateRequestStatus,
   getBrokerStats,
+  getBrokerPropertiesWithLeads,
 };

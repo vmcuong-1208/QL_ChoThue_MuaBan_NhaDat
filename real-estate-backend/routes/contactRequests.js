@@ -30,6 +30,7 @@ router.post("/", optionalAuth, contactRequestController.createContactRequest);
 // 2. Môi giới xem danh sách yêu cầu liên hệ nhận được & Thống kê
 router.get("/broker", authenticateToken, contactRequestController.getBrokerRequests);
 router.get("/broker/stats", authenticateToken, contactRequestController.getBrokerStats);
+router.get("/broker/properties", authenticateToken, contactRequestController.getBrokerProperties);
 
 // 3. Khách hàng (User thường) xem lịch sử yêu cầu tư vấn đã gửi
 router.get("/customer", authenticateToken, contactRequestController.getCustomerRequests);
