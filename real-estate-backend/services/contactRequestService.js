@@ -13,11 +13,8 @@ const queryAsync = (sql, params = []) =>
  * 1. Khách hàng gửi yêu cầu liên hệ tư vấn
  */
 const createContactRequest = async (data, io = null) => {
-  const { MaTTND, HoTen, SoDienThoai, Email, NoiDung, MaNgGui } = data;
+  const { MaTTND, HoTen, SoDienThoai, Email, NoiDung, MaNgGui, ChuDe } = data;
 
-  if (!MaTTND) {
-    throw new Error("Mã tin đăng (MaTTND) không được để trống!");
-  }
   if (!HoTen || !HoTen.trim()) {
     throw new Error("Họ và tên khách hàng không được để trống!");
   }
@@ -28,29 +25,42 @@ const createContactRequest = async (data, io = null) => {
     throw new Error("Nội dung yêu cầu tư vấn không được để trống!");
   }
 
-  // 1. Kiểm tra tin đăng và xác định môi giới phụ trách
-  const propertyRows = await queryAsync(
-    `SELECT t.MaTTND, t.TieuDe, t.Gia, t.DiaChi, t.MaNgDung,
-            COALESCE(u.HoTen, u.TenDangNhap) AS TenMoiGioi, u.Email AS EmailMoiGioi, u.SDT AS SDTMoiGioi
-     FROM THONGTINNHADAT t
-     LEFT JOIN NGUOIDUNG u ON t.MaNgDung = u.MaNgDung
-     WHERE t.MaTTND = ?`,
-    [MaTTND]
-  );
+  let property = null;
+  let MaMoiGioi = null;
 
-  if (propertyRows.length === 0) {
-    throw new Error("Không tìm thấy thông tin bất động sản này!");
+  // 1. Nếu có MaTTND (gửi từ bài đăng cụ thể)
+  if (MaTTND) {
+    const propertyRows = await queryAsync(
+      `SELECT t.MaTTND, t.TieuDe, t.Gia, t.DiaChi, t.MaNgDung,
+              COALESCE(u.HoTen, u.TenDangNhap) AS TenMoiGioi, u.Email AS EmailMoiGioi, u.SDT AS SDTMoiGioi
+       FROM THONGTINNHADAT t
+       LEFT JOIN NGUOIDUNG u ON t.MaNgDung = u.MaNgDung
+       WHERE t.MaTTND = ?`,
+      [MaTTND]
+    );
+
+    if (propertyRows.length > 0) {
+      property = propertyRows[0];
+      MaMoiGioi = property.MaNgDung;
+    }
   }
 
-  const property = propertyRows[0];
-  const MaMoiGioi = property.MaNgDung;
+  // Nếu không có MaTTND (gửi từ trang Liên hệ chung /lien-he), gán người nhận là Admin hệ thống
+  if (!MaMoiGioi) {
+    const adminRows = await queryAsync(
+      `SELECT MaNgDung FROM NGUOIDUNG WHERE LOWER(LoaiTaiKhoan) = 'admin' LIMIT 1`
+    );
+    MaMoiGioi = adminRows.length > 0 ? adminRows[0].MaNgDung : 3;
+  }
 
   // Lịch sử tư vấn ban đầu
   const initialHistory = [
     {
       thoiGian: new Date(),
       trangThai: "MOI_NHAN",
-      ghiChu: "Khách hàng gửi yêu cầu liên hệ từ trang chi tiết tin đăng",
+      ghiChu: MaTTND
+        ? "Khách hàng gửi yêu cầu liên hệ từ trang chi tiết tin đăng"
+        : `Khách hàng gửi yêu cầu tư vấn từ trang Liên hệ (Chủ đề: ${ChuDe || "Tư vấn chung"})`,
     },
   ];
 
@@ -59,7 +69,7 @@ const createContactRequest = async (data, io = null) => {
     `INSERT INTO YEUCAULIENHE (MaTTND, MaNgGui, MaMoiGioi, HoTen, SoDienThoai, Email, NoiDung, TrangThai, LichSuTuVan)
      VALUES (?, ?, ?, ?, ?, ?, ?, 'MOI_NHAN', ?)`,
     [
-      MaTTND,
+      MaTTND || null,
       MaNgGui || null,
       MaMoiGioi,
       HoTen.trim(),
@@ -81,26 +91,31 @@ const createContactRequest = async (data, io = null) => {
     .toString()
     .padStart(2, "0")}/${now.getFullYear()}`;
 
-  // Nội dung thông báo theo đúng quy chuẩn người dùng yêu cầu
-  const notificationContent = `Có khách hàng mới quan tâm đến tin đăng của bạn.\n\nKhách hàng: ${HoTen.trim()}\nSố điện thoại: ${SoDienThoai.trim()}\nTin đăng: ${
-    property.TieuDe
-  }\nThời gian: ${timeFormatted}\nNội dung: ${NoiDung.trim()}`;
+  // Tiêu đề & nội dung thông báo
+  const propertyTitle = property ? property.TieuDe : `Tư vấn dịch vụ (${ChuDe || "Khách hàng mới"})`;
+  const notificationTitle = property
+    ? "Có khách hàng mới quan tâm đến tin đăng của bạn"
+    : "Khách hàng mới gửi yêu cầu tư vấn trực tuyến";
+
+  const notificationContent = `Có khách hàng mới gửi yêu cầu liên hệ.\n\nKhách hàng: ${HoTen.trim()}\nSố điện thoại: ${SoDienThoai.trim()}\nNội dung: ${NoiDung.trim()}${
+    property ? `\nTin đăng: ${property.TieuDe}` : ""
+  }\nThời gian: ${timeFormatted}`;
 
   // 3. Tạo thông báo mới cho môi giới trong bảng THONGBAO và phát realtime Socket.IO
   try {
     await notificationService.createNotification(
       {
         MaNgDung: MaMoiGioi,
-        TieuDe: "Có khách hàng mới quan tâm đến tin đăng của bạn",
+        TieuDe: notificationTitle,
         NoiDung: notificationContent,
         LoaiTB: "LIEN_HE",
         LienKet: `/yeu-cau-lien-he?id=${newRequestId}`,
         DuLieuThem: {
           MaYCLH: newRequestId,
-          MaTTND: MaTTND,
+          MaTTND: MaTTND || null,
           HoTen: HoTen.trim(),
           SoDienThoai: SoDienThoai.trim(),
-          TieuDe: property.TieuDe,
+          TieuDe: propertyTitle,
           ThoiGian: timeFormatted,
           NgayGui: now,
         },
@@ -117,13 +132,13 @@ const createContactRequest = async (data, io = null) => {
     await queryAsync(
       `INSERT INTO TINNHAN (MaNgMua, MaNgBan, MaTTND, NoiDung, TrangThaiDoc)
        VALUES (?, ?, ?, ?, 0)`,
-      [senderId, MaMoiGioi, MaTTND, notificationContent]
+      [senderId, MaMoiGioi, MaTTND || null, notificationContent]
     );
   } catch (msgErr) {
     console.warn("[ContactRequest] Không thể tạo tin nhắn tự động:", msgErr.message);
   }
 
-  // 5. Phát tín hiệu realtime qua Socket.IO tới môi giới
+  // 5. Phát tín hiệu realtime qua Socket.IO tới môi giới / Admin
   if (io) {
     try {
       io.emit("new_contact_request", {
@@ -133,8 +148,8 @@ const createContactRequest = async (data, io = null) => {
         SoDienThoai: SoDienThoai.trim(),
         Email: Email ? Email.trim() : null,
         NoiDung: NoiDung.trim(),
-        TieuDe: property.TieuDe,
-        MaTTND: MaTTND,
+        TieuDe: propertyTitle,
+        MaTTND: MaTTND || null,
         ThoiGian: timeFormatted,
         NgayGui: now,
       });
@@ -145,8 +160,8 @@ const createContactRequest = async (data, io = null) => {
 
   return {
     MaYCLH: newRequestId,
-    MaTTND,
-    TieuDe: property.TieuDe,
+    MaTTND: MaTTND || null,
+    TieuDe: property ? property.TieuDe : propertyTitle,
     MaMoiGioi,
     HoTen: HoTen.trim(),
     SoDienThoai: SoDienThoai.trim(),

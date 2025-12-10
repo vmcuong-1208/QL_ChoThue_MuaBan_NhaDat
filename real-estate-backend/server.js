@@ -25,7 +25,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -40,7 +40,7 @@ app.use(
       secure: false, // set true nếu dùng HTTPS
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
-  })
+  }),
 );
 
 // Passport middleware
@@ -120,6 +120,9 @@ app.use("/api/admin/revenue", revenueRoutes);
 const chatbotRoutes = require("./routes/chatbot");
 app.use("/api/chatbot", chatbotRoutes);
 
+const featuredPostRoutes = require("./routes/featuredPosts");
+app.use("/api/featured-posts", featuredPostRoutes);
+
 // Xử lý lỗi 404
 app.use((req, res) => {
   console.log(`404 Not Found: ${req.method} ${req.originalUrl}`);
@@ -132,8 +135,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Lỗi server", error: err.message });
 });
 
+const { startFeaturedExpirationCron } = require("./services/featuredReminderService");
+
 // Khởi động server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server đang chạy trên cổng ${PORT}`);
+  // Khởi động cron job nhắc gia hạn tin nổi bật
+  startFeaturedExpirationCron(io);
 });

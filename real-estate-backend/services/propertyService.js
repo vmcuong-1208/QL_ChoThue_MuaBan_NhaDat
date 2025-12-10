@@ -76,7 +76,12 @@ const getAllProperties = async (filters) => {
     filterConditions.push("tt.MaNgDung = ?");
     values.push(filters.MaNgDung);
   }
-  if (filters.featured === "true" || filters.featured === true || filters.featured === "1" || filters.featured === 1) {
+  if (
+    filters.featured === "true" ||
+    filters.featured === true ||
+    filters.featured === "1" ||
+    filters.featured === 1
+  ) {
     filterConditions.push("tt.Featured = 1");
   }
 
@@ -85,7 +90,9 @@ const getAllProperties = async (filters) => {
     filterConditions.push("tt.TrangThaiDuyet = ?");
     values.push(filters.trangThaiDuyet);
   } else if (!filters.includeAllModeration) {
-    filterConditions.push("(tt.TrangThaiDuyet = 'APPROVED' OR tt.TrangThaiDuyet IS NULL)");
+    filterConditions.push(
+      "(tt.TrangThaiDuyet = 'APPROVED' OR tt.TrangThaiDuyet IS NULL)",
+    );
   }
 
   const filterQuery =
@@ -100,7 +107,7 @@ const getAllProperties = async (filters) => {
             LIMIT 1) AS HinhAnh
     FROM THONGTINNHADAT tt
     ${filterQuery}
-    ORDER BY tt.Featured DESC, tt.NgayTao DESC
+    ORDER BY (tt.Featured = 1 AND (tt.FeaturedEndDate IS NULL OR tt.FeaturedEndDate >= NOW())) DESC, tt.NgayTao DESC
     LIMIT ? OFFSET ?`;
 
   const queryValues = [...values, parsedLimit, offset];
@@ -160,9 +167,7 @@ const searchProperties = async (searchParams) => {
   const conditions = [];
 
   if (keyword) {
-    conditions.push(
-      "(tt.TieuDe LIKE ? OR tt.MoTa LIKE ? OR tt.DiaChi LIKE ?)"
-    );
+    conditions.push("(tt.TieuDe LIKE ? OR tt.MoTa LIKE ? OR tt.DiaChi LIKE ?)");
     const keywordPattern = `%${keyword}%`;
     values.push(keywordPattern, keywordPattern, keywordPattern);
   }
@@ -208,35 +213,40 @@ const searchProperties = async (searchParams) => {
     values.push(trangThai);
   } else {
     // Mặc định chỉ hiển thị tin đang hoạt động (cả bán và cho thuê)
-    conditions.push("(LOWER(tt.TrangThai) = 'đang bán' OR LOWER(tt.TrangThai) = 'cho thuê')");
+    conditions.push(
+      "(LOWER(tt.TrangThai) = 'đang bán' OR LOWER(tt.TrangThai) = 'cho thuê')",
+    );
   }
 
   // Chỉ hiển thị tin đã được Admin phê duyệt
-  conditions.push("(tt.TrangThaiDuyet = 'APPROVED' OR tt.TrangThaiDuyet IS NULL)");
+  conditions.push(
+    "(tt.TrangThaiDuyet = 'APPROVED' OR tt.TrangThaiDuyet IS NULL)",
+  );
 
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   // Sắp xếp
-  let orderClause = "ORDER BY tt.Featured DESC, tt.NgayTao DESC";
+  let orderClause = "ORDER BY (tt.Featured = 1 AND (tt.FeaturedEndDate IS NULL OR tt.FeaturedEndDate >= NOW())) DESC, tt.NgayTao DESC";
   switch (sort) {
     case "price-asc":
-      orderClause = "ORDER BY tt.Gia ASC";
+      orderClause = "ORDER BY (tt.Featured = 1 AND (tt.FeaturedEndDate IS NULL OR tt.FeaturedEndDate >= NOW())) DESC, tt.Gia ASC";
       break;
     case "price-desc":
-      orderClause = "ORDER BY tt.Gia DESC";
+      orderClause = "ORDER BY (tt.Featured = 1 AND (tt.FeaturedEndDate IS NULL OR tt.FeaturedEndDate >= NOW())) DESC, tt.Gia DESC";
       break;
     case "area-asc":
-      orderClause = "ORDER BY tt.DienTich ASC";
+      orderClause = "ORDER BY (tt.Featured = 1 AND (tt.FeaturedEndDate IS NULL OR tt.FeaturedEndDate >= NOW())) DESC, tt.DienTich ASC";
       break;
     case "area-desc":
-      orderClause = "ORDER BY tt.DienTich DESC";
+      orderClause = "ORDER BY (tt.Featured = 1 AND (tt.FeaturedEndDate IS NULL OR tt.FeaturedEndDate >= NOW())) DESC, tt.DienTich DESC";
       break;
     case "views-desc":
-      orderClause = "ORDER BY tt.SoLuotXem DESC";
+      orderClause = "ORDER BY (tt.Featured = 1 AND (tt.FeaturedEndDate IS NULL OR tt.FeaturedEndDate >= NOW())) DESC, tt.SoLuotXem DESC";
       break;
     case "newest":
-      orderClause = "ORDER BY tt.NgayTao DESC";
+    default:
+      orderClause = "ORDER BY (tt.Featured = 1 AND (tt.FeaturedEndDate IS NULL OR tt.FeaturedEndDate >= NOW())) DESC, tt.NgayTao DESC";
       break;
   }
 
@@ -294,7 +304,7 @@ const getUserProperties = async (userId) => {
     .promise()
     .query(
       `SELECT * FROM THONGTINNHADAT WHERE MaNgDung = ? ORDER BY NgayTao DESC`,
-      [userId]
+      [userId],
     );
 
   for (const property of properties) {
@@ -318,7 +328,7 @@ const getPropertyById = async (propertyId) => {
      FROM THONGTINNHADAT p
      LEFT JOIN LOAINHADAT l ON p.MaLoaiND = l.MaLoaiND
      WHERE p.MaTTND = ?`,
-    [propertyId]
+    [propertyId],
   );
 
   if (!properties || properties.length === 0) {
@@ -367,7 +377,7 @@ const incrementViews = async (propertyId, viewerId) => {
     .promise()
     .query(
       `UPDATE THONGTINNHADAT SET SoLuotXem = SoLuotXem + 1 WHERE MaTTND = ?`,
-      [propertyId]
+      [propertyId],
     );
 
   return {
@@ -456,7 +466,7 @@ const createProperty = async ({
       PhiDichVu || null,
       NoiThat || null,
       TienIch || null,
-    ]
+    ],
   );
 
   const propertyId = result.insertId;
@@ -473,10 +483,10 @@ const createProperty = async ({
   for (const imagePath of hinhAnhGiayTo) {
     await db
       .promise()
-      .query(
-        `INSERT INTO HINHANHGIAYTO (MaTTND, DuongDanAnh) VALUES (?, ?)`,
-        [propertyId, imagePath]
-      );
+      .query(`INSERT INTO HINHANHGIAYTO (MaTTND, DuongDanAnh) VALUES (?, ?)`, [
+        propertyId,
+        imagePath,
+      ]);
   }
 
   return propertyId;
@@ -562,16 +572,20 @@ const updateProperty = async ({
       GPS_Lat || null,
       GPS_Lng || null,
       videoThuaDat,
-      TienDatCoc !== undefined ? (TienDatCoc ? parseFloat(TienDatCoc) : 0) : property.TienDatCoc,
+      TienDatCoc !== undefined
+        ? TienDatCoc
+          ? parseFloat(TienDatCoc)
+          : 0
+        : property.TienDatCoc,
       ThoiHanThue !== undefined ? ThoiHanThue : property.ThoiHanThue,
       TienDien !== undefined ? TienDien : property.TienDien,
       TienNuoc !== undefined ? TienNuoc : property.TienNuoc,
       PhiDichVu !== undefined ? PhiDichVu : property.PhiDichVu,
       NoiThat !== undefined ? NoiThat : property.NoiThat,
       TienIch !== undefined ? TienIch : property.TienIch,
-      MaDuAn !== undefined ? (MaDuAn || null) : property.MaDuAn,
+      MaDuAn !== undefined ? MaDuAn || null : property.MaDuAn,
       propertyId,
-    ]
+    ],
   );
 
   // Cập nhật danh sách hình ảnh
@@ -594,10 +608,10 @@ const updateProperty = async ({
   for (const imagePath of hinhAnhGiayTo) {
     await db
       .promise()
-      .query(
-        `INSERT INTO HINHANHGIAYTO (MaTTND, DuongDanAnh) VALUES (?, ?)`,
-        [propertyId, imagePath]
-      );
+      .query(`INSERT INTO HINHANHGIAYTO (MaTTND, DuongDanAnh) VALUES (?, ?)`, [
+        propertyId,
+        imagePath,
+      ]);
   }
 
   return {
@@ -626,9 +640,7 @@ const deleteProperty = async ({ propertyId, userId }) => {
   // Xóa ảnh từ đĩa và CSDL
   const [images] = await db
     .promise()
-    .query(`SELECT DuongDanAnh FROM HINHANHBDS WHERE MaTTND = ?`, [
-      propertyId,
-    ]);
+    .query(`SELECT DuongDanAnh FROM HINHANHBDS WHERE MaTTND = ?`, [propertyId]);
   for (const { DuongDanAnh } of images) {
     safelyDeleteFile(DuongDanAnh);
   }

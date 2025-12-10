@@ -28,6 +28,7 @@ import {
   FaBullhorn,
   FaFlag,
   FaMoneyBillWave,
+  FaCrown,
 } from "react-icons/fa";
 import CategoryManager from "./CategoryManager";
 import ContentManager from "./ContentManager";
@@ -36,6 +37,7 @@ import PropertyModerationManager from "./PropertyModerationManager";
 import BrokerVerificationManager from "./BrokerVerificationManager";
 import ReportManager from "./ReportManager";
 import RevenueManager from "./RevenueManager";
+import FeaturedPostManager from "./FeaturedPostManager";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { API_URL } from "../../services/api";
@@ -97,6 +99,8 @@ const AdminPanel = () => {
         return <ReportManager />;
       case "revenue":
         return <RevenueManager />;
+      case "featured-posts":
+        return <FeaturedPostManager />;
       case "content":
         return <ContentManager />;
       default:
@@ -145,6 +149,11 @@ const AdminPanel = () => {
       id: "properties",
       icon: FaClipboardList,
       label: "Quản lý tin đăng",
+    },
+    {
+      id: "featured-posts",
+      icon: FaCrown,
+      label: "Quản lý tin nổi bật",
     },
     {
       id: "reports",

@@ -205,7 +205,7 @@ const Navbar = () => {
 
                 <li className="relative group">
                   <Link
-                    to="/tim-kiem?trangThai=đang+bán"
+                    to="/mua-ban"
                     className={`relative font-bold text-sm lg:text-base px-2.5 py-2 block transition-colors duration-300 ${textColor} ${textHoverColor} ${
                       isTransparent ? "drop-shadow-md" : ""
                     }`}
@@ -219,7 +219,7 @@ const Navbar = () => {
 
                 <li className="relative group">
                   <Link
-                    to="/tim-kiem?trangThai=cho+thuê"
+                    to="/cho-thue"
                     className={`relative font-bold text-sm lg:text-base px-2.5 py-2 block transition-colors duration-300 ${textColor} ${textHoverColor} ${
                       isTransparent ? "drop-shadow-md" : ""
                     }`}
@@ -232,17 +232,9 @@ const Navbar = () => {
                 </li>
 
                 <li className="relative group">
-                  <a
-                    href="#du-an-noi-bat"
-                    onClick={(e) => {
-                      if (location.pathname !== "/") {
-                        navigate("/#du-an-noi-bat");
-                      } else {
-                        const el = document.getElementById("du-an-noi-bat");
-                        if (el) el.scrollIntoView({ behavior: "smooth" });
-                      }
-                    }}
-                    className={`relative font-bold text-sm lg:text-base px-2.5 py-2 block cursor-pointer transition-colors duration-300 ${textColor} ${textHoverColor} ${
+                  <Link
+                    to="/du-an"
+                    className={`relative font-bold text-sm lg:text-base px-2.5 py-2 block transition-colors duration-300 ${textColor} ${textHoverColor} ${
                       isTransparent ? "drop-shadow-md" : ""
                     }`}
                   >
@@ -250,7 +242,7 @@ const Navbar = () => {
                     <span
                       className={`absolute bottom-0 left-0 w-full h-0.5 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left ${underlineColor}`}
                     ></span>
-                  </a>
+                  </Link>
                 </li>
 
                 <li className="relative group">
@@ -606,7 +598,8 @@ const Navbar = () => {
               </Link>
 
               <Link
-                to="/tim-kiem?trangThai=đang+bán"
+                to="/mua-ban"
+                onClick={() => setShowMobileMenu(false)}
                 className="flex items-center gap-3 px-5 py-3.5 text-base font-bold text-gray-800 transition-all duration-200 border-b border-gray-100 hover:bg-blue-50 hover:text-blue-700"
               >
                 <div className="flex items-center justify-center flex-shrink-0 w-6 h-6">
@@ -616,7 +609,8 @@ const Navbar = () => {
               </Link>
 
               <Link
-                to="/tim-kiem?trangThai=cho+thuê"
+                to="/cho-thue"
+                onClick={() => setShowMobileMenu(false)}
                 className="flex items-center gap-3 px-5 py-3.5 text-base font-bold text-gray-800 transition-all duration-200 border-b border-gray-100 hover:bg-blue-50 hover:text-blue-700"
               >
                 <div className="flex items-center justify-center flex-shrink-0 w-6 h-6">
@@ -625,24 +619,16 @@ const Navbar = () => {
                 <span>Cho thuê</span>
               </Link>
 
-              <a
-                href="#du-an-noi-bat"
-                onClick={(e) => {
-                  setShowMobileMenu(false);
-                  if (location.pathname !== "/") {
-                    navigate("/#du-an-noi-bat");
-                  } else {
-                    const el = document.getElementById("du-an-noi-bat");
-                    if (el) el.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
+              <Link
+                to="/du-an"
+                onClick={() => setShowMobileMenu(false)}
                 className="flex items-center gap-3 px-5 py-3.5 text-base font-bold text-gray-800 transition-all duration-200 border-b border-gray-100 hover:bg-blue-50 hover:text-blue-700"
               >
                 <div className="flex items-center justify-center flex-shrink-0 w-6 h-6">
                   <span className="text-xl">🏢</span>
                 </div>
                 <span>Dự án</span>
-              </a>
+              </Link>
 
               <a
                 href="#tin-tuc-bds"

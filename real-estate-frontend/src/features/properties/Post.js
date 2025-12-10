@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
   FaPlus,
@@ -15,14 +15,18 @@ import {
   FaSearch,
   FaEnvelopeOpenText,
   FaChartLine,
+  FaCrown,
+  FaStar,
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import locationService from "../../services/locationService";
 import VerificationModal from "../auth/VerificationModal";
+import FeaturedPostModal from "./FeaturedPostModal";
 import { API_URL, SERVER_URL } from "../../services/api";
 
 const Post = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useAuth();
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
@@ -34,6 +38,8 @@ const Post = () => {
   const [propertyTypes, setPropertyTypes] = useState([]);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
+  const [showFeaturedModal, setShowFeaturedModal] = useState(false);
+  const [featuredProperty, setFeaturedProperty] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [summaryStats, setSummaryStats] = useState(null);
 
@@ -188,6 +194,19 @@ const Post = () => {
     fetchUserProperties();
   }, [navigate]);
 
+  // Tự động mở Modal Gia hạn nổi bật nếu URL có query ?highlight=MaTTND (khi click từ thông báo chuông)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const highlightId = params.get("highlight");
+    if (highlightId && properties.length > 0) {
+      const target = properties.find((p) => p.MaTTND === Number(highlightId));
+      if (target) {
+        setFeaturedProperty(target);
+        setShowFeaturedModal(true);
+      }
+    }
+  }, [location.search, properties]);
+
   // ✅ Xử lý tìm kiếm
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -247,6 +266,18 @@ const Post = () => {
     setSelectedPropertyId(id);
     setShowVerificationModal(true);
     setActiveMenu(null);
+  };
+
+  // Xử lý đăng ký tin nổi bật
+  const handleOpenFeatured = (prop) => {
+    setFeaturedProperty(prop);
+    setShowFeaturedModal(true);
+    setActiveMenu(null);
+  };
+
+  const handleFeaturedSuccess = () => {
+    // Reload lại danh sách tin
+    window.location.reload();
   };
 
   // Định dạng giá tiền
@@ -529,8 +560,16 @@ const Post = () => {
                     {property.TrangThai || "Đang đăng"}
                   </span>
 
+                  {/* Badge Tin nổi bật */}
+                  {Boolean(property.Featured) && (
+                    <div className="absolute flex items-center gap-1 px-2.5 py-1 text-xs font-black text-amber-900 bg-amber-400 border border-amber-300 rounded-full shadow-lg top-3 left-3 z-10 animate-pulse">
+                      <FaCrown className="text-amber-900" />
+                      <span>Tin nổi bật</span>
+                    </div>
+                  )}
+
                   {/* Badge đã xác thực */}
-                  {property.TrangThaiXacThuc === "đã xác thực" && (
+                  {property.TrangThaiXacThuc === "đã xác thực" && !property.Featured && (
                     <div className="absolute flex items-center gap-1 px-2 py-0.5 text-xs font-bold text-white rounded-full shadow-md bg-emerald-500 top-3 left-3">
                       <FaCheckCircle />
                       Xác thực
@@ -547,7 +586,14 @@ const Post = () => {
 
                   {/* Menu actions */}
                   {activeMenu === property.MaTTND && (
-                    <div className="absolute z-20 w-40 py-2 text-sm bg-white border shadow-xl border-slate-100 rounded-xl top-12 right-3">
+                    <div className="absolute z-20 w-48 py-2 text-sm bg-white border shadow-xl border-slate-100 rounded-xl top-12 right-3">
+                      <button
+                        className="flex items-center w-full gap-2 px-3 py-2 font-bold text-left text-amber-600 hover:bg-amber-50"
+                        onClick={() => handleOpenFeatured(property)}
+                      >
+                        <FaCrown className="text-amber-500" />
+                        {property.Featured ? "Gia hạn tin nổi bật" : "Đăng ký tin nổi bật"}
+                      </button>
                       <button
                         className="flex items-center w-full gap-2 px-3 py-2 font-bold text-left text-slate-700 hover:bg-slate-50"
                         onClick={() => handleEdit(property.MaTTND)}
@@ -615,13 +661,27 @@ const Post = () => {
                     {getVerificationBadge(property.TrangThaiXacThuc)}
                   </div>
 
-                  {/* Nút xem chi tiết */}
-                  <button
-                    onClick={() => handleView(property.MaTTND)}
-                    className="w-full px-4 py-2 mt-auto text-xs font-bold text-white transition-all transform shadow-md rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:scale-105 active:scale-95"
-                  >
-                    Xem chi tiết
-                  </button>
+                  {/* Nút xem chi tiết & Nút đăng ký nổi bật */}
+                  <div className="mt-auto space-y-1.5 pt-2">
+                    <button
+                      onClick={() => handleOpenFeatured(property)}
+                      className={`w-full px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-xs ${
+                        property.Featured
+                          ? "bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300"
+                          : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                      }`}
+                    >
+                      <FaCrown className="text-amber-500 text-xs" />
+                      <span>{property.Featured ? "⭐ Nổi bật (Gia hạn)" : "⭐ Đăng ký tin nổi bật"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleView(property.MaTTND)}
+                      className="w-full px-4 py-2 text-xs font-bold text-white transition-all transform shadow-md rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:scale-[1.02] active:scale-95"
+                    >
+                      Xem chi tiết
+                    </button>
+                  </div>
                 </div>
 
                 {/* Overlay xác nhận xóa */}
@@ -665,6 +725,19 @@ const Post = () => {
           onSuccess={() => {
             window.location.reload();
           }}
+        />
+      )}
+
+      {/* Modal Đăng ký tin nổi bật */}
+      {showFeaturedModal && (
+        <FeaturedPostModal
+          isOpen={showFeaturedModal}
+          property={featuredProperty}
+          onClose={() => {
+            setShowFeaturedModal(false);
+            setFeaturedProperty(null);
+          }}
+          onSuccess={handleFeaturedSuccess}
         />
       )}
     </div>

@@ -273,7 +273,13 @@ const NotificationBell = ({ isTransparent = false }) => {
                           : "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      {item.LoaiTB === "LIEN_HE" ? <FaPhoneAlt /> : <FaInfoCircle />}
+                      {item.LoaiTB === "LIEN_HE" ? (
+                        <FaPhoneAlt />
+                      ) : item.LoaiTB === "TIN_NOI_BAT" ? (
+                        <span className="text-amber-500 font-black text-xs">⭐</span>
+                      ) : (
+                        <FaInfoCircle />
+                      )}
                     </div>
 
                     {/* Nội dung thông báo theo đúng mẫu chuẩn */}

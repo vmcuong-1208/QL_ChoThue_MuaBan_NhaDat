@@ -126,6 +126,61 @@ const Home = () => {
   const [isBannerPaused, setIsBannerPaused] = useState(false);
   const bannerTimerRef = useRef(null);
 
+  // Hiệu ứng chữ chạy Typewriter placeholder giống Batdongsan.com.vn
+  const [dynamicPlaceholder, setDynamicPlaceholder] = useState("");
+  useEffect(() => {
+    const suggestions = [
+      "Vinhomes Grand Park Quận 9...",
+      "Nhà mặt tiền kinh doanh Quận 7...",
+      "Căn hộ chung cư Masteri Centre Point...",
+      "Đất nền thổ cư sổ đỏ Bình Chánh...",
+      "Nhà phố liền kề TP Thủ Đức...",
+      "Cho thuê căn hộ dịch vụ cao cấp...",
+      "Biệt thự compound ven sông...",
+    ];
+
+    let currentSuggestionIdx = 0;
+    let currentCharIdx = 0;
+    let isDeleting = false;
+    let timer = null;
+
+    const typeWriter = () => {
+      const fullText = suggestions[currentSuggestionIdx];
+
+      if (!isDeleting) {
+        // Đang gõ chữ
+        setDynamicPlaceholder(fullText.substring(0, currentCharIdx + 1));
+        currentCharIdx++;
+
+        if (currentCharIdx === fullText.length) {
+          // Gõ xong, dừng lại 2.2 giây để người dùng đọc
+          isDeleting = true;
+          timer = setTimeout(typeWriter, 2200);
+          return;
+        }
+        timer = setTimeout(typeWriter, 65);
+      } else {
+        // Đang xóa chữ
+        setDynamicPlaceholder(fullText.substring(0, currentCharIdx - 1));
+        currentCharIdx--;
+
+        if (currentCharIdx === 0) {
+          // Xóa hết, chuyển sang câu tiếp theo
+          isDeleting = false;
+          currentSuggestionIdx = (currentSuggestionIdx + 1) % suggestions.length;
+          timer = setTimeout(typeWriter, 400);
+          return;
+        }
+        timer = setTimeout(typeWriter, 35);
+      }
+    };
+
+    timer = setTimeout(typeWriter, 500);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
   // Helper format giá
   const formatPrice = (price) => {
     if (!price || isNaN(price)) return "Thỏa thuận";
@@ -373,10 +428,10 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {/* ======================================================== */}
-      {/* 1. BANNER HERO SECTION (GIỮ NGUYÊN CONTAINER KHOANH ĐỎ, BỎ SEARCH BÊN TRONG) */}
+      {/* 1. BANNER HERO SECTION & BỘ LỌC TÌM KIẾM TRUNG TÂM       */}
       {/* ======================================================== */}
       <section
-        className="relative min-h-[560px] md:min-h-[620px] lg:min-h-[660px] flex items-center justify-center overflow-hidden"
+        className="relative min-h-[580px] md:min-h-[640px] lg:min-h-[680px] flex items-center justify-center overflow-hidden py-16 md:py-20"
         onMouseEnter={() => setIsBannerPaused(true)}
         onMouseLeave={() => setIsBannerPaused(false)}
       >
@@ -392,7 +447,7 @@ const Home = () => {
                   isActive ? "opacity-100 scale-100" : "opacity-0 scale-105 pointer-events-none"
                 }`}
                 style={{
-                  backgroundImage: `linear-gradient(to bottom, rgba(15, 23, 42, 0.65) 0%, rgba(15, 23, 42, 0.75) 100%), url('${bgUrl}')`,
+                  backgroundImage: `linear-gradient(to bottom, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.75) 100%), url('${bgUrl}')`,
                   transition: "opacity 1s ease-in-out, transform 8s ease-out",
                 }}
               />
@@ -400,70 +455,50 @@ const Home = () => {
           })}
         </div>
 
-        {/* Nội dung Banner: Tiêu đề lớn, mô tả, nút [XEM NGAY] */}
-        <div className="container relative z-10 px-4 py-16 mx-auto text-center lg:py-24">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 text-xs md:text-sm font-extrabold uppercase tracking-widest text-amber-300 bg-amber-500/20 border border-amber-400/40 rounded-full backdrop-blur-md animate-fadeIn">
-              ✨ Bất Động Sản 3MAN • Uy Tín & Đẳng Cấp
-            </span>
+        {/* Hộp Tìm kiếm trực tiếp trong Banner Hero */}
+        <div className="container relative z-10 px-4 mx-auto">
+          <div className="max-w-4xl mx-auto">
+            {/* Hộp Tìm kiếm tinh gọn một dòng */}
+            <div className="p-3 sm:p-4 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/50 transition-all">
+              {/* Form tìm kiếm */}
+              <form onSubmit={handleSearchSubmit}>
+                {/* Thanh tìm kiếm + Nút Tìm kiếm cùng 1 hàng */}
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="relative flex-1">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 sm:pl-5 pointer-events-none text-slate-400">
+                      <FaSearch className="text-base sm:text-lg" />
+                    </span>
+                    <input
+                      type="text"
+                      name="keyword"
+                      placeholder={`Tìm kiếm: ${dynamicPlaceholder || "Vinhomes Grand Park, Quận 7..."}`}
+                      value={searchData.keyword}
+                      onChange={handleInputChange}
+                      className="w-full pl-11 sm:pl-13 pr-4 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-slate-800 placeholder-slate-400/90 bg-slate-50 hover:bg-white border-2 border-slate-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all"
+                    />
+                  </div>
 
-            <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl drop-shadow-2xl leading-tight">
-              {currentBanner.TenBanner || "SỞ HỮU NHÀ ĐẸP GIÁ TỐT HÔM NAY"}
-            </h1>
-
-            <p className="max-w-2xl mx-auto text-base sm:text-lg md:text-xl font-medium text-slate-200 drop-shadow-md">
-              {currentBanner.MoTa ||
-                "Tìm kiếm ngôi nhà mơ ước của bạn với hàng nghìn lựa chọn đa dạng, pháp lý minh bạch"}
-            </p>
-
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                to={currentBanner.LienKet || "/tim-kiem"}
-                className="inline-flex items-center gap-3 px-8 py-4 text-base font-black text-white transition-all duration-300 rounded-xl shadow-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 hover:scale-105 active:scale-95 group"
-              >
-                <span>{currentBanner.NutCTA || "XEM NGAY"}</span>
-                <FaArrowRight className="transition-transform group-hover:translate-x-1" />
-              </Link>
-
-              <Link
-                to="/lien-he"
-                className="inline-flex items-center gap-2 px-6 py-4 text-base font-bold text-white transition-all duration-300 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md hover:scale-105"
-              >
-                <FaPhoneAlt className="text-amber-300" />
-                <span>Tư vấn trực tiếp</span>
-              </Link>
+                  <button
+                    type="submit"
+                    className="flex-shrink-0 flex items-center justify-center gap-2 py-3.5 sm:py-4 px-6 sm:px-8 text-sm sm:text-base font-extrabold text-white rounded-2xl shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                  >
+                    <FaSearch className="text-sm sm:text-base" />
+                    <span>Tìm kiếm</span>
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
 
-        {/* Nút điều hướng Slider Trái / Phải */}
-        {banners.length > 1 && (
-          <>
-            <button
-              onClick={handlePrevBanner}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-11 h-11 text-white transition-all bg-black/30 hover:bg-black/60 rounded-full backdrop-blur-md border border-white/20 hover:scale-110"
-              title="Banner trước"
-            >
-              <FaChevronLeft size={18} />
-            </button>
-            <button
-              onClick={handleNextBanner}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-11 h-11 text-white transition-all bg-black/30 hover:bg-black/60 rounded-full backdrop-blur-md border border-white/20 hover:scale-110"
-              title="Banner tiếp theo"
-            >
-              <FaChevronRight size={18} />
-            </button>
-          </>
-        )}
-
         {/* Chỉ số chấm tròn Banner (Dots) */}
         {banners.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5">
             {banners.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveBannerIdx(idx)}
-                className={`transition-all duration-300 rounded-full ${
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
                   idx === activeBannerIdx
                     ? "w-8 h-2.5 bg-blue-500 shadow-md shadow-blue-400/50"
                     : "w-2.5 h-2.5 bg-white/50 hover:bg-white/80"
@@ -473,210 +508,6 @@ const Home = () => {
             ))}
           </div>
         )}
-      </section>
-
-      {/* ======================================================== */}
-      {/* 2. THANH TÌM KIẾM (ĐẶT NGAY DƯỚI BANNER, BỐ CỤC HOÀN CHỈNH) */}
-      {/* ======================================================== */}
-      <section className="relative z-30 -mt-10 lg:-mt-14 px-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Hộp Tìm kiếm sang trọng */}
-          <div className="p-6 md:p-8 bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-slate-200/90 transition-all">
-            {/* Header: "Bạn muốn tìm gì?" + Tabs Mua Bán / Cho Thuê */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-5 border-b border-slate-100 gap-3">
-              <div>
-                <h2 className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2">
-                  <span>Bạn muốn tìm gì?</span>
-                  <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
-                    Bộ lọc thông minh
-                  </span>
-                </h2>
-                <p className="text-xs md:text-sm font-medium text-slate-500 mt-0.5">
-                  Tìm theo từ khóa, loại bất động sản, tỉnh thành, quận huyện và mức giá
-                </p>
-              </div>
-
-              {/* Tabs chuyển đổi Mua bán / Cho thuê */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setSearchData((p) => ({ ...p, trangThai: "đang bán" }))}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
-                    searchData.trangThai === "đang bán"
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <span>🏷️</span> Mua bán
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSearchData((p) => ({ ...p, trangThai: "cho thuê" }))}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
-                    searchData.trangThai === "cho thuê"
-                      ? "bg-white text-emerald-600 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  <span>🔑</span> Cho thuê
-                </button>
-              </div>
-            </div>
-
-            {/* Form tìm kiếm */}
-            <form onSubmit={handleSearchSubmit} className="space-y-4">
-              {/* Row 1: Từ khóa */}
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400">
-                  <FaSearch className="text-base" />
-                </span>
-                <input
-                  type="text"
-                  name="keyword"
-                  placeholder="Nhập từ khóa, tên dự án, đường, khu vực (Ví dụ: Vinhomes, Quận 7, Căn hộ 2PN...)"
-                  value={searchData.keyword}
-                  onChange={handleInputChange}
-                  className="w-full pl-11 pr-4 py-3.5 text-base font-semibold text-slate-800 placeholder-slate-400 bg-slate-50 hover:bg-white border-2 border-slate-200 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all"
-                />
-              </div>
-
-              {/* Row 2: 4 Dropdowns (Loại BĐS | Tỉnh/Thành | Quận/Huyện | Khoảng giá) + Nút Tìm kiếm */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                {/* 1. Loại BĐS */}
-                <div className="relative">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 ml-1">
-                    Loại BĐS
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="loaiBDS"
-                      value={searchData.loaiBDS}
-                      onChange={handleInputChange}
-                      className="w-full px-3.5 py-3 text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl appearance-none cursor-pointer pr-9 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    >
-                      <option value="">Tất cả loại BĐS</option>
-                      {propertyTypes.map((t) => (
-                        <option key={t.MaLoai || t.MaLoaiND} value={t.MaLoai || t.MaLoaiND}>
-                          {t.TenLoai || t.TenLoaiND}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* 2. Tỉnh/Thành */}
-                <div className="relative">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 ml-1">
-                    Tỉnh / Thành phố
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="tinhThanh"
-                      value={searchData.tinhThanh}
-                      onChange={handleInputChange}
-                      className="w-full px-3.5 py-3 text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl appearance-none cursor-pointer pr-9 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    >
-                      <option value="">-- Tỉnh / Thành --</option>
-                      {provinces.map((p) => (
-                        <option key={p.MaTinh} value={p.MaTinh}>
-                          {p.TenTinh}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* 3. Quận/Huyện */}
-                <div className="relative">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 ml-1">
-                    Quận / Huyện
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="quanHuyen"
-                      value={searchData.quanHuyen}
-                      onChange={handleInputChange}
-                      disabled={!searchData.tinhThanh}
-                      className="w-full px-3.5 py-3 text-sm font-bold text-slate-700 bg-slate-50 disabled:bg-slate-100 disabled:text-slate-400 border border-slate-200 rounded-xl appearance-none cursor-pointer pr-9 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    >
-                      <option value="">
-                        {searchData.tinhThanh ? "-- Chọn Quận/Huyện --" : "Chọn Tỉnh/Thành trước"}
-                      </option>
-                      {districts.map((d) => (
-                        <option key={d.MaHuyen} value={d.MaHuyen}>
-                          {d.TenHuyen}
-                        </option>
-                      ))}
-                    </select>
-                    <FaChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* 4. Khoảng giá */}
-                <div className="relative">
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 ml-1">
-                    Khoảng giá
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="khoangGia"
-                      value={searchData.khoangGia}
-                      onChange={handleInputChange}
-                      className="w-full px-3.5 py-3 text-sm font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl appearance-none cursor-pointer pr-9 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    >
-                      <option value="">Tất cả mức giá</option>
-                      <option value="0-1000000000">Dưới 1 tỷ</option>
-                      <option value="1000000000-2000000000">1 - 2 tỷ</option>
-                      <option value="2000000000-3000000000">2 - 3 tỷ</option>
-                      <option value="3000000000-5000000000">3 - 5 tỷ</option>
-                      <option value="5000000000-7000000000">5 - 7 tỷ</option>
-                      <option value="7000000000-10000000000">7 - 10 tỷ</option>
-                      <option value="10000000000-20000000000">10 - 20 tỷ</option>
-                      <option value="20000000000-999000000000">Trên 20 tỷ</option>
-                    </select>
-                    <FaChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* 5. Nút Tìm kiếm */}
-                <div className="flex items-end">
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 py-3 px-6 text-base font-extrabold text-white rounded-xl shadow-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
-                  >
-                    <FaSearch />
-                    <span>Tìm kiếm</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Gợi ý từ khóa hot */}
-              <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-slate-500">
-                <span className="font-bold text-slate-600 flex items-center gap-1">
-                  <span>🔥</span> Gợi ý phổ biến:
-                </span>
-                {[
-                  "Căn hộ Vinhomes Grand Park",
-                  "Nhà phố Quận 7",
-                  "Đất nền Bình Chánh",
-                  "Biệt thự Thủ Đức",
-                  "Masteri Centre Point",
-                ].map((kw) => (
-                  <button
-                    key={kw}
-                    type="button"
-                    onClick={() => handleQuickKeyword(kw)}
-                    className="px-2.5 py-1 font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                  >
-                    {kw}
-                  </button>
-                ))}
-              </div>
-            </form>
-          </div>
-        </div>
       </section>
 
       {/* ======================================================== */}

@@ -50,6 +50,7 @@ import {
   PaymentSuccess,
 } from "./features";
 
+import ProjectList from "./features/properties/ProjectList";
 import "./App.css";
 
 // ========================================
@@ -74,6 +75,9 @@ function AppContent() {
           <Route path="/auth" element={<LoginRegister />} />
           <Route path="/lien-he" element={<Contact />} />
           <Route path="/tim-kiem" element={<SearchResults />} />
+          <Route path="/mua-ban" element={<SearchResults forcedType="đang bán" />} />
+          <Route path="/cho-thue" element={<SearchResults forcedType="cho thuê" />} />
+          <Route path="/du-an" element={<ProjectList />} />
           <Route path="/ban-do" element={<MapPage />} />
           <Route path="/tham-khao-gia" element={<PriceReference />} />
           <Route path="/bat-dong-san/:id" element={<PropertyDetail />} />

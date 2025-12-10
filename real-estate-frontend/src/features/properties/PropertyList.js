@@ -418,7 +418,7 @@ const PropertyList = () => {
               <div
                 key={property.MaTTND}
                 className={`flex flex-col h-full overflow-hidden bg-white border border-gray-100 shadow-lg rounded-2xl transition-all duration-500 transform hover:shadow-2xl hover:-translate-y-2 animate-fadeInUp ${
-                  property.isFeatured ? "ring-2 ring-orange-400" : ""
+                  (property.isFeatured || property.Featured) ? "ring-2 ring-amber-400 shadow-amber-100" : ""
                 }`}
                 style={{ animationDelay: `${index * 80}ms` }}
               >
@@ -458,18 +458,16 @@ const PropertyList = () => {
                   </button>
 
                   {/* Badge xác thực / nổi bật / trạng thái */}
-                  {property.TrangThaiXacThuc === "đã xác thực" && (
+                  {(property.isFeatured || property.Featured) ? (
+                    <div className="absolute flex items-center gap-1 px-2.5 py-1 text-xs font-black text-amber-950 bg-amber-400 border border-amber-300 rounded-full shadow-lg top-3 left-3 z-10 animate-pulse">
+                      <span>⭐ Tin nổi bật</span>
+                    </div>
+                  ) : property.TrangThaiXacThuc === "đã xác thực" ? (
                     <div className="absolute flex items-center gap-1 px-2 py-1 text-xs font-semibold text-white bg-green-500 rounded-full shadow-md top-3 left-3">
                       <FaCheckCircle className="text-xs" />
                       Đã xác thực
                     </div>
-                  )}
-
-                  {property.isFeatured && (
-                    <span className="absolute px-2 py-1 text-xs font-bold text-white rounded-full shadow-md bg-gradient-to-r from-orange-500 to-red-500 bottom-3 left-3">
-                      Nổi bật
-                    </span>
-                  )}
+                  ) : null}
 
                   <span className="absolute px-2 py-1 text-xs font-bold text-white bg-blue-600 rounded-full shadow-md bottom-3 right-3">
                     {property.TrangThai}

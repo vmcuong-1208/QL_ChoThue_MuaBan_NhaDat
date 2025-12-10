@@ -21,7 +21,7 @@ import { useAuth } from "../../context/AuthContext";
 import locationService from "../../services/locationService";
 import { API_URL, SERVER_URL } from "../../services/api";
 
-const SearchResults = () => {
+const SearchResults = ({ forcedType = null }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -64,13 +64,21 @@ const SearchResults = () => {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
+    const resolvedType =
+      forcedType ||
+      (location.pathname === "/mua-ban"
+        ? "đang bán"
+        : location.pathname === "/cho-thue"
+        ? "cho thuê"
+        : searchParams.get("trangThai") || "");
+
     setSearchData({
       keyword: searchParams.get("keyword") || "",
       loaiBDS: searchParams.get("loaiBDS") || "",
       tinh: searchParams.get("tinh") || "",
       huyen: searchParams.get("huyen") || "",
       xa: searchParams.get("xa") || "",
-      trangThai: searchParams.get("trangThai") || "",
+      trangThai: resolvedType,
       giaMin: searchParams.get("giaMin") || "",
       giaMax: searchParams.get("giaMax") || "",
       dienTichMin: searchParams.get("dienTichMin") || "",
@@ -93,7 +101,7 @@ const SearchResults = () => {
       dienTichMin > 0 ? dienTichMin.toString() : "",
       dienTichMax > 0 ? dienTichMax.toString() : "",
     ]);
-  }, [location.search]);
+  }, [location.search, location.pathname, forcedType]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -335,7 +343,12 @@ const SearchResults = () => {
       if (value) queryParams.append(key, value);
     });
 
-    navigate(`/tim-kiem?${queryParams.toString()}`);
+    const targetPath =
+      location.pathname === "/mua-ban" || location.pathname === "/cho-thue"
+        ? location.pathname
+        : "/tim-kiem";
+
+    navigate(`${targetPath}?${queryParams.toString()}`);
     setCurrentPage(1);
   };
 
@@ -506,63 +519,34 @@ const SearchResults = () => {
     return type ? type.TenLoai : "Không xác định";
   };
 
+  const isBuyPage = location.pathname === "/mua-ban" || searchData.trangThai === "đang bán";
+  const isRentPage = location.pathname === "/cho-thue" || searchData.trangThai === "cho thuê";
+
   return (
     <div className="min-h-screen py-6 pt-20 bg-gradient-to-b from-slate-100 to-indigo-100/40">
       <div className="max-w-screen-xl px-4 mx-auto">
+        {/* Tiêu đề trang động */}
+        <div className="mb-4">
+          <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>
+              {isBuyPage
+                ? "🏷️ Mua bán Nhà đất & Bất động sản"
+                : isRentPage
+                ? "🔑 Cho thuê Nhà đất & Bất động sản"
+                : "🔍 Tìm kiếm Bất động sản"}
+            </span>
+          </h1>
+          <p className="text-xs md:text-sm text-slate-500 font-medium mt-0.5">
+            {isBuyPage
+              ? "Danh sách tin đăng mua bán nhà riêng, căn hộ chung cư, đất nền chính chủ, giá tốt"
+              : isRentPage
+              ? "Danh sách phòng trọ, căn hộ, mặt bằng kinh doanh, nhà nguyên căn cho thuê uy tín"
+              : "Bộ lọc thông minh giúp bạn tìm kiếm bất động sản phù hợp nhất"}
+          </p>
+        </div>
+
         {/* Search Form */}
         <div className="p-4 mb-4 bg-white shadow-xl md:p-5 rounded-2xl animate-fadeIn">
-          {/* TABS CHỢ TỐT: TẤT CẢ / CẦN BÁN / CHO THUÊ */}
-          <div className="flex gap-2 pb-3 mb-3 border-b border-gray-100">
-            <button
-              type="button"
-              onClick={() => {
-                setSearchData((prev) => ({ ...prev, trangThai: "" }));
-                const searchParams = new URLSearchParams(location.search);
-                searchParams.delete("trangThai");
-                navigate(`/tim-kiem?${searchParams.toString()}`);
-              }}
-              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-                !searchData.trangThai
-                  ? "bg-gray-800 text-white shadow-sm"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Tất cả
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchData((prev) => ({ ...prev, trangThai: "đang bán" }));
-                const searchParams = new URLSearchParams(location.search);
-                searchParams.set("trangThai", "đang bán");
-                navigate(`/tim-kiem?${searchParams.toString()}`);
-              }}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-                searchData.trangThai === "đang bán"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-blue-50 text-blue-700 hover:bg-blue-100"
-              }`}
-            >
-              <span>🏷️</span> Cần bán
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchData((prev) => ({ ...prev, trangThai: "cho thuê" }));
-                const searchParams = new URLSearchParams(location.search);
-                searchParams.set("trangThai", "cho thuê");
-                navigate(`/tim-kiem?${searchParams.toString()}`);
-              }}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${
-                searchData.trangThai === "cho thuê"
-                  ? "bg-green-600 text-white shadow-sm"
-                  : "bg-green-50 text-green-700 hover:bg-green-100"
-              }`}
-            >
-              <span>🔑</span> Cho thuê
-            </button>
-          </div>
-
           <form onSubmit={handleSearch} className="space-y-2.5">
             {/* ROW 1: Input + Nút Tìm kiếm */}
             <div className="flex items-center gap-2">
@@ -594,11 +578,38 @@ const SearchResults = () => {
                   className="w-full px-2.5 py-2 pr-7 text-xs md:text-sm font-medium transition-all bg-white border-2 border-gray-300 outline-none appearance-none cursor-pointer rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 hover:border-gray-400"
                 >
                   <option value="">Loại BĐS</option>
-                  {propertyTypes.map((type) => (
-                    <option key={type.MaLoai} value={type.MaLoai}>
-                      {type.TenLoai}
-                    </option>
-                  ))}
+                  {propertyTypes
+                    .filter((type) => {
+                      if (isRentPage) {
+                        // Ưu tiên hiển thị các loại hình cho thuê
+                        return (
+                          type.TenLoai?.includes("Phòng trọ") ||
+                          type.TenLoai?.includes("Mặt bằng") ||
+                          type.TenLoai?.includes("Văn phòng") ||
+                          type.TenLoai?.includes("Nhà trọ") ||
+                          type.TenLoai?.includes("Căn hộ") ||
+                          type.TenLoai?.includes("Nhà riêng") ||
+                          type.TenLoai?.includes("Nhà xưởng")
+                        );
+                      }
+                      if (isBuyPage) {
+                        // Ưu tiên hiển thị các loại hình mua bán
+                        return (
+                          type.TenLoai?.includes("Đất") ||
+                          type.TenLoai?.includes("Biệt thự") ||
+                          type.TenLoai?.includes("Nhà riêng") ||
+                          type.TenLoai?.includes("Căn hộ") ||
+                          type.TenLoai?.includes("Liền kề") ||
+                          type.TenLoai?.includes("Nhà xưởng")
+                        );
+                      }
+                      return true;
+                    })
+                    .map((type) => (
+                      <option key={type.MaLoai} value={type.MaLoai}>
+                        {type.TenLoai}
+                      </option>
+                    ))}
                 </select>
                 <div className="absolute text-gray-500 transition-all duration-300 -translate-y-1/2 pointer-events-none right-1.5 top-1/2 group-focus-within:rotate-180 group-focus-within:text-blue-600">
                   <FaChevronDown className="w-3 h-3" />
