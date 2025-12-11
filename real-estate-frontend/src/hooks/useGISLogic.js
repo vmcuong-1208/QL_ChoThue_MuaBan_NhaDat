@@ -6,6 +6,9 @@ import { normalizeVietnamese } from "../utils/textNormalizer";
 import { MERGED_TO_OLD_MAP } from "../utils/provinceMapping";
 import { findBoundariesContainingPoint } from "../utils/pointInPolygon";
 
+let cachedAllGISData = null;
+let cachedAllGISDataPromise = null;
+
 const useGISLogic = (mapRef, setPlaceDetailBoundaries) => {
   const [selectedBoundaries, setSelectedBoundaries] = useState([]);
   const [boundaryOpacities, setBoundaryOpacities] = useState({});
@@ -53,70 +56,79 @@ const useGISLogic = (mapRef, setPlaceDetailBoundaries) => {
   }, []);
 
   const loadAllGISData = useCallback(async () => {
-    try {
-      const response = await fetch("/data/sorted.json");
-      const sorted = await response.json();
+    if (cachedAllGISData) return cachedAllGISData;
+    if (cachedAllGISDataPromise) return cachedAllGISDataPromise;
 
-      const level1Ids = new Set();
-      sorted.forEach((item) => {
-        const firstTwoDigits = item[0]?.slice(0, 2);
-        if (firstTwoDigits) level1Ids.add(firstTwoDigits);
-      });
+    cachedAllGISDataPromise = (async () => {
+      try {
+        const response = await fetch("/data/sorted.json");
+        const sorted = await response.json();
 
-      const results = [];
+        const level1Ids = new Set();
+        sorted.forEach((item) => {
+          const firstTwoDigits = item[0]?.slice(0, 2);
+          if (firstTwoDigits) level1Ids.add(firstTwoDigits);
+        });
 
-      for (const level1Id of Array.from(level1Ids)) {
-        try {
-          const res = await fetch(`/data/gis/${level1Id}.json`);
-          if (res.ok) {
-            const gisData = await res.json();
-            // Lấy tên romanized
-            const romanizedName =
-              gisData.romanized ||
-              normalizeVietnamese(gisData.name)
-                .replace(/\s+/g, "")
-                .replace(/^(tinh|thanhpho)/, "")
-                .toLowerCase();
-            // Thêm level 1 (Tỉnh)
-            if (gisData.coordinates) {
-              results.push({
-                level: 1,
-                level1_id: level1Id,
-                name: gisData.name,
-                romanized: romanizedName,
-                type: gisData.type || "MultiPolygon",
-                coordinates: gisData.coordinates,
-                bbox: gisData.bbox,
-              });
-            }
+        const results = [];
 
-            // Thêm level 2 (Huyện)
-            if (gisData.level2s) {
-              for (const l2 of gisData.level2s) {
-                if (l2.coordinates) {
-                  results.push({
-                    level: 2,
-                    level1_id: level1Id,
-                    level2_id: l2.level2_id || l2.id,
-                    name: l2.name,
-                    type: l2.type || "MultiPolygon",
-                    coordinates: l2.coordinates,
-                    bbox: l2.bbox,
-                  });
+        await Promise.all(
+          Array.from(level1Ids).map(async (level1Id) => {
+            try {
+              const res = await fetch(`/data/gis/${level1Id}.json`);
+              if (!res.ok) return;
+              const gisData = await res.json();
+              const romanizedName =
+                gisData.romanized ||
+                normalizeVietnamese(gisData.name)
+                  .replace(/\s+/g, "")
+                  .replace(/^(tinh|thanhpho)/, "")
+                  .toLowerCase();
+
+              if (gisData.coordinates) {
+                results.push({
+                  level: 1,
+                  level1_id: level1Id,
+                  name: gisData.name,
+                  romanized: romanizedName,
+                  type: gisData.type || "MultiPolygon",
+                  coordinates: gisData.coordinates,
+                  bbox: gisData.bbox,
+                });
+              }
+
+              if (gisData.level2s) {
+                for (const l2 of gisData.level2s) {
+                  if (l2.coordinates) {
+                    results.push({
+                      level: 2,
+                      level1_id: level1Id,
+                      level2_id: l2.level2_id || l2.id,
+                      name: l2.name,
+                      type: l2.type || "MultiPolygon",
+                      coordinates: l2.coordinates,
+                      bbox: l2.bbox,
+                    });
+                  }
                 }
               }
+            } catch (err) {
+              console.warn(`[v0] Could not load GIS ${level1Id}:`, err);
             }
-          }
-        } catch (err) {
-          console.warn(`[v0] Could not load GIS ${level1Id}:`, err);
-        }
-      }
+          })
+        );
 
-      return results;
-    } catch (error) {
-      console.error("[v0] Error loading all GIS data:", error);
-      return [];
-    }
+        cachedAllGISData = results;
+        return results;
+      } catch (error) {
+        console.error("[v0] Error loading all GIS data:", error);
+        return [];
+      } finally {
+        cachedAllGISDataPromise = null;
+      }
+    })();
+
+    return cachedAllGISDataPromise;
   }, []);
 
   // 3. Hàm helper load GeoJSON level3
@@ -309,20 +321,17 @@ const useGISLogic = (mapRef, setPlaceDetailBoundaries) => {
         const area = calculatePolygonArea(coords);
         setCalculatedArea(area);
 
-        const BRIGHT_COLORS = [
-          "#39FF14",
-          "#7DF9FF",
-          "#FF10F0",
-          "#FF6700",
-          "#FFFF54",
-          "#FF00FF",
-          "#00FFAA",
-        ];
+        const LEVEL_COLORS = {
+          level1: "#2563EB", // Xanh dương đậm (Tỉnh/TP)
+          level2: "#059669", // Xanh ngọc (Quận/Huyện)
+          level3: "#7C3AED", // Tím đậm (Phường/Xã)
+        };
+        const FALLBACK_COLORS = ["#2563EB", "#059669", "#7C3AED", "#D97706", "#DC2626"];
         const uniqueId = `${result.level}-${result.id}-${Date.now()}`;
 
         setSelectedBoundaries((prev) => {
           const selectedColor =
-            BRIGHT_COLORS[prev.length % BRIGHT_COLORS.length];
+            LEVEL_COLORS[result.level] || FALLBACK_COLORS[prev.length % FALLBACK_COLORS.length];
           const newBoundary = {
             id: uniqueId,
             level: result.level,
@@ -438,17 +447,9 @@ const useGISLogic = (mapRef, setPlaceDetailBoundaries) => {
             // Logic hiển thị Level 3
             const area = calculatePolygonArea(boundary.coordinates);
             const uniqueId = `level3-${Date.now()}`;
-            const BRIGHT_COLORS = [
-              "#39FF14",
-              "#7DF9FF",
-              "#FF10F0",
-              "#FF6700",
-              "#FFFF54",
-            ];
 
             setSelectedBoundaries((prev) => {
-              const selectedColor =
-                BRIGHT_COLORS[prev.length % BRIGHT_COLORS.length];
+              const selectedColor = "#7C3AED"; // Tím đậm (Phường/Xã)
               return [
                 ...prev,
                 {

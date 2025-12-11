@@ -199,9 +199,20 @@ const DirectionsPanel = ({
         setLoading(false);
       },
       (err) => {
-        setError(`Lỗi lấy vị trí: ${err.message}`);
+        if (err.code === 1) {
+          setError(
+            "Trình duyệt đang chặn quyền Vị trí (Location). Hãy bấm vào biểu tượng ổ khóa 🔒 trên thanh địa chỉ để cho phép, hoặc chọn điểm trực tiếp trên bản đồ."
+          );
+        } else if (err.code === 2) {
+          setError("Không thể xác định vị trí GPS hiện tại.");
+        } else if (err.code === 3) {
+          setError("Hết thời gian chờ lấy vị trí GPS. Vui lòng thử lại.");
+        } else {
+          setError(`Lỗi lấy vị trí: ${err.message}`);
+        }
         setLoading(false);
-      }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
   };
 
@@ -358,32 +369,38 @@ const DirectionsPanel = ({
   };
 
   return (
-    <div className="fixed z-40 w-full max-w-md transition-all duration-500 top-20 right-4 animate-slideInRight">
-      <div className="relative overflow-hidden bg-white shadow-2xl rounded-2xl">
+    <aside
+      aria-label="Bảng chỉ đường bản đồ"
+      className="fixed z-40 w-full max-w-md transition-all duration-500 top-20 right-4 animate-slideInRight"
+      style={{ fontFamily: "'Roboto', Arial, sans-serif" }}
+    >
+      <div className="relative overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200/80">
         {/* Gradient Header */}
-        <div className="relative px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <header className="relative px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-lg">
+              <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-lg" aria-hidden="true">
                 <FaRoad className="text-sm text-blue-600" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Tìm đường</h3>
-                <p className="text-[10px] font-semibold text-blue-100">
-                  Chỉ đường nhanh
+                <h2 className="text-base font-bold text-white leading-tight">Tìm đường</h2>
+                <p className="text-[11px] font-medium text-blue-100">
+                  Định tuyến thông minh theo phương tiện
                 </p>
               </div>
             </div>
 
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Đóng bảng chỉ đường"
               className="flex items-center justify-center text-white transition-all duration-300 rounded-full w-7 h-7 hover:bg-white/20 hover:rotate-90 active:scale-95"
               title="Đóng"
             >
-              <FaTimes className="text-sm" />
+              <FaTimes className="text-sm" aria-hidden="true" />
             </button>
           </div>
-        </div>
+        </header>
 
         {/* Content */}
         <div className="p-3 space-y-2.5 bg-white max-h-[calc(100vh-140px)] overflow-y-auto">
@@ -436,32 +453,25 @@ const DirectionsPanel = ({
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={() => handleCurrentLocation("origin")}
                 disabled={loading}
-                className="flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-bold text-blue-600 transition-all duration-300 bg-blue-50 rounded-md hover:bg-blue-100 hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[11px] font-bold text-blue-600 transition-all duration-300 bg-blue-50 rounded-lg hover:bg-blue-100 active:scale-95 disabled:opacity-50"
               >
-                <FaLocationArrow className="text-[9px]" />
+                <FaLocationArrow className="text-[10px]" />
                 <span>Vị trí</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => handleMapSelection("origin")}
                 disabled={loading}
-                className="flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-bold text-purple-600 transition-all duration-300 bg-purple-50 rounded-md hover:bg-purple-100 hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[11px] font-bold text-purple-600 transition-all duration-300 bg-purple-50 rounded-lg hover:bg-purple-100 active:scale-95 disabled:opacity-50"
               >
-                <FaMapMarkerAlt className="text-[9px]" />
+                <FaMapMarkerAlt className="text-[10px]" />
                 <span>Chọn</span>
-              </button>
-
-              <button
-                onClick={() => handlePropertyLocation("origin")}
-                disabled={loading}
-                className="flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-bold text-orange-600 transition-all duration-300 bg-orange-50 rounded-md hover:bg-orange-100 hover:scale-105 active:scale-95 disabled:opacity-50"
-              >
-                <FaHome className="text-[9px]" />
-                <span>BĐS</span>
               </button>
             </div>
           </div>
@@ -536,32 +546,25 @@ const DirectionsPanel = ({
                 )}
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={() => handleCurrentLocation("destination")}
                 disabled={loading}
-                className="flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-bold text-blue-600 transition-all duration-300 bg-blue-50 rounded-md hover:bg-blue-100 hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[11px] font-bold text-blue-600 transition-all duration-300 bg-blue-50 rounded-lg hover:bg-blue-100 active:scale-95 disabled:opacity-50"
               >
-                <FaLocationArrow className="text-[9px]" />
+                <FaLocationArrow className="text-[10px]" />
                 <span>Vị trí</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => handleMapSelection("destination")}
                 disabled={loading}
-                className="flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-bold text-purple-600 transition-all duration-300 bg-purple-50 rounded-md hover:bg-purple-100 hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[11px] font-bold text-purple-600 transition-all duration-300 bg-purple-50 rounded-lg hover:bg-purple-100 active:scale-95 disabled:opacity-50"
               >
-                <FaMapMarkerAlt className="text-[9px]" />
+                <FaMapMarkerAlt className="text-[10px]" />
                 <span>Chọn</span>
-              </button>
-
-              <button
-                onClick={() => handlePropertyLocation("destination")}
-                disabled={loading}
-                className="flex items-center justify-center gap-1 px-2 py-1.5 text-[10px] font-bold text-orange-600 transition-all duration-300 bg-orange-50 rounded-md hover:bg-orange-100 hover:scale-105 active:scale-95 disabled:opacity-50"
-              >
-                <FaHome className="text-[9px]" />
-                <span>BĐS</span>
               </button>
             </div>
           </div>
@@ -694,7 +697,7 @@ const DirectionsPanel = ({
           )}
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 

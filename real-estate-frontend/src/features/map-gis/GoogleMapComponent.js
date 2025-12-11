@@ -9,7 +9,7 @@ import DirectionsPanel from "./DirectionsPanel";
 import NearbyPlacesPanel from "./NearbyPlacesPanel";
 import SearchPanel from "../properties/SearchPanel";
 import PlaceDetailCard from "./PlaceDetailCard";
-import { getPlaceByCoordinates } from "../../utils/nominatimService";
+import { getPlaceByCoordinates, searchPlaces } from "../../utils/nominatimService";
 import useGISLogic from "../../hooks/useGISLogic";
 import usePropertyLogic from "../../hooks/usePropertyLogic";
 import { SERVER_URL } from "../../services/api";
@@ -87,7 +87,16 @@ const TILE_CONFIGS = {
  */
 function normalizeCoordinates(coords) {
   if (!coords || !Array.isArray(coords) || coords.length === 0) return [];
-  const flat = Array.isArray(coords[0]) && Array.isArray(coords[0][0]) ? coords.flat() : coords;
+  
+  let flat = coords;
+  while (
+    Array.isArray(flat) &&
+    flat.length > 0 &&
+    Array.isArray(flat[0]) &&
+    (Array.isArray(flat[0][0]) || (typeof flat[0][0] === "object" && flat[0][0] !== null))
+  ) {
+    flat = flat.flat();
+  }
 
   const result = [];
   for (const pt of flat) {
@@ -106,6 +115,27 @@ function normalizeCoordinates(coords) {
     }
   }
   return result;
+}
+
+/**
+ * Chuẩn hóa MultiPolygon (giữ nguyên từng ring riêng biệt để tránh nối đường chéo giữa các đảo/vùng rời)
+ */
+function normalizeMultiPolygon(coords) {
+  if (!coords || !Array.isArray(coords) || coords.length === 0) return [];
+  // Nếu là mảng 1D các điểm [{lat, lng}, ...] hoặc [[lat, lng], ...]
+  if (!Array.isArray(coords[0]) || (typeof coords[0][0] === "number")) {
+    const single = normalizeCoordinates(coords);
+    return single.length >= 3 ? [single] : [];
+  }
+  // Nếu là mảng nhiều ring: [[{lat, lng}, ...], [{lat, lng}, ...]]
+  const rings = [];
+  for (const ring of coords) {
+    const normalized = normalizeCoordinates(ring);
+    if (normalized.length >= 3) {
+      rings.push(normalized);
+    }
+  }
+  return rings;
 }
 
 function computeCenter(points) {
@@ -252,6 +282,9 @@ const GoogleMapComponent = ({
       maxZoom: initialConfig.maxZoom,
       subdomains: initialConfig.subdomains || ["mt0", "mt1", "mt2", "mt3"],
       attribution: initialConfig.attribution,
+      updateWhenZooming: false,
+      updateWhenIdle: true,
+      keepBuffer: 4,
     }).addTo(map);
 
     // Zoom control góc dưới bên phải
@@ -336,6 +369,9 @@ const GoogleMapComponent = ({
       maxZoom: config.maxZoom,
       subdomains: config.subdomains || ["mt0", "mt1", "mt2", "mt3"],
       attribution: config.attribution,
+      updateWhenZooming: false,
+      updateWhenIdle: true,
+      keepBuffer: 4,
     }).addTo(leafletMapRef.current);
   }, [mapType]);
 
@@ -660,15 +696,26 @@ const GoogleMapComponent = ({
 
     if (!showBoundaryLayer || !selectedBoundaries || selectedBoundaries.length === 0) return;
 
+    const LEVEL_COLORS = {
+      level1: "#2563EB",
+      level2: "#059669",
+      level3: "#7C3AED",
+      1: "#2563EB",
+      2: "#059669",
+      3: "#7C3AED",
+    };
+
     selectedBoundaries.forEach((boundary) => {
-      const coords = normalizeCoordinates(boundary.coordinates);
-      if (coords.length >= 3) {
+      const rings = normalizeMultiPolygon(boundary.coordinates);
+      if (rings.length > 0) {
         const opacity = boundaryOpacities[boundary.id] ?? boundaryOpacity;
-        const poly = L.polygon(coords, {
-          color: boundary.color || "#3b82f6",
-          weight: 2,
-          opacity: 0.85,
-          fillColor: boundary.color || "#3b82f6",
+        const resolvedColor = LEVEL_COLORS[boundary.level] || boundary.color || "#2563EB";
+        const poly = L.polygon(rings, {
+          color: resolvedColor,
+          weight: boundary.level === "level1" || boundary.level === 1 ? 3 : 2,
+          dashArray: boundary.level === "level1" || boundary.level === 1 ? "6, 4" : undefined,
+          opacity: 0.9,
+          fillColor: resolvedColor,
           fillOpacity: opacity,
         });
 
@@ -983,6 +1030,20 @@ const GoogleMapComponent = ({
     });
     group.addLayer(polyline);
 
+    // Điểm đầu (A) và Điểm cuối (B) của tuyến đường
+    const startIcon = L.divIcon({
+      className: "route-pin-start",
+      html: `<div style="transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:#10b981;color:#fff;font-weight:900;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4);">A</div>`,
+      iconSize: [0, 0],
+    });
+    const endIcon = L.divIcon({
+      className: "route-pin-end",
+      html: `<div style="transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:#ef4444;color:#fff;font-weight:900;font-size:11px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4);">B</div>`,
+      iconSize: [0, 0],
+    });
+    group.addLayer(L.marker(latLngs[0], { icon: startIcon, zIndexOffset: 2000 }));
+    group.addLayer(L.marker(latLngs[latLngs.length - 1], { icon: endIcon, zIndexOffset: 2000 }));
+
     if (leafletMapRef.current) {
       leafletMapRef.current.fitBounds(polyline.getBounds(), { padding: [50, 50] });
     }
@@ -1015,7 +1076,7 @@ const GoogleMapComponent = ({
       {/* 1. Leaflet Map Canvas Container */}
       <div
         ref={mapCanvasRef}
-        className="w-full h-full z-0"
+        className="z-0 w-full h-full"
         style={{
           position: "absolute",
           top: 0,
@@ -1120,8 +1181,8 @@ const GoogleMapComponent = ({
             onPlaceSelect={handlePlaceSelect}
             onToggleClickMode={() => setClickPointMode(!clickPointMode)}
             isClickModeActive={clickPointMode}
-            onBoundaryAdd={onBoundaryAdd}
-            onSelect={onBoundaryAdd}
+            onBoundaryAdd={onBoundaryAdd || handleSearchSelect}
+            onSelect={handleSearchSelect}
             searchLoading={searchLoading}
             searchError={searchError}
           />
@@ -1195,14 +1256,14 @@ const GoogleMapComponent = ({
 
       {/* Trigger Buttons (Bottom Left) - Ẩn khi Bảng chú giải đang mở */}
       {!showPlanningLegend && (
-        <div className="absolute z-10 bottom-4 left-4 flex items-center gap-2 pointer-events-auto">
+        <div className="absolute z-10 flex items-center gap-2 pointer-events-auto bottom-4 left-4">
           <button
             onClick={() => setShowPlanningLegend(true)}
             className="flex items-center gap-2 px-3.5 py-2.5 bg-white/95 backdrop-blur-md hover:bg-white text-slate-800 hover:text-blue-600 rounded-2xl shadow-xl border border-slate-200/90 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
             title="Mở Bảng chú giải màu sắc quy hoạch & ký hiệu loại đất"
           >
             <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-pink-500 via-amber-400 to-emerald-500 animate-pulse" />
-            <FaBookOpen className="text-blue-600 text-xs" />
+            <FaBookOpen className="text-xs text-blue-600" />
             <span>Chú giải Quy hoạch</span>
           </button>
 
@@ -1213,7 +1274,7 @@ const GoogleMapComponent = ({
               className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-2xl shadow-xl border border-purple-400/40 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
               title="Thanh trượt so sánh Quy hoạch chia đôi màn hình (Before/After Swipe Slider)"
             >
-              <FaArrowsAltH className="text-sky-300 text-xs animate-pulse" />
+              <FaArrowsAltH className="text-xs text-sky-300 animate-pulse" />
               <span>So sánh Swipe</span>
             </button>
           )}
@@ -1225,7 +1286,11 @@ const GoogleMapComponent = ({
         <PlanningSwipeSlider
           mapRef={mapRef}
           isActive={isSwipeActive}
-          onClose={() => setIsSwipeActive(false)}
+          onClose={() => {
+            setIsSwipeActive(false);
+            setShowPlanningLayer(false);
+            setInternalPlanningData(null);
+          }}
           activeDistrictName={activeDistrictName}
           onSelectDistrict={handleSelectSwipeDistrict}
           planningOpacity={planningOpacity}

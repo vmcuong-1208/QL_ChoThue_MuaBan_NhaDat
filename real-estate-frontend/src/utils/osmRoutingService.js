@@ -21,49 +21,44 @@ export const getRouteFromOSRM = async (
   console.log("📍 Input Profile:", profile);
 
   try {
-    // ✅ MAP UI PROFILE → OSRM PROFILE
-    const profileMapping = {
-      driving: "car", // Ô tô → OSRM "car" profile
-      cycling: "bike", // Xe máy/Xe đạp → OSRM "bike" profile
-      walking: "foot", // Đi bộ → OSRM "foot" profile
+    // Sử dụng máy chủ OSRM phân tách 3 profile thực tế (đường lớn cho ô tô, hẻm cho xe máy, lối đi bộ nhỏ cho đi bộ)
+    const routedEndpointMap = {
+      driving: "https://routing.openstreetmap.de/routed-car/route/v1/driving",
+      cycling: "https://routing.openstreetmap.de/routed-bike/route/v1/driving",
+      walking: "https://routing.openstreetmap.de/routed-foot/route/v1/driving",
     };
 
-    // Lấy OSRM profile hoặc fallback về "car"
-    const osrmProfile = profileMapping[profile] || "car";
+    const baseEndpoint = routedEndpointMap[profile] || routedEndpointMap.driving;
+    const queryParams = "overview=full&geometries=geojson&steps=true&annotations=distance,duration";
+    let url = `${baseEndpoint}/${startLng},${startLat};${endLng},${endLat}?${queryParams}`;
 
-    console.log("🚗 OSRM Profile Used:", osrmProfile);
+    let response = await fetch(url, { cache: "no-store" });
+    let data = response.ok ? await response.json() : null;
 
-    // OSRM API endpoint - format: lng,lat;lng,lat
-    const url = `https://router.project-osrm.org/route/v1/${osrmProfile}/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&steps=true&annotations=distance,duration`;
+    // Fallback về router.project-osrm.org nếu routed endpoint gặp sự cố
+    if (!data || data.code !== "Ok" || !data.routes?.length) {
+      const fallbackUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?${queryParams}`;
+      response = await fetch(fallbackUrl, { cache: "no-store" });
+      data = await response.json();
+    }
 
-    console.log("📡 OSRM Request URL:", url);
-
-    const response = await fetch(url, {
-      cache: "no-store", // Buộc trình duyệt không dùng cache
-    });
-
-    const data = await response.json();
-
-    console.log("📦 OSRM Response Code:", data.code);
-
-    if (data.code !== "Ok" || !data.routes || data.routes.length === 0) {
-      throw new Error(data.message || "Không tìm thấy route");
+    if (!data || data.code !== "Ok" || !data.routes || data.routes.length === 0) {
+      throw new Error(data?.message || "Không tìm thấy route");
     }
 
     const route = data.routes[0];
 
-    console.log("✅ Route Found:", {
-      profile: osrmProfile,
-      distance: `${(route.distance / 1000).toFixed(2)} km`,
-      duration: `${Math.floor(route.duration / 60)} phút`,
-      coordinates: route.geometry.coordinates.length,
-    });
+    // Điều chỉnh thời gian cho Xe máy (~30 km/h) vì routed-bike tính theo tốc độ xe đạp (~15 km/h)
+    let adjustedDuration = route.duration;
+    if (profile === "cycling") {
+      adjustedDuration = Math.round(route.distance / 8.33);
+    }
 
     // Chuyển đổi dữ liệu OSRM sang format dễ sử dụng
     return {
       coordinates: route.geometry.coordinates, // Array [lng, lat]
       distance: route.distance, // Mét
-      duration: route.duration, // Giây
+      duration: adjustedDuration, // Giây
       steps: route.legs[0]?.steps || [], // Chi tiết các bước
       legs: route.legs, // Thông tin từng chặng
     };
