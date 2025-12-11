@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
 
 const usePropertyLogic = (mapRef) => {
@@ -8,75 +8,47 @@ const usePropertyLogic = (mapRef) => {
   const [propertyMarkers, setPropertyMarkers] = useState([]);
   const [relatedProperties, setRelatedProperties] = useState([]);
 
-  // Tìm kiếm BĐS theo Tỉnh/Huyện
-  const fetchProperties = async (provinceId, districtId) => {
-    console.log("🔍 [fetchProperties] START:", { provinceId, districtId }); // ← DEBUG 1
-
-    if (!provinceId) {
-      console.warn("⚠️ [fetchProperties] No provinceId provided!"); // ← DEBUG 2
-      return;
-    }
-
+  // Tìm kiếm BĐS theo Tỉnh/Huyện (hoặc lấy toàn bộ ban đầu nếu không truyền)
+  const fetchProperties = async (provinceId = null, districtId = null) => {
     try {
       const params = {
-        tinh: provinceId,
-        huyen: districtId,
-        limit: 20,
+        limit: 100,
       };
+      if (provinceId) params.tinh = provinceId;
+      if (districtId) params.huyen = districtId;
 
       const propResponse = await api.get("/properties/search", { params });
-
-      console.log("🔍 [fetchProperties] Response status:", propResponse.status); // ← DEBUG 5
-      console.log("🔍 [fetchProperties] Response data:", propResponse.data); // ← DEBUG 6
-
-      const properties = propResponse.data.properties || [];
-
-      console.log("🔍 [fetchProperties] Properties array:", properties); // ← DEBUG 7
-      console.log("🔍 [fetchProperties] Properties length:", properties.length); // ← DEBUG 8
+      const properties = propResponse.data?.properties || (Array.isArray(propResponse.data) ? propResponse.data : []);
 
       setPropertyMarkers(properties);
 
       // Logic "BĐS Liên quan" (Client-side filtering)
-      // Lấy 5 BĐS đầu tiên làm "liên quan"
       const related = properties.slice(0, 5);
       setRelatedProperties(related);
-
-      console.log("🔍 [fetchProperties] Related properties:", related); // ← DEBUG 9
-      console.log("🔍 [fetchProperties] Related length:", related.length); // ← DEBUG 10
-
-      console.log(
-        `✅ [fetchProperties] Found ${properties.length} properties in area.`
-      ); // ← DEBUG 11
     } catch (err) {
-      console.error("❌ [fetchProperties] Error:", err); // ← DEBUG 12
-      console.error(
-        "❌ [fetchProperties] Error details:",
-        err.response?.data || err.message
-      ); // ← DEBUG 13
-
+      console.error("❌ [fetchProperties] Error:", err);
       setPropertyMarkers([]);
       setRelatedProperties([]);
     }
   };
 
-  const handlePropertySelect = (property) => {
-    console.log("🔍 [handlePropertySelect] Property selected:", property); // ← DEBUG
+  // Nạp sẵn BĐS lên bản đồ ngay khi mở trang
+  useEffect(() => {
+    fetchProperties();
+  }, []);
 
+  const handlePropertySelect = (property) => {
     setSelectedProperty(property);
 
-    if (mapRef.current && property.ToaDoX && property.ToaDoY) {
-      console.log("🔍 [handlePropertySelect] Panning to:", {
-        lat: property.ToaDoX,
-        lng: property.ToaDoY,
-      }); // ← DEBUG
+    const lat = Number(property.GPS_Lat || property.ToaDoX);
+    const lng = Number(property.GPS_Lng || property.ToaDoY);
 
-      mapRef.current.panTo({ lat: property.ToaDoX, lng: property.ToaDoY });
-      mapRef.current.setZoom(17);
-    } else {
-      console.warn("⚠️ [handlePropertySelect] Missing coordinates:", {
-        ToaDoX: property.ToaDoX,
-        ToaDoY: property.ToaDoY,
-      }); // ← DEBUG
+    if (mapRef.current && !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+      if (typeof mapRef.current.setView === "function") {
+        mapRef.current.setView([lat, lng], 16, { animate: true });
+      } else if (typeof mapRef.current.panTo === "function") {
+        mapRef.current.panTo([lat, lng]);
+      }
     }
   };
 

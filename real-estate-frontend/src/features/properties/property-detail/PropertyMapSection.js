@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { FaMapMarkerAlt, FaDrawPolygon, FaInfoCircle } from "react-icons/fa";
+import { FaMapMarkerAlt, FaDrawPolygon, FaInfoCircle, FaBookOpen } from "react-icons/fa";
 import LeafletMapComponent from "../../map-gis/LeafletMapComponent";
 import PropertyDistanceFinder from "./PropertyDistanceFinder";
+import PlanningLegendPanel from "../../map-gis/PlanningLegendPanel";
 
 /**
  * Tính tâm đa giác nếu có danh sách tọa độ thửa đất
@@ -46,6 +47,7 @@ const PropertyMapSection = ({
   const [routeData, setRouteData] = useState(null);
   const [isPickingOnMap, setIsPickingOnMap] = useState(false);
   const [pickedLocation, setPickedLocation] = useState(null);
+  const [showPlanningLegend, setShowPlanningLegend] = useState(false);
 
   if (!property) return null;
 
@@ -121,16 +123,31 @@ const PropertyMapSection = ({
           </p>
         </div>
 
-        {isPickingOnMap && (
-          <span className="text-xs font-bold text-amber-700 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full animate-pulse">
-            🎯 Đang chọn vị trí xuất phát trên bản đồ
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {isPickingOnMap && (
+            <span className="text-xs font-bold text-amber-700 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full animate-pulse">
+              🎯 Đang chọn vị trí xuất phát trên bản đồ
+            </span>
+          )}
+
+          <button
+            onClick={() => setShowPlanningLegend(!showPlanningLegend)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+              showPlanningLegend
+                ? "bg-purple-600 text-white shadow-purple-200"
+                : "bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200"
+            }`}
+            title="Tra cứu màu sắc & ký hiệu đất quy hoạch"
+          >
+            <FaBookOpen className={showPlanningLegend ? "text-white" : "text-purple-600"} />
+            <span>Chú giải loại đất</span>
+          </button>
+        </div>
       </div>
 
       {/* Bản đồ Leaflet Map */}
       <div
-        className={`overflow-hidden rounded-xl border border-gray-200 transition-all ${
+        className={`relative overflow-hidden rounded-xl border border-gray-200 transition-all ${
           isPickingOnMap ? "ring-2 ring-amber-400 cursor-crosshair" : ""
         }`}
       >
@@ -148,6 +165,10 @@ const PropertyMapSection = ({
           routeData={routeData}
           onMapClick={handleMapClick}
         />
+
+        {showPlanningLegend && (
+          <PlanningLegendPanel onClose={() => setShowPlanningLegend(false)} />
+        )}
       </div>
 
       {/* Địa chỉ thực tế của BĐS */}

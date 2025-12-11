@@ -13,6 +13,21 @@ import { getPlaceByCoordinates } from "../../utils/nominatimService";
 import useGISLogic from "../../hooks/useGISLogic";
 import usePropertyLogic from "../../hooks/usePropertyLogic";
 import { SERVER_URL } from "../../services/api";
+import { FaBookOpen, FaArrowsAltH } from "react-icons/fa";
+import { createPriceBadgeIcon, createPropertyTooltipHtml } from "./priceMarkerUtils";
+import PlanningLegendPanel from "./PlanningLegendPanel";
+import MeasurementPanel from "./MeasurementPanel";
+import PlanningSwipeSlider, { SAMPLE_PLANNING_DISTRICTS } from "./PlanningSwipeSlider";
+import { loadPlanningDataFromUrl } from "../../utils/planningDataLoader";
+import {
+  calculateGeodesicDistance,
+  calculatePolylineDistance,
+  calculatePolygonArea as calculateGeoArea,
+  getSegmentMidpoint,
+  getPolygonCentroid,
+  formatMeasureDistance,
+  formatMeasureArea,
+} from "./measurementUtils";
 
 import MapControls from "./google-map/MapControls";
 import AdminBoundariesPanel from "./google-map/AdminBoundariesPanel";
@@ -124,13 +139,21 @@ const GoogleMapComponent = ({
   const [boundaryOpacity, setBoundaryOpacity] = useState(0.4);
 
   const [measurementMode, setMeasurementMode] = useState(false);
+  const [measureType, setMeasureType] = useState("distance"); // "distance" | "area"
   const [measurementPoints, setMeasurementPoints] = useState([]);
   const [measurementDistance, setMeasurementDistance] = useState(0);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
   const [showNearbyPlaces, setShowNearbyPlaces] = useState(false);
+  const [showPlanningLegend, setShowPlanningLegend] = useState(false);
   const [routeData, setRouteData] = useState(null);
+
+  // Swipe Slider Comparison States
+  const [isSwipeActive, setIsSwipeActive] = useState(false);
+  const [internalPlanningData, setInternalPlanningData] = useState(null);
+  const [activeDistrictName, setActiveDistrictName] = useState("TP. Mỹ Tho (2030)");
+  const [currentMapZoom, setCurrentMapZoom] = useState(zoom);
 
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -217,6 +240,12 @@ const GoogleMapComponent = ({
     planningGroupRef.current = L.layerGroup().addTo(map);
     routeGroupRef.current = L.layerGroup().addTo(map);
 
+    // Custom Pane cho Swipe Slider So Sánh Quy Hoạch
+    if (!map.getPane("planningSwipePane")) {
+      const pPane = map.createPane("planningSwipePane");
+      pPane.style.zIndex = 450;
+    }
+
     // Initial tile layer
     const initialConfig = TILE_CONFIGS[mapType] || TILE_CONFIGS.roadmap;
     tileLayerRef.current = L.tileLayer(initialConfig.url, {
@@ -274,12 +303,18 @@ const GoogleMapComponent = ({
     const onResize = () => map.invalidateSize();
     window.addEventListener("resize", onResize);
 
+    const onZoomEnd = () => {
+      setCurrentMapZoom(map.getZoom());
+    };
+    map.on("zoomend", onZoomEnd);
+
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
       clearTimeout(t4);
       window.removeEventListener("resize", onResize);
+      map.off("zoomend", onZoomEnd);
       if (leafletMapRef.current) {
         leafletMapRef.current.remove();
         leafletMapRef.current = null;
@@ -304,30 +339,34 @@ const GoogleMapComponent = ({
     }).addTo(leafletMapRef.current);
   }, [mapType]);
 
-  // 3. Xử lý Search Nominatim
+  // 3. Xử lý Search Nominatim (Tìm kiếm địa chỉ chi tiết theo chuẩn Google Maps)
   const handleSearchCommit = async (query) => {
     setSearchLoading(true);
     setSearchError(null);
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-        query
-      )}&format=json&countrycodes=vn&limit=1&addressdetails=1`;
-      const response = await fetch(url);
-      const data = await response.json();
-      const result = data.length > 0 ? data[0] : null;
+      const places = await searchPlaces(query, 1);
+      const result = places.length > 0 ? places[0] : null;
 
       if (result) {
         const place = {
           ...result,
           lat: Number.parseFloat(result.lat),
           lng: Number.parseFloat(result.lon || result.lng),
+          display_name: result.displayName || result.display_name,
+          name: result.name || result.displayName,
         };
         setSelectedPlace(place);
         setSelectedProperty(null);
 
+        // Đặt ghim đỏ chuẩn Google Maps ngay tại vị trí tìm thấy
+        setClickMarker({
+          lat: place.lat,
+          lng: place.lng,
+          title: place.name || place.displayName,
+        });
+
         if (leafletMapRef.current) {
-          leafletMapRef.current.panTo([place.lat, place.lng]);
-          leafletMapRef.current.setZoom(16);
+          leafletMapRef.current.setView([place.lat, place.lng], 17);
         }
 
         const queryParts = query
@@ -366,15 +405,62 @@ const GoogleMapComponent = ({
           await fetchProperties(provinceId, districtId);
         }
       } else {
-        setSearchError("Không tìm thấy địa điểm.");
+        setSearchError(`Không tìm thấy địa điểm "${query}". Bạn hãy thử nhập thêm từ khóa hoặc chọn gợi ý bên dưới.`);
       }
     } catch (err) {
       console.error("Search error:", err);
-      setSearchError("Lỗi khi tìm kiếm.");
+      setSearchError("Lỗi kết nối khi tìm kiếm địa chỉ.");
     } finally {
       setSearchLoading(false);
     }
   };
+
+  // 3b. Xử lý khi bấm chọn địa điểm chi tiết từ danh sách gợi ý Autocomplete
+  const handlePlaceSelect = useCallback(
+    async (place) => {
+      if (!place || isNaN(place.lat) || isNaN(place.lng)) return;
+
+      const standardizedPlace = {
+        ...place,
+        lat: Number(place.lat),
+        lng: Number(place.lng),
+        display_name: place.displayName || place.display_name || place.name,
+        name: place.name || place.displayName,
+      };
+
+      setSelectedPlace(standardizedPlace);
+      setSelectedProperty(null);
+
+      // Đặt ghim đỏ chuẩn Google Maps ngay lập tức
+      setClickMarker({
+        lat: standardizedPlace.lat,
+        lng: standardizedPlace.lng,
+        title: standardizedPlace.name || standardizedPlace.display_name,
+      });
+
+      if (leafletMapRef.current) {
+        leafletMapRef.current.setView([standardizedPlace.lat, standardizedPlace.lng], 17);
+      }
+
+      // Tự động tìm nạp ranh giới và BĐS xung quanh địa điểm
+      try {
+        const foundBoundaries = await handleSelectByCoordinates(
+          standardizedPlace.lat,
+          standardizedPlace.lng
+        );
+        if (foundBoundaries && foundBoundaries.length > 0) {
+          const province = foundBoundaries.find((b) => b.level === 1);
+          const district = foundBoundaries.find((b) => b.level === 2);
+          if (province) {
+            await fetchProperties(province.id, district?.id || null);
+          }
+        }
+      } catch (err) {
+        console.warn("handlePlaceSelect boundaries error:", err);
+      }
+    },
+    [handleSelectByCoordinates, fetchProperties]
+  );
 
   // 4. Click điểm trên bản đồ
   const processMapClick = useCallback(
@@ -442,23 +528,27 @@ const GoogleMapComponent = ({
     };
   }, [measurementMode, clickPointMode, onMapClick, processMapClick]);
 
+  // Con trỏ chữ thập (Crosshair) khi bật thước đo
+  useEffect(() => {
+    if (!leafletMapRef.current) return;
+    const container = leafletMapRef.current.getContainer();
+    if (measurementMode) {
+      container.style.cursor = "crosshair";
+    } else {
+      container.style.cursor = "";
+    }
+  }, [measurementMode]);
+
   // 6. Tính khoảng cách đo đạc
   useEffect(() => {
     if (measurementPoints.length > 1) {
-      let totalDistance = 0;
-      for (let i = 0; i < measurementPoints.length - 1; i++) {
-        totalDistance += calculateDistance(
-          measurementPoints[i],
-          measurementPoints[i + 1]
-        );
-      }
-      setMeasurementDistance(totalDistance);
+      setMeasurementDistance(calculatePolylineDistance(measurementPoints));
     } else {
       setMeasurementDistance(0);
     }
   }, [measurementPoints]);
 
-  // 7. Vẽ Measurement Layer
+  // 7. Vẽ Measurement Layer (Khoảng cách & Diện tích)
   useEffect(() => {
     if (!measurementGroupRef.current) return;
     const group = measurementGroupRef.current;
@@ -468,42 +558,99 @@ const GoogleMapComponent = ({
 
     const latLngs = measurementPoints.map((p) => [p.lat, p.lng]);
 
-    // Vẽ đường đo
-    if (latLngs.length > 1) {
-      const polyline = L.polyline(latLngs, {
-        color: "#dc2626",
-        weight: 3,
+    // A. Vẽ hình học: Đa giác diện tích (Polygon) hoặc Đường gấp khúc (Polyline)
+    if (measureType === "area" && latLngs.length >= 3) {
+      // Đa giác khép kín đo diện tích
+      const polygon = L.polygon(latLngs, {
+        color: "#f59e0b",
+        weight: 2.5,
+        fillColor: "#fbbf24",
+        fillOpacity: 0.25,
         dashArray: "6, 6",
+      });
+      group.addLayer(polygon);
+
+      // Thẻ diện tích nổi bật tại trọng tâm đa giác (Centroid)
+      const centroid = getPolygonCentroid(measurementPoints);
+      const area = calculateGeoArea(measurementPoints);
+      const areaInfo = formatMeasureArea(area);
+
+      const areaBadge = L.divIcon({
+        className: "custom-measure-area",
+        html: `
+          <div class="measure-area-card">
+            <div style="font-size: 10px; color: #fef08a; text-transform: uppercase; letter-spacing: 0.5px;">DIỆN TÍCH</div>
+            <div style="font-size: 14px; font-weight: 900; color: #ffffff;">${areaInfo.primary}</div>
+            ${areaInfo.ha ? `<div style="font-size: 10.5px; color: #fde047;">${areaInfo.ha}</div>` : ""}
+          </div>
+        `,
+        iconSize: [0, 0],
+      });
+      group.addLayer(L.marker(centroid, { icon: areaBadge, zIndexOffset: 2500 }));
+    } else if (latLngs.length > 1) {
+      // Đường gấp khúc đo khoảng cách (hoặc diện tích khi chưa đủ 3 điểm)
+      const polyline = L.polyline(latLngs, {
+        color: measureType === "area" ? "#f59e0b" : "#ea580c",
+        weight: 3,
+        dashArray: "7, 5",
       });
       group.addLayer(polyline);
     }
 
-    // Vẽ từng điểm nút đo
-    latLngs.forEach(([lat, lng], idx) => {
-      const badge = L.divIcon({
-        className: "custom-measure-point",
+    // B. Nhãn khoảng cách trên từng đoạn thẳng (Segment Midpoints)
+    const segmentCount =
+      measureType === "area" && latLngs.length >= 3
+        ? latLngs.length
+        : latLngs.length - 1;
+
+    for (let i = 0; i < segmentCount; i++) {
+      const p1 = measurementPoints[i];
+      const p2 = measurementPoints[(i + 1) % measurementPoints.length];
+      const dist = calculateGeodesicDistance(p1, p2);
+      const midpoint = getSegmentMidpoint(p1, p2);
+
+      const segBadge = L.divIcon({
+        className: "custom-measure-segment",
         html: `
-          <div style="
-            transform: translate(-50%, -50%);
-            width: 18px;
-            height: 18px;
-            background: #dc2626;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          ">${idx + 1}</div>
+          <div class="measure-segment-pill">
+            ${formatMeasureDistance(dist)}
+          </div>
         `,
         iconSize: [0, 0],
       });
-      group.addLayer(L.marker([lat, lng], { icon: badge }));
+      group.addLayer(L.marker(midpoint, { icon: segBadge, zIndexOffset: 1500 }));
+    }
+
+    // C. Vẽ các điểm đỉnh đánh số thứ tự (Vertex Pins 1, 2, 3...)
+    latLngs.forEach(([lat, lng], idx) => {
+      const isLast = idx === latLngs.length - 1;
+      const vertexIcon = L.divIcon({
+        className: "custom-measure-point",
+        html: `
+          <div class="measure-vertex-pin ${isLast ? "pin-latest" : ""}">
+            ${idx + 1}
+          </div>
+        `,
+        iconSize: [0, 0],
+      });
+
+      const marker = L.marker([lat, lng], {
+        icon: vertexIcon,
+        zIndexOffset: 2000 + idx,
+      });
+
+      if (measureType === "distance" && isLast && latLngs.length > 1) {
+        const total = calculatePolylineDistance(measurementPoints);
+        marker.bindTooltip(`Tổng khoảng cách: ${formatMeasureDistance(total)}`, {
+          permanent: true,
+          direction: "top",
+          className: "measure-segment-pill",
+        });
+      }
+
+      group.addLayer(marker);
     });
-  }, [measurementMode, measurementPoints]);
+  }, [measurementMode, measurementPoints, measureType]);
 
   // 8. Vẽ Ranh giới hành chính (selectedBoundaries)
   useEffect(() => {
@@ -623,56 +770,75 @@ const GoogleMapComponent = ({
     const group = markersGroupRef.current;
     group.clearLayers();
 
-    // Click Marker
+    // Click / Search Marker (Ghim đỏ chuẩn Google Maps có nhãn tên & hiệu ứng lan tỏa)
     if (clickMarker) {
+      const pinTitle = clickMarker.title || "Vị trí đã chọn";
       const pinIcon = L.divIcon({
-        className: "custom-click-pin",
+        className: "custom-search-pin",
         html: `
-          <div style="transform: translate(-50%, -100%);">
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="#2563eb" stroke="#ffffff" stroke-width="1.5">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
+          <div style="position: relative; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer;">
+            <!-- Sóng lan tỏa tiếp đất Google Maps (Ground Ripple) -->
+            <div style="position: absolute; bottom: -2px; left: 50%; transform: translate(-50%, 50%); width: 28px; height: 14px; background: rgba(234, 67, 53, 0.4); border-radius: 50%; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+            
+            <!-- Biểu tượng Ghim đỏ Google Maps đổ bóng 3D -->
+            <div style="filter: drop-shadow(0 4px 10px rgba(0,0,0,0.55)); transform-origin: bottom center;">
+              <svg viewBox="0 0 24 24" width="42" height="42" fill="#ea4335" stroke="#b31412" stroke-width="0.7">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                <circle cx="12" cy="9" r="3.2" fill="#ffffff"/>
+              </svg>
+            </div>
+
+            <!-- Thẻ tên địa danh nổi bật -->
+            ${clickMarker.title ? `
+              <div style="margin-top: -3px; background: rgba(15, 23, 42, 0.95); color: #ffffff; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; font-family: 'Roboto', Arial, sans-serif; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,0.45); border: 1.5px solid rgba(255,255,255,0.3); display: flex; align-items: center; gap: 4px;">
+                <span style="color: #ef4444;">📍</span>
+                <span>${clickMarker.title.length > 28 ? clickMarker.title.slice(0, 28) + '...' : clickMarker.title}</span>
+              </div>
+            ` : ''}
           </div>
         `,
         iconSize: [0, 0],
       });
-      group.addLayer(L.marker([clickMarker.lat, clickMarker.lng], { icon: pinIcon }));
+      const marker = L.marker([clickMarker.lat, clickMarker.lng], {
+        icon: pinIcon,
+        zIndexOffset: 3000,
+      });
+      marker.bindPopup(`
+        <div style="font-family: 'Roboto', Arial, sans-serif; padding: 4px; max-width: 260px;">
+          <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">📍 ${pinTitle}</div>
+          <div style="font-size: 11px; color: #64748b;">Tọa độ: ${clickMarker.lat.toFixed(6)}, ${clickMarker.lng.toFixed(6)}</div>
+        </div>
+      `);
+      group.addLayer(marker);
     }
 
-    // Property markers
+    // Property markers (Airbnb & Batdongsan Style Price Badge Pins)
     if (propertyMarkers && propertyMarkers.length > 0) {
       propertyMarkers.forEach((prop) => {
         const lat = Number(prop.GPS_Lat || prop.ToaDoX);
         const lng = Number(prop.GPS_Lng || prop.ToaDoY);
         if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
-        const priceText = prop.Gia
-          ? prop.Gia >= 1e9
-            ? `${(prop.Gia / 1e9).toFixed(1)} tỷ`
-            : `${(prop.Gia / 1e6).toFixed(0)} tr`
-          : "Xem";
+        const isSelected = selectedProperty && (
+          (selectedProperty.MaTTND && prop.MaTTND && selectedProperty.MaTTND === prop.MaTTND) ||
+          (selectedProperty.id && prop.id && selectedProperty.id === prop.id)
+        );
 
-        const propIcon = L.divIcon({
-          className: "custom-prop-pin",
-          html: `
-            <div style="
-              transform: translate(-50%, -100%);
-              background: #2563eb;
-              color: white;
-              padding: 2.5px 6.5px;
-              border-radius: 10px;
-              font-size: 11px;
-              font-weight: 700;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-              border: 1.5px solid white;
-              white-space: nowrap;
-              cursor: pointer;
-            ">🏠 ${priceText}</div>
-          `,
-          iconSize: [0, 0],
+        const propIcon = createPriceBadgeIcon(prop, isSelected);
+
+        const marker = L.marker([lat, lng], {
+          icon: propIcon,
+          zIndexOffset: isSelected ? 1000 : prop.Featured ? 500 : 100,
         });
 
-        const marker = L.marker([lat, lng], { icon: propIcon });
+        // Tooltip rich preview card chuẩn Airbnb khi hover
+        marker.bindTooltip(createPropertyTooltipHtml(prop), {
+          direction: "top",
+          offset: [0, -28],
+          className: "price-pin-tooltip",
+          opacity: 1,
+        });
+
         marker.on("click", () => {
           if (typeof handlePropertySelect === "function") {
             handlePropertySelect(prop);
@@ -681,17 +847,46 @@ const GoogleMapComponent = ({
         group.addLayer(marker);
       });
     }
-  }, [clickMarker, propertyMarkers, handlePropertySelect]);
+  }, [clickMarker, propertyMarkers, handlePropertySelect, selectedProperty]);
 
-  // 11. Lớp phủ Quy hoạch (planningData)
+  // 11. Lớp phủ Quy hoạch (planningData hoặc internalPlanningData mẫu) với Smart LOD
   useEffect(() => {
     if (!planningGroupRef.current) return;
     const group = planningGroupRef.current;
     group.clearLayers();
 
-    if (!showPlanningLayer || !planningData?.overlays) return;
+    const currentPlanning = internalPlanningData || planningData;
+    if (!showPlanningLayer || !currentPlanning?.overlays) return;
 
-    planningData.overlays.forEach((item) => {
+    // Smart Level-of-Detail (LOD): Nếu tệp có cấu trúc phân cấp pyramid L1..L6 (như Mỹ Tho 386 overlays)
+    // thì chỉ nạp đúng 1 cấp zoom phù hợp nhất thay vì load cả 6 cấp đè lên nhau gây lag
+    let overlaysToRender = currentPlanning.overlays;
+    const hasPyramidLevels = currentPlanning.overlays.some((o) => /_L\d+_/.test(o.url));
+
+    if (hasPyramidLevels) {
+      const levelMap = {};
+      currentPlanning.overlays.forEach((o) => {
+        const m = o.url.match(/_L(\d+)_/);
+        const lvl = m ? parseInt(m[1], 10) : 1;
+        if (!levelMap[lvl]) levelMap[lvl] = [];
+        levelMap[lvl].push(o);
+      });
+
+      const available = Object.keys(levelMap).map(Number).sort((a, b) => a - b);
+      let targetLevel = available[0];
+
+      if (currentMapZoom <= 13) {
+        targetLevel = available.includes(3) ? 3 : available.includes(2) ? 2 : available[0];
+      } else if (currentMapZoom <= 15) {
+        targetLevel = available.includes(4) ? 4 : available.includes(3) ? 3 : available[available.length - 1];
+      } else {
+        targetLevel = available.includes(5) ? 5 : available[available.length - 1];
+      }
+
+      overlaysToRender = levelMap[targetLevel] || currentPlanning.overlays;
+    }
+
+    overlaysToRender.forEach((item) => {
       try {
         if (!item?.bounds || !item?.url) return;
         const north = parseFloat(item.bounds.north || item.bounds.North || item.bounds.maxLat);
@@ -705,13 +900,68 @@ const GoogleMapComponent = ({
           [south, west],
           [north, east],
         ];
-        const overlay = L.imageOverlay(item.url, bounds, { opacity: planningOpacity });
+        const overlay = L.imageOverlay(item.url, bounds, {
+          opacity: planningOpacity,
+          pane: "planningSwipePane",
+        });
         group.addLayer(overlay);
       } catch (err) {
         console.warn("Planning layer error:", err);
       }
     });
-  }, [planningData, showPlanningLayer, planningOpacity]);
+  }, [planningData, internalPlanningData, showPlanningLayer, planningOpacity, currentMapZoom]);
+
+  // Handler chọn khu vực quy hoạch mẫu cho Swipe Slider
+  const handleSelectSwipeDistrict = useCallback(async (district) => {
+    if (!district?.path) return;
+    try {
+      setActiveDistrictName(district.name);
+      const data = await loadPlanningDataFromUrl(district.path);
+      if (data && data.overlays && data.overlays.length > 0) {
+        setInternalPlanningData(data);
+        setShowPlanningLayer(true);
+        setIsSwipeActive(true);
+        setMapType("satellite");
+
+        // Bay đến vùng quy hoạch
+        if (leafletMapRef.current) {
+          const first = data.overlays[0];
+          const north = parseFloat(first.bounds.north || first.bounds.North || first.bounds.maxLat);
+          const south = parseFloat(first.bounds.south || first.bounds.South || first.bounds.minLat);
+          const east = parseFloat(first.bounds.east || first.bounds.East || first.bounds.maxLng);
+          const west = parseFloat(first.bounds.west || first.bounds.West || first.bounds.minLng);
+
+          if (!isNaN(north) && !isNaN(south) && !isNaN(east) && !isNaN(west)) {
+            leafletMapRef.current.fitBounds(
+              [
+                [south, west],
+                [north, east],
+              ],
+              { padding: [50, 50], maxZoom: 14 }
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("handleSelectSwipeDistrict error:", err);
+    }
+  }, []);
+
+  // Handler Bật/Tắt chế độ So Sánh Quy Hoạch Swipe
+  const handleToggleSwipe = useCallback(async () => {
+    if (!isSwipeActive) {
+      setIsSwipeActive(true);
+      setShowPlanningLayer(true);
+      setPlanningOpacity(0.95);
+      setMapType("satellite"); // Tự động chọn Vệ tinh làm nền Hiện trạng sắc nét nhất
+
+      if (!internalPlanningData && !planningData) {
+        await handleSelectSwipeDistrict(SAMPLE_PLANNING_DISTRICTS[0]);
+      }
+    } else {
+      setIsSwipeActive(false);
+    }
+  }, [isSwipeActive, internalPlanningData, planningData, handleSelectSwipeDistrict]);
 
   // 12. Vẽ Chỉ đường (routeData)
   useEffect(() => {
@@ -809,6 +1059,10 @@ const GoogleMapComponent = ({
           setShowDirections={setShowDirections}
           showNearbyPlaces={showNearbyPlaces}
           setShowNearbyPlaces={setShowNearbyPlaces}
+          showPlanningLegend={showPlanningLegend}
+          setShowPlanningLegend={setShowPlanningLegend}
+          isSwipeActive={isSwipeActive}
+          onToggleSwipe={handleToggleSwipe}
         />
       )}
 
@@ -837,14 +1091,37 @@ const GoogleMapComponent = ({
         </div>
       )}
 
+      {/* 4. Measurement Panel (Thước đo khoảng cách & diện tích) */}
+      {measurementMode && (
+        <MeasurementPanel
+          measureType={measureType}
+          setMeasureType={setMeasureType}
+          measurementPoints={measurementPoints}
+          onUndo={() => {
+            setMeasurementPoints((prev) => prev.slice(0, -1));
+          }}
+          onClear={() => {
+            setMeasurementPoints([]);
+            setMeasurementDistance(0);
+          }}
+          onClose={() => {
+            setMeasurementMode(false);
+            setMeasurementPoints([]);
+            setMeasurementDistance(0);
+          }}
+        />
+      )}
+
       {showSearch && (
         <div className="animate-slideInTop">
           <SearchPanel
             onClose={() => setShowSearch(false)}
             onSearchCommit={handleSearchCommit}
+            onPlaceSelect={handlePlaceSelect}
             onToggleClickMode={() => setClickPointMode(!clickPointMode)}
             isClickModeActive={clickPointMode}
             onBoundaryAdd={onBoundaryAdd}
+            onSelect={onBoundaryAdd}
             searchLoading={searchLoading}
             searchError={searchError}
           />
@@ -900,14 +1177,61 @@ const GoogleMapComponent = ({
         </div>
       )}
 
-      {/* 4. Admin Boundaries Panel (Bottom Right) */}
-      <AdminBoundariesPanel
-        selectedBoundaries={selectedBoundaries}
-        boundaryOpacities={boundaryOpacities}
-        setBoundaryOpacities={setBoundaryOpacities}
-        handleRemoveBoundary={handleRemoveBoundary}
-        handleClearAllBoundaries={handleClearAllBoundaries}
-      />
+      {/* 4. Admin Boundaries Panel (Bottom Right) - Ẩn khi đang bật thanh trượt so sánh để tránh che hoặc xung đột */}
+      {!isSwipeActive && (
+        <AdminBoundariesPanel
+          selectedBoundaries={selectedBoundaries}
+          boundaryOpacities={boundaryOpacities}
+          setBoundaryOpacities={setBoundaryOpacities}
+          handleRemoveBoundary={handleRemoveBoundary}
+          handleClearAllBoundaries={handleClearAllBoundaries}
+        />
+      )}
+
+      {/* 5. Planning Legend Panel & Trigger Buttons (Bottom Left) */}
+      {showPlanningLegend && (
+        <PlanningLegendPanel onClose={() => setShowPlanningLegend(false)} />
+      )}
+
+      {/* Trigger Buttons (Bottom Left) - Ẩn khi Bảng chú giải đang mở */}
+      {!showPlanningLegend && (
+        <div className="absolute z-10 bottom-4 left-4 flex items-center gap-2 pointer-events-auto">
+          <button
+            onClick={() => setShowPlanningLegend(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-white/95 backdrop-blur-md hover:bg-white text-slate-800 hover:text-blue-600 rounded-2xl shadow-xl border border-slate-200/90 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            title="Mở Bảng chú giải màu sắc quy hoạch & ký hiệu loại đất"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-pink-500 via-amber-400 to-emerald-500 animate-pulse" />
+            <FaBookOpen className="text-blue-600 text-xs" />
+            <span>Chú giải Quy hoạch</span>
+          </button>
+
+          {/* Nút bật nhanh So Sánh Swipe */}
+          {!isSwipeActive && (
+            <button
+              onClick={handleToggleSwipe}
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-2xl shadow-xl border border-purple-400/40 text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              title="Thanh trượt so sánh Quy hoạch chia đôi màn hình (Before/After Swipe Slider)"
+            >
+              <FaArrowsAltH className="text-sky-300 text-xs animate-pulse" />
+              <span>So sánh Swipe</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 6. Planning Swipe Slider (Chia đôi màn hình) */}
+      {isSwipeActive && (
+        <PlanningSwipeSlider
+          mapRef={mapRef}
+          isActive={isSwipeActive}
+          onClose={() => setIsSwipeActive(false)}
+          activeDistrictName={activeDistrictName}
+          onSelectDistrict={handleSelectSwipeDistrict}
+          planningOpacity={planningOpacity}
+          setPlanningOpacity={setPlanningOpacity}
+        />
+      )}
     </div>
   );
 };

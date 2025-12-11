@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { FaCompress, FaExpand, FaLayerGroup, FaRedo, FaEye, FaEyeSlash } from "react-icons/fa";
+import { createPriceBadgeIcon, createPropertyTooltipHtml } from "./priceMarkerUtils";
 
 // Map tile layers - 100% MIỄN PHÍ KHÔNG CẦN API KEY / THẺ VISA
 const TILE_LAYERS = {
@@ -400,55 +401,34 @@ const LeafletMapComponent = ({
       });
     }
 
-    // Property markers nếu có trong danh sách
+    // Property markers nếu có trong danh sách (Airbnb & Batdongsan Style Price Badge Pins)
     if (propertyMarkers && propertyMarkers.length > 0) {
       propertyMarkers.forEach((prop) => {
         const lat = Number(prop.GPS_Lat || prop.ToaDoX);
         const lng = Number(prop.GPS_Lng || prop.ToaDoY);
         if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
-        const priceText = prop.Gia
-          ? prop.Gia >= 1000000000
-            ? `${(prop.Gia / 1000000000).toFixed(1)} tỷ`
-            : `${(prop.Gia / 1000000).toFixed(0)} tr`
-          : "Xem";
+        const propIcon = createPriceBadgeIcon(prop, false);
 
-        const propIcon = L.divIcon({
-          className: "custom-property-pin",
-          html: `
-            <div style="
-              position: relative;
-              transform: translate(-50%, -100%);
-              background: #2563eb;
-              color: white;
-              padding: 3px 7px;
-              border-radius: 12px;
-              font-size: 11px;
-              font-weight: 700;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-              border: 1.5px solid white;
-              white-space: nowrap;
-              cursor: pointer;
-            ">
-              🏠 ${priceText}
-            </div>
-          `,
-          iconSize: [0, 0],
+        const marker = L.marker([lat, lng], {
+          icon: propIcon,
+          zIndexOffset: prop.Featured ? 500 : 100,
         });
 
-        const marker = L.marker([lat, lng], { icon: propIcon });
         marker.on("click", () => {
           if (typeof onPropertySelect === "function") {
             onPropertySelect(prop);
           }
         });
-        marker.bindPopup(`
-          <div style="font-family: Roboto, sans-serif; font-size: 12px; max-width: 200px;">
-            <strong style="color: #1e40af;">${prop.TieuDe || "Bất động sản"}</strong>
-            <p style="margin: 4px 0 0 0; color: #dc2626; font-weight: bold;">${priceText}</p>
-            <p style="margin: 2px 0 0 0; color: #6b7280; font-size: 11px;">${prop.DiaChi || ""}</p>
-          </div>
-        `);
+
+        // Tooltip rich preview card chuẩn Airbnb khi hover
+        marker.bindTooltip(createPropertyTooltipHtml(prop), {
+          direction: "top",
+          offset: [0, -28],
+          className: "price-pin-tooltip",
+          opacity: 1,
+        });
+
         layerGroup.addLayer(marker);
       });
     }

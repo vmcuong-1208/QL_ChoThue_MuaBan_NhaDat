@@ -25,7 +25,8 @@ Bộ tài liệu đánh giá và nhật ký khắc phục được phân tách t
 | 05 | [04-files-audit-necessary-vs-redundant.md](file:///B:/DACN%20(1)/DACS-BDSTC/project-review/04-files-audit-necessary-vs-redundant.md) | Bảng phân loại từng file/folder: Cần thiết vs Thừa thãi | Đã dọn dẹp |
 | 06 | [05-recommendations-and-next-steps.md](file:///B:/DACN%20(1)/DACS-BDSTC/project-review/05-recommendations-and-next-steps.md) | Lộ trình thực hiện & Hướng dẫn kiểm thử thực tế | Đã hoàn tất các giai đoạn |
 | 07 | [06-resolution-log.md](file:///B:/DACN%20(1)/DACS-BDSTC/project-review/06-resolution-log.md) | Báo cáo chi tiết kết quả xử lý các lỗi & nhược điểm | Đã hoàn tất |
-| 08 | [07-professional-code-standards-review.md](file:///B:/DACN%20(1)/DACS-BDSTC/project-review/07-professional-code-standards-review.md) | **Đánh giá chuẩn mực dev chuyên nghiệp & Clean Code** | **MỚI LẬP (CHỜ DUYỆT)** |
+| 08 | [07-professional-code-standards-review.md](file:///B:/DACN%20(1)/DACS-BDSTC/project-review/07-professional-code-standards-review.md) | **Đánh giá chuẩn mực dev chuyên nghiệp & Clean Code** | **Đã hoàn thành** |
+| 09 | [08-map-gis-features-and-architecture.md](file:///B:/DACN%20(1)/DACS-BDSTC/project-review/08-map-gis-features-and-architecture.md) | **Báo cáo toàn diện hệ thống Bản đồ số & Không gian địa lý (GIS)** | **MỚI CẬP NHẬT** |
 
 ---
 

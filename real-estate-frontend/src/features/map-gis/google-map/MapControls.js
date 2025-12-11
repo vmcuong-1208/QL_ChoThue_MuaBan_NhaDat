@@ -11,6 +11,8 @@ import {
   FaSearch,
   FaTimes,
   FaMapPin,
+  FaBookOpen,
+  FaArrowsAltH,
 } from "react-icons/fa";
 
 const MapControls = ({
@@ -22,6 +24,8 @@ const MapControls = ({
   setShowPlanningLayer,
   planningOpacity,
   setPlanningOpacity,
+  isSwipeActive,
+  onToggleSwipe,
   propertyBoundary,
   showBoundaryLayer,
   setShowBoundaryLayer,
@@ -43,6 +47,8 @@ const MapControls = ({
   setShowDirections,
   showNearbyPlaces,
   setShowNearbyPlaces,
+  showPlanningLegend,
+  setShowPlanningLegend,
 }) => {
   return (
     <div
@@ -95,7 +101,13 @@ const MapControls = ({
         {planningData && (
           <div className="pb-2 space-y-2 border-b border-gray-100">
             <button
-              onClick={() => setShowPlanningLayer(!showPlanningLayer)}
+              onClick={() => {
+                const nextState = !showPlanningLayer;
+                setShowPlanningLayer(nextState);
+                if (nextState && setShowPlanningLegend) {
+                  setShowPlanningLegend(true);
+                }
+              }}
               className={`flex items-center justify-between w-full px-3 py-2 text-sm font-bold transition-all duration-300 rounded-lg ${
                 showPlanningLayer
                   ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md"
@@ -107,21 +119,63 @@ const MapControls = ({
               </div>
             </button>
             {showPlanningLayer && (
-              <div className="px-1 animate-slideInTop">
-                <div className="flex justify-between text-[10px] text-gray-500 mb-1">
-                  <span>Độ mờ</span>
-                  <span>{Math.round(planningOpacity * 100)}%</span>
+              <div className="px-1 space-y-2 animate-slideInTop">
+                <div>
+                  <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                    <span>Độ mờ</span>
+                    <span>{Math.round(planningOpacity * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={planningOpacity * 100}
+                    onChange={(e) =>
+                      setPlanningOpacity(parseInt(e.target.value) / 100)
+                    }
+                    className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  />
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={planningOpacity * 100}
-                  onChange={(e) =>
-                    setPlanningOpacity(parseInt(e.target.value) / 100)
-                  }
-                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
+
+                {onToggleSwipe && (
+                  <button
+                    type="button"
+                    onClick={onToggleSwipe}
+                    className={`flex items-center justify-between w-full px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                      isSwipeActive
+                        ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md animate-pulse"
+                        : "bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200"
+                    }`}
+                    title="Thanh trượt so sánh Quy hoạch chia đôi màn hình (Before/After)"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <FaArrowsAltH className="text-[11px]" />
+                      <span>So sánh Swipe</span>
+                    </div>
+                    <span className="text-[9.5px] uppercase tracking-wider bg-white/30 px-1.5 py-0.2 rounded font-black">
+                      Chia đôi
+                    </span>
+                  </button>
+                )}
+
+                {setShowPlanningLegend && (
+                  <button
+                    onClick={() => setShowPlanningLegend(!showPlanningLegend)}
+                    className={`flex items-center justify-between w-full px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                      showPlanningLegend
+                        ? "bg-purple-100 text-purple-700 border border-purple-300 shadow-sm"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <FaBookOpen className="text-purple-600 text-[11px]" />
+                      <span>Chú giải loại đất</span>
+                    </div>
+                    <span className="text-[10px] bg-purple-200 text-purple-800 px-1.5 py-0.2 rounded font-black">
+                      15
+                    </span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -207,10 +261,10 @@ const MapControls = ({
             }}
             className={`flex items-center justify-center gap-2 px-2 py-2 text-xs font-bold rounded-lg transition-all ${
               measurementMode
-                ? "bg-orange-600 text-white"
+                ? "bg-amber-500 text-white shadow-md ring-2 ring-amber-300 animate-pulse"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
-            title="Đo đạc khoảng cách"
+            title="Thước đo bản đồ: Đo khoảng cách & Diện tích tự do"
           >
             <FaRuler />
           </button>
@@ -218,56 +272,34 @@ const MapControls = ({
 
         {/* Directions & Nearby */}
         {propertyCenter && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
             <button
               onClick={() => setShowDirections(!showDirections)}
-              className={`flex items-center justify-center gap-2 px-2 py-2 text-xs font-bold rounded-lg transition-all ${
+              className={`flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-bold rounded-lg transition-all ${
                 showDirections
-                  ? "bg-purple-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-purple-600 text-white shadow-md"
+                  : "bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200"
               }`}
-              title="Chỉ đường"
+              title="Tìm đường đi"
             >
-              <FaDirections />
+              <FaDirections className="text-sm" />
+              <span>Chỉ đường</span>
             </button>
             <button
               onClick={() => setShowNearbyPlaces(!showNearbyPlaces)}
-              className={`flex items-center justify-center gap-2 px-2 py-2 text-xs font-bold rounded-lg transition-all ${
+              className={`flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-bold rounded-lg transition-all ${
                 showNearbyPlaces
-                  ? "bg-pink-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-emerald-600 text-white shadow-md"
+                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
               }`}
-              title="Địa điểm xung quanh"
+              title="Khám phá tiện ích lân cận & Bán kính"
             >
-              <FaMapPin />
+              <FaMapPin className="text-sm text-emerald-600" />
+              <span>Tiện ích</span>
             </button>
           </div>
         )}
       </div>
-
-      {/* MEASUREMENT RESULT */}
-      {measurementMode && measurementPoints.length > 0 && (
-        <div className="p-3 bg-white border-l-4 border-orange-500 shadow-lg rounded-xl animate-slideInTop">
-          <div className="text-[10px] font-bold text-gray-500 uppercase">
-            KHOẢNG CÁCH
-          </div>
-          <div className="flex items-center justify-between mt-1">
-            <span className="text-xl font-bold text-orange-600">
-              {measurementDistance.toFixed(2)}m
-            </span>
-            <button
-              onClick={() => {
-                setMeasurementPoints([]);
-                setMeasurementDistance(0);
-              }}
-              className="p-1 text-gray-400 transition-colors hover:text-red-500"
-              title="Xóa đo đạc"
-            >
-              <FaTimes />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

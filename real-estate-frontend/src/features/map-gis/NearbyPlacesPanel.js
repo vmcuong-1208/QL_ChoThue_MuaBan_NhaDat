@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaTimes,
   FaMapMarkerAlt,
@@ -25,6 +25,20 @@ import {
 } from "../../utils/overpassService";
 import L from "leaflet";
 
+const getPlaceEmoji = (type) => {
+  const t = String(type || "").toLowerCase();
+  if (t.includes("school") || t.includes("trường")) return "🎓";
+  if (t.includes("hospital") || t.includes("bệnh viện") || t.includes("pharmacy")) return "🏥";
+  if (t.includes("market") || t.includes("chợ") || t.includes("siêu thị") || t.includes("mall")) return "🛒";
+  if (t.includes("gas") || t.includes("xăng")) return "⛽";
+  if (t.includes("restaurant") || t.includes("quán ăn") || t.includes("nhà hàng")) return "🍽️";
+  if (t.includes("cafe") || t.includes("cà phê")) return "☕";
+  if (t.includes("bus") || t.includes("xe buýt") || t.includes("trạm")) return "🚌";
+  if (t.includes("park") || t.includes("công viên")) return "🌳";
+  if (t.includes("bank") || t.includes("atm") || t.includes("ngân hàng")) return "🏦";
+  return "📍";
+};
+
 const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
   const [fixedPlaces, setFixedPlaces] = useState({
     highway: [],
@@ -37,8 +51,133 @@ const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
   const [radius, setRadius] = useState(2000);
   const [searchType, setSearchType] = useState("school");
   const [selectedPlace, setSelectedPlace] = useState(null);
-  const markersRef = useRef([]);
 
+  const markersRef = useRef([]);
+  const circleRef = useRef(null);
+  const centerMarkerRef = useRef(null);
+  const radiusLabelMarkerRef = useRef(null);
+
+  const calculateDistance = (lat, lng) => {
+    if (!propertyCenter?.lat || !propertyCenter?.lng) return "0 m";
+    const R = 6371;
+    const dLat = ((lat - propertyCenter.lat) * Math.PI) / 180;
+    const dLng = ((lng - propertyCenter.lng) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((propertyCenter.lat * Math.PI) / 180) *
+        Math.cos((lat * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return distance < 1
+      ? `${(distance * 1000).toFixed(0)} m`
+      : `${distance.toFixed(1)} km`;
+  };
+
+  // 1. Quản lý Vòng tròn bán kính (Radius Search Circle) & Pulsing Center Pin
+  useEffect(() => {
+    if (!mapRef?.current || !propertyCenter?.lat || !propertyCenter?.lng) return;
+    const map = mapRef.current;
+
+    if (circleRef.current) {
+      circleRef.current.remove();
+      circleRef.current = null;
+    }
+    if (centerMarkerRef.current) {
+      centerMarkerRef.current.remove();
+      centerMarkerRef.current = null;
+    }
+    if (radiusLabelMarkerRef.current) {
+      radiusLabelMarkerRef.current.remove();
+      radiusLabelMarkerRef.current = null;
+    }
+
+    const center = [Number(propertyCenter.lat), Number(propertyCenter.lng)];
+
+    // A. Vẽ vòng tròn bán kính mờ với viền nét đứt sang trọng
+    const circle = L.circle(center, {
+      radius: Number(radius),
+      color: "#2563eb",
+      weight: 2.5,
+      opacity: 0.9,
+      dashArray: "8, 6",
+      fillColor: "#3b82f6",
+      fillOpacity: 0.1,
+    }).addTo(map);
+    circleRef.current = circle;
+
+    // B. Ghim tâm BĐS với hiệu ứng gợn sóng (Pulsing Halo Ring)
+    const centerIcon = L.divIcon({
+      className: "custom-radius-center-pin",
+      html: `
+        <div style="position: relative; width: 34px; height: 34px; transform: translate(-50%, -50%);">
+          <div style="position: absolute; inset: 0; border-radius: 50%; background: rgba(37, 99, 235, 0.35); animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="position: absolute; inset: 3px; border-radius: 50%; background: #2563eb; border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 900;">
+            🎯
+          </div>
+        </div>
+      `,
+      iconSize: [0, 0],
+    });
+    const centerMarker = L.marker(center, { icon: centerIcon, zIndexOffset: 2000 }).addTo(map);
+    centerMarker.bindPopup(`
+      <div style="font-family: 'Roboto', Arial, sans-serif; font-size: 12px; padding: 3px;">
+        <strong style="color: #1e3a8a;">📍 Tâm tìm kiếm tiện ích (Bán kính vàng)</strong>
+        <div style="color: #64748b; margin-top: 2px;">Tọa độ: ${center[0].toFixed(5)}, ${center[1].toFixed(5)}</div>
+      </div>
+    `);
+    centerMarkerRef.current = centerMarker;
+
+    // C. Nhãn hiển thị bán kính nổi ở mép trên đỉnh vòng tròn
+    const radiusKm = radius / 1000;
+    const labelLat = center[0] + radius / 111320;
+    const labelText = radius >= 1000 ? `${radiusKm % 1 === 0 ? radiusKm : radiusKm.toFixed(1)} km` : `${radius} m`;
+
+    const labelIcon = L.divIcon({
+      className: "custom-radius-label-badge",
+      html: `
+        <div style="
+          transform: translate(-50%, -100%);
+          background: rgba(15, 23, 42, 0.94);
+          color: #ffffff;
+          padding: 4px 11px;
+          border-radius: 9999px;
+          font-size: 11.5px;
+          font-weight: 800;
+          font-family: 'Roboto', Arial, sans-serif;
+          border: 1.5px solid #38bdf8;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+          white-space: nowrap;
+          pointer-events: none;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        ">
+          <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #38bdf8;"></span>
+          <span>Bán kính: ${labelText}</span>
+        </div>
+      `,
+      iconSize: [0, 0],
+    });
+    const radiusLabelMarker = L.marker([labelLat, center[1]], { icon: labelIcon, zIndexOffset: 1500 }).addTo(map);
+    radiusLabelMarkerRef.current = radiusLabelMarker;
+
+    // D. Căn chỉnh khung nhìn vừa khít vòng tròn
+    try {
+      map.fitBounds(circle.getBounds(), { padding: [45, 45], maxZoom: 16 });
+    } catch (err) {
+      console.warn("fitBounds radius error:", err);
+    }
+
+    return () => {
+      if (circleRef.current) circleRef.current.remove();
+      if (centerMarkerRef.current) centerMarkerRef.current.remove();
+      if (radiusLabelMarkerRef.current) radiusLabelMarkerRef.current.remove();
+    };
+  }, [propertyCenter, radius, mapRef]);
+
+  // 2. Render các Marker Tiện ích (POI Markers) bên trong Vòng tròn
   useEffect(() => {
     if (!mapRef?.current) return;
     const map = mapRef.current;
@@ -47,10 +186,64 @@ const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
     markersRef.current = [];
 
     const allPlaces = [...Object.values(fixedPlaces).flat(), ...customPlaces];
-    allPlaces.forEach((place) => {
+    const seen = new Set();
+    const uniquePlaces = [];
+    allPlaces.forEach((p) => {
+      const key = `${p.lat?.toFixed(5)}_${p.lng?.toFixed(5)}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniquePlaces.push(p);
+      }
+    });
+
+    uniquePlaces.forEach((place) => {
       if (!place.lat || !place.lng) return;
-      const marker = L.marker([place.lat, place.lng]);
-      marker.bindPopup(`<b>${place.name || "Địa điểm"}</b>`);
+      const distText = calculateDistance(place.lat, place.lng);
+      const iconEmoji = getPlaceEmoji(place.type);
+
+      const poiIcon = L.divIcon({
+        className: "custom-poi-marker-icon",
+        html: `
+          <div style="
+            position: relative;
+            transform: translate(-50%, -100%);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 11px;
+            font-weight: 800;
+            font-family: 'Roboto', Arial, sans-serif;
+            border: 1.5px solid #10b981;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+          " onmouseover="this.style.transform='translate(-50%, -100%) scale(1.15)'; this.style.zIndex='9999';" onmouseout="this.style.transform='translate(-50%, -100%) scale(1)';">
+            <span>${iconEmoji}</span>
+            <span style="color: #047857; font-weight: 800;">${distText}</span>
+          </div>
+        `,
+        iconSize: [0, 0],
+      });
+
+      const marker = L.marker([place.lat, place.lng], { icon: poiIcon });
+      marker.bindPopup(`
+        <div style="font-family: 'Roboto', Arial, sans-serif; font-size: 12px; max-width: 220px; line-height: 1.4;">
+          <div style="display: flex; align-items: center; gap: 4px; color: #047857; font-weight: 800; font-size: 11px; margin-bottom: 3px;">
+            <span>${iconEmoji}</span>
+            <span>${place.type || "Tiện ích lân cận"}</span>
+          </div>
+          <strong style="color: #0f172a; font-size: 13px;">${place.name || "Địa điểm"}</strong>
+          <div style="color: #2563eb; font-weight: 800; margin-top: 4px; font-size: 12px;">
+            📍 Cách tâm BĐS: ${distText}
+          </div>
+          ${place.address ? `<div style="color: #64748b; font-size: 11px; margin-top: 2px;">${place.address}</div>` : ""}
+        </div>
+      `);
       marker.on("click", () => handlePlaceClick(place));
       marker.addTo(map);
       markersRef.current.push(marker);
@@ -60,7 +253,7 @@ const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
     };
-  }, [fixedPlaces, customPlaces, mapRef]);
+  }, [fixedPlaces, customPlaces, mapRef, propertyCenter]);
 
   const radiusOptions = [
     { value: 500, label: "500m" },
@@ -151,23 +344,6 @@ const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
     }
   };
 
-  const calculateDistance = (lat, lng) => {
-    const R = 6371;
-    const dLat = ((lat - propertyCenter.lat) * Math.PI) / 180;
-    const dLng = ((lng - propertyCenter.lng) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((propertyCenter.lat * Math.PI) / 180) *
-        Math.cos((lat * Math.PI) / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-    return distance < 1
-      ? `${(distance * 1000).toFixed(0)} m`
-      : `${distance.toFixed(2)} km`;
-  };
-
   const sortedCustomPlaces = [...customPlaces].sort((a, b) => {
     const distA = parseFloat(calculateDistance(a.lat, a.lng));
     const distB = parseFloat(calculateDistance(b.lat, b.lng));
@@ -253,21 +429,27 @@ const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
   };
 
   return (
-    <div className="fixed top-20 left-4 z-40 w-full max-w-md transition-all duration-500 animate-slideInLeft">
-      <div className="relative overflow-hidden bg-white shadow-2xl rounded-2xl">
+    <div
+      className="fixed top-20 right-4 z-40 w-full max-w-md transition-all duration-500 animate-slideInRight"
+      style={{ fontFamily: "'Roboto', Arial, sans-serif" }}
+    >
+      <div className="relative overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
         {/* Header */}
-        <div className="relative px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600">
+        <div className="relative px-4 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full shadow-lg">
-                <FaMapMarkerAlt className="text-sm text-green-600" />
+                <span className="text-sm">🎯</span>
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">
-                  Tham khảo vị trí
+                <h3 className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                  <span>Bán Kính Tiện Ích</span>
+                  <span className="px-2 py-0.5 bg-white/20 text-white text-[10.5px] font-extrabold rounded-full">
+                    {radius >= 1000 ? `${(radius / 1000).toFixed(radius % 1000 === 0 ? 0 : 1)} km` : `${radius} m`}
+                  </span>
                 </h3>
-                <p className="text-[10px] font-semibold text-green-100">
-                  Địa điểm gần đây
+                <p className="text-[10px] font-semibold text-emerald-100">
+                  Dò tìm trường học, chợ, bệnh viện trong bán kính vàng
                 </p>
               </div>
             </div>
@@ -275,7 +457,7 @@ const NearbyPlacesPanel = ({ propertyCenter, mapRef, onClose }) => {
             <button
               onClick={onClose}
               className="flex items-center justify-center w-7 h-7 text-white transition-all duration-300 rounded-full hover:bg-white/20 hover:rotate-90 active:scale-95"
-              title="Đóng"
+              title="Đóng bảng tiện ích"
             >
               <FaTimes className="text-sm" />
             </button>
